@@ -88,7 +88,7 @@ const double sta_time = 0.0;
 const double end_time = 1000.0*twopi;
 
 const int prt_interval = 1000;
-const int max_step = 1000;
+const int max_step = 1000000000;
 
 //=======================================================================
 // Hydro parameters
