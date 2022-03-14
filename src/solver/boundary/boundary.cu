@@ -227,13 +227,18 @@ void boundx(Grid* dev)
 
 	////////////////////////////////
 
-	for (int n=0; n<ndev-1; n++)
+	for (int n=0; n<ndev; n++)
 	{
 		cudaSetDevice(n);
 		buff_rght<<< gdim, bdim, 0, dev[n].stream >>> (dev[n].xres, dev[n].xarr, dev[n].C, dev[n].BuffR);
+	}
+	for (int n=0; n<ndev-1; n++)
+	{
 		cudaMemcpyAsync( dev[n+1].BuffL, dev[n].BuffR, xpad*yarr*zarr*sizeof(Cell), cudaMemcpyDeviceToDevice, dev[n].stream);
 	}
+		cudaMemcpyAsync( dev[0].BuffL, dev[ndev-1].BuffR, xpad*yarr*zarr*sizeof(Cell), cudaMemcpyDeviceToDevice, dev[ndev-1].stream);
 	for (int n=0; n<ndev; n++) cudaStreamSynchronize(dev[n].stream);
+
 	for (int n=0; n<ndev-1; n++)
 	{
 		cudaSetDevice(n+1);
@@ -243,13 +248,20 @@ void boundx(Grid* dev)
 
 	////////////////////////////////
 
-	for (int n=1; n<ndev; n++)
+	for (int n=0; n<ndev; n++)
 	{
 		cudaSetDevice(n);
 		buff_left<<< gdim, bdim, 0, dev[n].stream >>> (dev[n].xres, dev[n].xarr, dev[n].C, dev[n].BuffL);
+	}
+	for (int n=1; n<ndev; n++)
+	{
 		cudaMemcpyAsync( dev[n-1].BuffR, dev[n].BuffL, xpad*yarr*zarr*sizeof(Cell), cudaMemcpyDeviceToDevice, dev[n].stream);
 	}
+		cudaMemcpyAsync( dev[ndev-1].BuffR, dev[0].BuffL, xpad*yarr*zarr*sizeof(Cell), cudaMemcpyDeviceToDevice, dev[0].stream);
 	for (int n=0; n<ndev; n++) cudaStreamSynchronize(dev[n].stream);
+
+	////////////////////////////////
+
 	for (int n=1; n<ndev; n++)
 	{
 		cudaSetDevice(n-1);
@@ -261,10 +273,6 @@ void boundx(Grid* dev)
 
 	if (bound_rgh == 3)
 	{
-		cudaSetDevice(0);
-		buff_left<<< gdim, bdim, 0, dev[0].stream >>> (dev[0].xres, dev[0].xarr, dev[0].C, dev[0].BuffL);
-		cudaMemcpyAsync( dev[ndev-1].BuffR, dev[0].BuffL, xpad*yres*zres*sizeof(Cell), cudaMemcpyDeviceToDevice, dev[0].stream);
-		cudaStreamSynchronize(dev[0].stream);
 		cudaSetDevice(ndev-1);
 		dump_rght<<< gdim, bdim, 0, dev[ndev-1].stream >>> (dev[ndev-1].xres, dev[ndev-1].xarr, dev[ndev-1].C, dev[ndev-1].BuffR);
 	}
@@ -273,14 +281,9 @@ void boundx(Grid* dev)
 		cudaSetDevice(ndev-1);
 		bound_x_rght<<< dim3(dev[ndev-1].yarr,dev[ndev-1].zarr,1) , dim3(xpad,1,1) >>> (dev[ndev-1]);
 	}
-	for (int n=0; n<ndev; n++) cudaStreamSynchronize(dev[n].stream);
 
 	if (bound_lft == 3)
 	{
-		cudaSetDevice(ndev-1);
-		buff_rght<<< gdim, bdim, 0, dev[ndev-1].stream >>> (dev[ndev-1].xres, dev[ndev-1].xarr, dev[ndev-1].C, dev[ndev-1].BuffR);
-		cudaMemcpyAsync( dev[0].BuffL, dev[ndev-1].BuffR, xpad*yres*zres*sizeof(Cell), cudaMemcpyDeviceToDevice, dev[ndev-1].stream);
-		cudaStreamSynchronize(dev[ndev-1].stream);
 		cudaSetDevice(0);
 		dump_left<<< gdim, bdim, 0, dev[0].stream >>> (dev[0].xres, dev[0].xarr, dev[0].C, dev[0].BuffL);
 	}

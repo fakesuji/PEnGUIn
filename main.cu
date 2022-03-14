@@ -73,6 +73,8 @@ void mem_allocation(Grid* hst, Grid* dev)
 
 		cudaMallocHost( (void**)&hst[n].planets, n_planet*sizeof(body) );
 
+		cudaMallocHost( (void**)&hst[n].dt, sizeof(double) );
+
 
 		cudaStreamCreate(&dev[n].stream);
 
@@ -221,7 +223,7 @@ int main(int narg, char *args[])
 
 	while (contu)
 	{
-		dt = global_dt(dev, dt);
+		dt = global_dt(hst, dev, dt);
 		if (cur_time+dt > end_time)
 		{
 			dt = end_time-cur_time;

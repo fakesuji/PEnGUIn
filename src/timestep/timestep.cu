@@ -101,12 +101,10 @@ __global__ void get_dt_lv2(double* dt, double* dt_lv1)
 	return;
 }
 
-double global_dt(Grid* dev, double dt)
+double global_dt(Grid* hst, Grid* dev, double dt)
 {
-	double* h_dt;
 	int lv1_size, nx, ny, nz;
 	
-	cudaMallocHost( (void**)&h_dt, ndev*sizeof(double) );
 	for (int n=0; n<ndev; n++)
 	{
 		cudaSetDevice(n);
@@ -118,7 +116,7 @@ double global_dt(Grid* dev, double dt)
 		lv1_size = min(1024,(nx*ny*nz+std_thd-1)/std_thd);
 		get_dt_lv1<<< lv1_size, std_thd, std_thd*sizeof(double), dev[n].stream >>>(dev[n].Buff, &dev[n].xa[dev[n].xbgn], dev[n].ya, dev[n].za, nx, ny, nz, dev[n].C, dev[n].orb_rot);
 		get_dt_lv2<<< 1, lv1_size, lv1_size*sizeof(double), dev[n].stream >>>(dev[n].dt, dev[n].Buff);
-		cudaMemcpy( &h_dt[n], dev[n].dt, sizeof(double), cudaMemcpyDeviceToHost );
+		cudaMemcpyAsync( hst[n].dt, dev[n].dt, sizeof(double), cudaMemcpyDeviceToHost, dev[n].stream );
 	}
 	
 	for(int n=0; n<ndev; n++) cudaStreamSynchronize(dev[n].stream);
@@ -126,9 +124,8 @@ double global_dt(Grid* dev, double dt)
 	double tmp = dt*1.1;
 	for (int n=0; n<ndev; n++)
 	{
-		if (h_dt[n]<tmp) tmp = h_dt[n];
+		if (*hst[n].dt<tmp) tmp = *hst[n].dt;
 	}
 
-	cudaFreeHost(h_dt);
 	return tmp;
 }
