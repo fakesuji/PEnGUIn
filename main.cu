@@ -105,8 +105,8 @@ void mem_allocation(Grid* hst, Grid* dev)
 		#endif
 		#endif
 
-		cudaMalloc( (void**)&dev[n].BuffL, xpad*dev[n].yres*dev[n].zres*sizeof(Cell) );
-		cudaMalloc( (void**)&dev[n].BuffR, xpad*dev[n].yres*dev[n].zres*sizeof(Cell) );
+		cudaMalloc( (void**)&dev[n].BuffL, xpad*dev[n].yarr*dev[n].zarr*sizeof(Cell) );
+		cudaMalloc( (void**)&dev[n].BuffR, xpad*dev[n].yarr*dev[n].zarr*sizeof(Cell) );
 
 		cudaMalloc( (void**)&dev[n].orb_rot, dev[n].xarr*dev[n].zarr*sizeof(double) );
 		cudaMalloc( (void**)&dev[n].orb_res, dev[n].xarr*dev[n].zarr*sizeof(double) );
