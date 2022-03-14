@@ -509,9 +509,6 @@ void solve(Grid* dev, double time, double dt)
 	#endif
 
 	boundx(dev);
-	#ifdef OrbAdv_flag
-	orb_boundx(dev);
-	#endif
 	for (int n=0; n<ndev; n++)
 	{
 		cudaSetDevice(n);
@@ -529,6 +526,7 @@ void solve(Grid* dev, double time, double dt)
 	}
 
 	#if ndim>2
+	boundz(dev);
 	for (int n=0; n<ndev; n++)
 	{
 		cudaSetDevice(n);
@@ -536,8 +534,6 @@ void solve(Grid* dev, double time, double dt)
 		nx = dev[n].xres;
 		ny = dev[n].yres;
 		nz = dev[n].zres;
-
-		boundz<<< dim3(nx,ny,2), dim3(zpad,1,1), 0, dev[n].stream >>>(dev[n]);
 
 		sourcez<<< dim3((nx+bsz-1)/bsz,ny,dev[n].zarr), bsz, 0, dev[n].stream >>> (dev[n], hdt, 0.0, false);
 
@@ -549,6 +545,7 @@ void solve(Grid* dev, double time, double dt)
 	#endif
 
 	#if ndim>1
+	boundy(dev);
 	for (int n=0; n<ndev; n++)
 	{
 		cudaSetDevice(n);
@@ -556,8 +553,6 @@ void solve(Grid* dev, double time, double dt)
 		nx = dev[n].xres;
 		ny = dev[n].yres;
 		nz = dev[n].zres;
-
-		boundy<<< dim3(nx,nz,2), dim3(ypad,1,1), 0, dev[n].stream >>>(dev[n]);
 
 		sourcey<<< dim3((nx+bsz-1)/bsz,dev[n].yarr,nz), bsz, 0, dev[n].stream >>> (dev[n], hdt, 0.0, false);
 

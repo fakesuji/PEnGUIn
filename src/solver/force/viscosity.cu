@@ -176,21 +176,16 @@ void viscosity_tensor_evaluation(Grid* dev)
 {
 	int nx, ny, nz;
 
+	#if ndim>2
+	boundz(dev);
+	#endif
+	#if ndim>1
+	boundy(dev);
+	#endif
 	boundx(dev);
 	for (int n=0; n<ndev; n++)
 	{
 		cudaSetDevice(n);
-
-		nx = dev[n].xres;
-		ny = dev[n].yres;
-		nz = dev[n].zres;
-
-		#if ndim>1
-		boundy<<< dim3(nx,nz,2), dim3(ypad,1,1), 0, dev[n].stream >>>(dev[n]);
-		#endif
-		#if ndim>2
-		boundz<<< dim3(nx,ny,2), dim3(zpad,1,1), 0, dev[n].stream >>>(dev[n]);
-		#endif
 
 		nx = dev[n].xarr-2;
 		#if ndim>1
