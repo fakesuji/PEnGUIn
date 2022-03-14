@@ -55,8 +55,8 @@ const int xarr = xres + 2*xpad;
 const int yarr = yres + 2*ypad;
 const int zarr = zres + 2*zpad;
 
-const int x_xdiv = 432;
-const int x_ydiv = 1;
+const int x_xdiv = 48;
+const int x_ydiv = 8;
 const int x_zdiv = 1;
 
 const int x_xthd = x_xdiv + 2*xpad;
