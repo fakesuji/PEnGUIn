@@ -620,10 +620,6 @@ __global__ void source_all(Grid G, double dt)
 		get_fict(xc,yc,zc,u,v,w,fx,fy,fz);
 		#endif
 
-		//tx = gx;
-		//get_grav(G.get_xc(i),yc,zc,G.planets,0.0,gx,gy,gz);
-		//if (tx!=gx) printf("%f %f\n",tx,gx);
-
 		u += (gx+fx)*dt;
 
 		G.C[ind].u = u;
@@ -651,72 +647,9 @@ void source_all(Grid* dev, double dt)
 	return;
 }
 
-__global__ void source_tmp(Grid G, double dt)
-{
-	int i = threadIdx.x + blockIdx.x*blockDim.x + xpad;
-	int j = threadIdx.y + blockIdx.y*blockDim.y + ypad;
-	int k = threadIdx.z + blockIdx.z*blockDim.z + zpad;
-
-	double u,v,w;
-	double xc,yc,zc;
-	double fx,fy,fz;
-	double gx,gy,gz;
-	int ind;
-
-	if (i>=xpad && i<G.xarr-xpad)
-	if (j>=ypad && j<G.yarr-ypad)
-	if (k>=zpad && k<G.zarr-zpad)
-	{		
-		ind = G.get_ind(i,j,k);
-		u = G.C[ind].u;
-		v = G.C[ind].v;
-		w = G.C[ind].w;
-
-		xc = G.get_xc(i);
-		#if ndim > 1
-		yc = G.get_yc(j);
-		#else
-		yc = 0.0;
-		#endif
-		#if ndim > 2
-		zc = G.get_zc(k);
-		#else
-		zc = 0.0;
-		#endif
-		
-		get_grav(xc,yc,zc,G.planets,dt,gx,gy,gz);
-		get_fict(xc,yc,zc,u,v,w,fx,fy,fz);
-
-		u += (gx+fx)*dt;
-
-		G.C[ind].u = u;
-	}
-
-	return;
-}
-
-void source_tmp(Grid* dev, double dt)
-{
-	int bsz = 1024;
-	int nx,ny,nz;
-	for (int n=0; n<ndev; n++)
-	{
-		cudaSetDevice(n);
-
-		nx = dev[n].xres;
-		ny = dev[n].yres;
-		nz = dev[n].zres;
-
-		source_tmp<<< dim3((nx+bsz-1)/bsz,ny,nz), bsz, 0, dev[n].stream >>> (dev[n], dt);
-	}
-	return;
-}
-
 void solve(Grid* dev, double time, double dt)
 {
 	double hdt = 0.5*dt;
-	int nx, ny, nz;
-	int bsz = 1024;
 
 	#ifdef visc_flag
 	apply_viscosity(dev,hdt);
