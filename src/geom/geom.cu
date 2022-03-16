@@ -1,4 +1,4 @@
-__host__ __device__ double get_dv_dr(int geom, double ra, double dr)
+double get_dv_dr(int geom, double ra, double dr)
 {
 	if 	(geom==5)
 	{
@@ -12,7 +12,7 @@ __host__ __device__ double get_dv_dr(int geom, double ra, double dr)
 	else return 1.0;
 }
 
-__host__ __device__ double get_volume(int geom, double ra, double dr)
+double get_volume(int geom, double ra, double dr)
 {
 	return dr*get_dv_dr(geom,ra,dr);
 }

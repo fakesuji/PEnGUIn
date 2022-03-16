@@ -72,22 +72,6 @@ struct Cell
 		v = 0.0;
 		w = 0.0;
 	}
-	__host__ __device__ void conservative(double gamm, double vol)
-	{
-		u *= r*vol;
-		v *= r*vol;
-		w *= r*vol;
-		p *= vol/gamm;
-		r *= vol;
-	}
-	__host__ __device__ void primitive(double gamm, double vol)
-	{
-		u /= r;
-		v /= r;
-		w /= r;
-		p /= vol/gamm;
-		r /= vol;
-	}
 };
 
 struct body
@@ -153,21 +137,12 @@ struct Grid
 
 	body* planets;
 
-	__host__ __device__ int get_j_shf(int i, int j, int k)
-	{
-		int ypad = (yarr-yres)/2;
-		int j_shf = (j-ypad - orb_shf[i+xarr*k])%yres;
-		if (j_shf<0) j_shf += yres;
-		j_shf += ypad;
-		return j_shf;
-	}
-
 	__host__ __device__ int get_ind(int i, int j, int k)
 	{
-		//return i + xarr*get_j_shf(i,j,k) + xarr*yarr*k;
 		return i + xarr*j + xarr*yarr*k;
 	}
 
+	////////////////////////////////////////
 	__host__ __device__ double get_xa(int i)
 	{
 		return xa[i+xbgn];
@@ -180,7 +155,7 @@ struct Grid
 	{
 		return 0.5*(xa[i+1+xbgn]+xa[i+xbgn]);
 	}
-
+	////////////////////////////////////////
 	__host__ __device__ double get_ya(int j)
 	{
 		return ya[j+ybgn];
@@ -193,35 +168,7 @@ struct Grid
 	{
 		return 0.5*(ya[j+1+ybgn]+ya[j+ybgn]);
 	}
-/*
-	__host__ __device__ double get_ya(int i, int j, int k)
-	{
-		int ypad = (yarr-yres)/2;
-		int j_shf = (j-ypad + orb_shf[i+xarr*k])%yres;
-		if (j_shf<0) j_shf += yres;
-		j_shf += ypad;
-
-		return ya[j_shf+ybgn];
-	}
-	__host__ __device__ double get_yv(int i, int j, int k)
-	{
-		int ypad = (yarr-yres)/2;
-		int j_shf = (j-ypad + orb_shf[i+xarr*k])%yres;
-		if (j_shf<0) j_shf += yres;
-		j_shf += ypad;
-
-		return yv[j_shf+ybgn];
-	}
-	__host__ __device__ double get_yc(int i, int j, int k)
-	{
-		int ypad = (yarr-yres)/2;
-		int j_shf = (j-ypad + orb_shf[i+xarr*k])%yres;
-		if (j_shf<0) j_shf += yres;
-		j_shf += ypad;
-
-		return 0.5*(ya[j_shf+1+ybgn]+ya[j_shf+ybgn]);
-	}
-*/
+	////////////////////////////////////////
 	__host__ __device__ double get_za(int k)
 	{
 		return za[k+zbgn];
@@ -234,7 +181,7 @@ struct Grid
 	{
 		return 0.5*(za[k+1+zbgn]+za[k+zbgn]);
 	}
-
+	////////////////////////////////////////
 	__host__ __device__ double get_r(int i, int j, int k)
 	{
 		return C[get_ind(i,j,k)].r;
@@ -255,7 +202,7 @@ struct Grid
 	{
 		return C[get_ind(i,j,k)].w;
 	}
-
+	////////////////////////////////////////
 	__host__ __device__ Cell get_cell(int i, int j, int k)
 	{
 		return C[get_ind(i,j,k)];
@@ -265,7 +212,7 @@ struct Grid
 		C[get_ind(i,j,k)].copy(W);
 		return;
 	}
-
+	////////////////////////////////////////
 	__host__ __device__ void write_r(int i, int j, int k, double r)
 	{
 		C[get_ind(i,j,k)].r=r;
@@ -291,7 +238,7 @@ struct Grid
 		C[get_ind(i,j,k)].w=w;
 		return;
 	}
-
+	////////////////////////////////////////
 	__host__ __device__ double get_rot(int i, int k)
 	{
 		return orb_rot[i+xarr*k];
@@ -301,6 +248,7 @@ struct Grid
 		orb_rot[i+xarr*k] = rot;
 		return;
 	}
+	////////////////////////////////////////
 	__host__ __device__ double get_res(int i, int k)
 	{
 		return orb_res[i+xarr*k];
@@ -310,6 +258,7 @@ struct Grid
 		orb_res[i+xarr*k] = res;
 		return;
 	}
+	////////////////////////////////////////
 	__host__ __device__ int get_shf(int i, int k)
 	{
 		return orb_shf[i+xarr*k];
@@ -319,6 +268,7 @@ struct Grid
 		orb_shf[i+xarr*k] = shf;
 		return;
 	}
+	////////////////////////////////////////
 	__host__ __device__ int get_inc(int i, int k)
 	{
 		return orb_inc[i+xarr*k];
@@ -328,6 +278,7 @@ struct Grid
 		orb_inc[i+xarr*k] = inc;
 		return;
 	}
+	////////////////////////////////////////
 };
 
 /*

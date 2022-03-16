@@ -3,7 +3,6 @@
 
 #include "parameters.h"
 #include "structs.h"
-#include "geom.h"
 #include "EOS.h"
 #include "init.h"
 #include "orbit.h"
@@ -18,6 +17,25 @@ __device__ int jlim(int j, int jmax)
 	j = j%jmax;
 	if (j<0) j += jmax;
 	return j;
+}
+
+__device__ double get_dv_dr_dev(int geom, double ra, double dr)
+{
+	if 	(geom==5)
+	{
+		if (dr<1.0e-4) return sin(ra+0.5*dr);
+		else           return (cos(ra)-cos(ra+dr))/dr;
+	}
+	//else if (geom==4) return 1.0;	
+	//else if (geom==3) return 1.0;
+	else if (geom==2) return ra*ra + ra*dr + dr*dr/3.0;
+	else if (geom==1) return ra + dr/2.0;
+	else return 1.0;
+}
+
+__device__ double get_volume_dev(int geom, double ra, double dr)
+{
+	return dr*get_dv_dr_dev(geom,ra,dr);
 }
 
 void syncallstreams(Grid* dev)
