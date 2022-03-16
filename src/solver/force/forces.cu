@@ -214,6 +214,7 @@ __device__ void get_grav(double rad, double azi, double pol,
 			gy += gy_tmp;
 			gz += gz_tmp;
 		}
+		if (pol < zmin) {gz *= -1.0;}
 	#endif
 	return;
 }
@@ -244,7 +245,7 @@ __device__ void get_fict(double rad, double azi, double pol,
 		fx = v*v/rad + w*w/rad;
 		fy = 0.0;
 		fz = v*v/rad/tan(pol);
-
+		if (pol < zmin) {fz *= -1.0;}
 	#endif
 	return;
 }

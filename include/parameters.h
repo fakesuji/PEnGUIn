@@ -67,7 +67,7 @@ const int y_zdiv = 1;
 
 const int y_ythd = y_ydiv + 2*ypad;
 
-const int z_xdiv = 16;
+const int z_xdiv = 12;
 const int z_ydiv = 1;
 const int z_zdiv = 16;
 
@@ -129,11 +129,11 @@ const int bound_top = 2;
 
 const double p_beta = 7.0/7.0;                             // temperature ~ r^-p_beta
 #if ndim==3
-const double p_alpha = 1.5 - 0.5*p_beta + 1.5;          // midplane density ~ r^-p_alpha (isothermal limit)
+const double p_alpha = 0.5 - 0.5*p_beta + 1.5;          // midplane density ~ r^-p_alpha (isothermal limit)
 #else 
 const double p_alpha = 0.5;                             // surface density ~ r^-p_alpha
 #endif 
-const double ss_alpha = 0.1;                            // alpha-viscosity
+const double ss_alpha = 0.01;                            // alpha-viscosity
 const double sc_h = 0.05;                              // scale height at r=1, normalized to that at r = 100
 
 #if ndim==3
