@@ -31,7 +31,7 @@ const double smallr = 1.0e-14;
 
 const int std_thd = 1024;
 
-#define ndim 2
+#define ndim 3
 
 const int npad = 2;
 
@@ -47,9 +47,9 @@ const int zpad = npad;
 const int zpad = 0;
 #endif
 
-const int xres = 864;
-const int yres = 2016;
-const int zres = 1;
+const int xres = 432;
+const int yres = 1008;
+const int zres = 32;
 
 const int xarr = xres + 2*xpad;
 const int yarr = yres + 2*ypad;
@@ -69,7 +69,7 @@ const int y_ythd = y_ydiv + 2*ypad;
 
 const int z_xdiv = 16;
 const int z_ydiv = 1;
-const int z_zdiv = 24;
+const int z_zdiv = 16;
 
 const int z_zthd = z_zdiv + 2*zpad;
 
@@ -87,7 +87,7 @@ const double sav_interval = 1.0*twopi;
 const double sta_time = 0.0;
 const double end_time = 1.0*twopi;
 
-const int prt_interval = 1000;
+const int prt_interval = 100;
 const int max_step = 1000000000;
 
 //=======================================================================
@@ -134,7 +134,7 @@ const double p_alpha = 1.5 - 0.5*p_beta + 1.5;          // midplane density ~ r^
 const double p_alpha = 0.5;                             // surface density ~ r^-p_alpha
 #endif 
 const double ss_alpha = 0.1;                            // alpha-viscosity
-const double sc_h = 0.025;                              // scale height at r=1, normalized to that at r = 100
+const double sc_h = 0.05;                              // scale height at r=1, normalized to that at r = 100
 
 #if ndim==3
 const double Sigma_0 = 0.1*MMSN_1AU/(sqrt_hpi*sc_h);    // midplane density at r=1 in units of M_solar/AU^3
@@ -168,9 +168,9 @@ const double ymax = twopi;
 const double zmin = hpi-4.0*sc_h;
 const double zmax = hpi;
 
-#define geomx 1
-#define geomy 3
-#define geomz 0
+#define geomx 2
+#define geomy 4
+#define geomz 5
 
 const int gridx = 1;
 const int gridy = 0;

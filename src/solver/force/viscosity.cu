@@ -16,7 +16,7 @@ __global__ void viscous_tensor(Grid G)
 	s = 1;
 	#elif ndim==2
 	s = 3;
-	#elif nidm==3
+	#elif ndim==3
 	s = 6;
 	#endif
 
@@ -117,7 +117,7 @@ __global__ void viscous_force(Grid G, double dt)
 	s = 1;
 	#elif ndim==2
 	s = 3;
-	#elif nidm==3
+	#elif ndim==3
 	s = 6;
 	#endif
 
