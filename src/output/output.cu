@@ -17,7 +17,23 @@ string create_label()
 	else if (ndim==2) label = int_to_string(xres)+"x"+int_to_string(yres);
 	else if (ndim==3) label = int_to_string(xres)+"x"+int_to_string(yres)+"x"+int_to_string(zres);
 	
-	label += "_xRange_"+int_to_string(xmin*100.0)+"_"+int_to_string(xmax*100.0);
+	label += "_h"+int_to_string(1000.0*sc_h);
+
+	if (n_planet>0)
+	{
+		if (planet_mass>JupiterMass)
+		{
+			label += "_p"+int_to_string(planet_mass/JupiterMass)+"J";
+		}
+		else
+		{
+			label += "_p"+int_to_string(planet_mass/EarthMass)+"E";
+		}
+	}
+
+	#ifdef visc_flag
+	label += "_a"+int_to_string(log10(ss_alpha));
+	#endif
 	
 	#ifdef OrbAdv_flag
 	label += "_OA";

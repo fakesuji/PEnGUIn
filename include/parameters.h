@@ -83,9 +83,9 @@ const int ndev = 1;
 // Temporal parameters
 //=======================================================================
 
-const double sav_interval = 10.0*twopi;
+const double sav_interval = 1.0*twopi;
 const double sta_time = 0.0;
-const double end_time = 1000.0*twopi;
+const double end_time = 1.0*twopi;
 
 const int prt_interval = 1000;
 const int max_step = 1000000000;
@@ -94,7 +94,7 @@ const int max_step = 1000000000;
 // Hydro parameters
 //=======================================================================
 
-#define recon_flag 1
+#define recon_flag 0
 
 #define EOS_flag 0
 #define internal_e_flag 1

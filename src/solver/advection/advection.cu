@@ -74,7 +74,7 @@ __device__ Cell advection(int geom, double* xa, double* dx, double* dv, int npad
 	return Del;
 }
 
-__global__ void advecy(Grid G, double dt)
+__global__ void advecty(Grid G, double dt)
 {
 	__shared__ double ya[y_ythd+1], dy[y_ythd], yv[y_ythd];
 	__shared__ double r[y_ythd*y_xdiv], p[y_ythd*y_xdiv], u[y_ythd*y_xdiv], v[y_ythd*y_xdiv], w[y_ythd*y_xdiv];
@@ -142,7 +142,7 @@ __global__ void advecy(Grid G, double dt)
 	return;
 }
 
-__global__ void updadv(Grid G, double dt)
+__global__ void advect_update(Grid G, double dt)
 {
 	int i = threadIdx.x + blockIdx.x*blockDim.x + xpad;
 	int j = threadIdx.y + blockIdx.y*blockDim.y + ypad;
@@ -181,4 +181,24 @@ __global__ void updadv(Grid G, double dt)
 	}
 
 	return;
+}
+
+void advecty(Grid* dev, double dt)
+{
+	int nx,ny,nz;
+
+	boundy(dev);
+	for (int n=0; n<ndev; n++)
+	{
+		cudaSetDevice(n);
+
+		nx = dev[n].xres;
+		ny = dev[n].yres;
+		nz = dev[n].zres;
+
+		advecty<<< dim3(ny/y_ydiv,nx/y_xdiv,nz/y_zdiv), dim3(y_ythd,y_xdiv,y_zdiv), 2*sizeof(double)*y_ythd*y_xdiv*y_zdiv, dev[n].stream >>>
+		      (dev[n], dt);
+
+		advect_update<<< dim3(nx/x_xdiv,ny,nz), x_xthd, 0, dev[n].stream >>> (dev[n], dt);
+	}
 }

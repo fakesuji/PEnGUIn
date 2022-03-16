@@ -92,3 +92,18 @@ __global__ void killwave(Grid G, double dt)
 	}
 	return;
 }
+
+void killwave(Grid* dev, double dt)
+{
+	int nx, ny, nz;
+	for (int n=0; n<ndev; n++)
+	{
+		cudaSetDevice(n);
+
+		nx = dev[n].xres;
+		ny = dev[n].yres;
+		nz = dev[n].zres;
+
+		killwave<<< dim3(nx/x_xdiv,ny/x_ydiv,nz/x_zdiv), dim3(x_xthd,x_ydiv,x_zdiv), 0, dev[n].stream >>> (dev[n],dt);
+	}
+}

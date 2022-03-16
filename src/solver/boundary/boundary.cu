@@ -237,14 +237,14 @@ void boundx(Grid* dev)
 		cudaMemcpyAsync( dev[n+1].BuffL, dev[n].BuffR, xpad*yarr*zarr*sizeof(Cell), cudaMemcpyDeviceToDevice, dev[n].stream);
 	}
 		cudaMemcpyAsync( dev[0].BuffL, dev[ndev-1].BuffR, xpad*yarr*zarr*sizeof(Cell), cudaMemcpyDeviceToDevice, dev[ndev-1].stream);
-	for (int n=0; n<ndev; n++) cudaStreamSynchronize(dev[n].stream);
+	syncallstreams(dev);
 
 	for (int n=0; n<ndev-1; n++)
 	{
 		cudaSetDevice(n+1);
 		dump_left<<< gdim, bdim, 0, dev[n+1].stream >>> (dev[n+1].xres, dev[n+1].xarr, dev[n+1].C, dev[n+1].BuffL);
 	}
-	for (int n=0; n<ndev; n++) cudaStreamSynchronize(dev[n].stream);
+	syncallstreams(dev);
 
 	////////////////////////////////
 
@@ -258,16 +258,14 @@ void boundx(Grid* dev)
 		cudaMemcpyAsync( dev[n-1].BuffR, dev[n].BuffL, xpad*yarr*zarr*sizeof(Cell), cudaMemcpyDeviceToDevice, dev[n].stream);
 	}
 		cudaMemcpyAsync( dev[ndev-1].BuffR, dev[0].BuffL, xpad*yarr*zarr*sizeof(Cell), cudaMemcpyDeviceToDevice, dev[0].stream);
-	for (int n=0; n<ndev; n++) cudaStreamSynchronize(dev[n].stream);
-
-	////////////////////////////////
+	syncallstreams(dev);
 
 	for (int n=1; n<ndev; n++)
 	{
 		cudaSetDevice(n-1);
 		dump_rght<<< gdim, bdim, 0, dev[n-1].stream >>> (dev[n-1].xres, dev[n-1].xarr, dev[n-1].C, dev[n-1].BuffR);
 	}
-	for (int n=0; n<ndev; n++) cudaStreamSynchronize(dev[n].stream);
+	syncallstreams(dev);
 
 	////////////////////////////////
 
@@ -292,7 +290,7 @@ void boundx(Grid* dev)
 		cudaSetDevice(0);
 		bound_x_left<<< dim3(dev[0].yarr,dev[0].zarr,1) , dim3(xpad,1,1) >>> (dev[0]);
 	}
-	for (int n=0; n<ndev; n++) cudaStreamSynchronize(dev[n].stream);
+	syncallstreams(dev);
 
 	return;
 }
@@ -306,7 +304,7 @@ void boundy(Grid* dev)
 		boundy<<< dim3(dev[n].xres,dev[n].zarr,2), dim3(ypad,1,1), 0, dev[n].stream >>>(dev[n]);
 	}
 
-	for (int n=0; n<ndev; n++) cudaStreamSynchronize(dev[n].stream);
+	syncallstreams(dev);
 
 	return;
 }
@@ -320,7 +318,7 @@ void boundz(Grid* dev)
 		boundz<<< dim3(dev[n].xres,dev[n].yres,2), dim3(zpad,1,1), 0, dev[n].stream >>>(dev[n]);
 	}
 
-	for (int n=0; n<ndev; n++) cudaStreamSynchronize(dev[n].stream);
+	syncallstreams(dev);
 
 	return;
 }

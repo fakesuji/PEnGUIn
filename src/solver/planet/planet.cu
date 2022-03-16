@@ -27,3 +27,13 @@ __global__ void planet_evo(body* planets, double time, double dt)
 	planets[n].z += planets[n].vz*dt;
 	return;
 }
+
+void evolve_planet(Grid* dev, double time, double dt)
+{
+	for (int n=0; n<ndev; n++)
+	{
+		cudaSetDevice(n);
+		planet_evo<<< 1, n_planet, 0, dev[n].stream >>> (dev[n].planets, time+dt, dt);
+	}
+	return;
+}

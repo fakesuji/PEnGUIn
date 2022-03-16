@@ -38,8 +38,12 @@ __global__ void viscous_tensor(Grid G)
 	wm = G.C[ind].w;
 
 	double dudx = (up-um)/dr;
+	#if ndim>1
 	double dvdx = (vp-vm)/dr;
+	#endif
+	#if ndim>2
 	double dwdx = (wp-wm)/dr;
+	#endif
 
 	#if ndim>1
 	double dphi = G.get_yc(j+1)-G.get_yc(j-1);
@@ -56,7 +60,9 @@ __global__ void viscous_tensor(Grid G)
 
 	double dudy = (up-um)/dphi/r;
 	double dvdy = (vp-vm)/dphi/r;
+	#if ndim>2
 	double dwdy = (wp-wm)/dphi/r;
+	#endif
 	#endif
 
 	#if ndim>2

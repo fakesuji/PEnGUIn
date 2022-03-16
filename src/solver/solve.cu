@@ -1,9 +1,5 @@
 #include <unistd.h>
 #include <iostream>
-#include <fstream>
-#include <sstream>
-#include <string>
-#include <math.h>
 
 #include "parameters.h"
 #include "structs.h"
@@ -22,6 +18,11 @@ __device__ int jlim(int j, int jmax)
 	j = j%jmax;
 	if (j<0) j += jmax;
 	return j;
+}
+
+void syncallstreams(Grid* dev)
+{
+	for (int n=0; n<ndev; n++) cudaStreamSynchronize(dev[n].stream);
 }
 
 #include "kill/killwave.cu"
@@ -377,7 +378,7 @@ __global__ void source(Grid G, double dt)
 	return;
 }
 
-__global__ void sourcex(Grid G, double dt, double t_sh, bool inplace)
+__global__ void sourcex(Grid G, double dt, bool inplace)
 {
 	int i = threadIdx.x + blockIdx.x*blockDim.x;
 	int j = threadIdx.y + blockIdx.y*blockDim.y + ypad;
@@ -392,14 +393,14 @@ __global__ void sourcex(Grid G, double dt, double t_sh, bool inplace)
 	if (j>=ypad && j<G.yarr-ypad)
 	if (k>=zpad && k<G.zarr-zpad)
 	{		
-		ind = i + G.xarr*j + G.xarr*G.yarr*k;
+		ind = G.get_ind(i,j,k);
 		u = G.C[ind].u;
 		v = G.C[ind].v;
 		w = G.C[ind].w;
 
 		xc = G.get_xc(i);
 		#if ndim > 1
-		yc = G.get_yc(j) + t_sh*G.orb_rot[i+G.xarr*k];
+		yc = G.get_yc(j);
 		#else
 		yc = 0.0;
 		#endif
@@ -418,7 +419,7 @@ __global__ void sourcex(Grid G, double dt, double t_sh, bool inplace)
 	return;
 }
 
-__global__ void sourcey(Grid G, double dt, double t_sh, bool inplace)
+__global__ void sourcey(Grid G, double dt, bool inplace)
 {
 	int i = threadIdx.x + blockIdx.x*blockDim.x + xpad;
 	int j = threadIdx.y + blockIdx.y*blockDim.y;
@@ -433,14 +434,14 @@ __global__ void sourcey(Grid G, double dt, double t_sh, bool inplace)
 	if (j>=0 && j<G.yarr)
 	if (k>=zpad && k<G.zarr-zpad)
 	{		
-		ind = i + G.xarr*j + G.xarr*G.yarr*k;
+		ind = G.get_ind(i,j,k);
 		u = G.C[ind].u;
 		v = G.C[ind].v;
 		w = G.C[ind].w;
 
 		xc = G.get_xc(i);
 		#if ndim > 1
-		yc = G.get_yc(j) + t_sh*G.orb_rot[i+G.xarr*k];
+		yc = G.get_yc(j);
 		#else
 		yc = 0.0;
 		#endif
@@ -458,7 +459,7 @@ __global__ void sourcey(Grid G, double dt, double t_sh, bool inplace)
 	return;
 }
 
-__global__ void sourcez(Grid G, double dt, double t_sh, bool inplace)
+__global__ void sourcez(Grid G, double dt, bool inplace)
 {
 	int i = threadIdx.x + blockIdx.x*blockDim.x + xpad;
 	int j = threadIdx.y + blockIdx.y*blockDim.y + ypad;
@@ -473,14 +474,14 @@ __global__ void sourcez(Grid G, double dt, double t_sh, bool inplace)
 	if (j>=ypad && j<G.yarr-ypad)
 	if (k>=0 && k<G.zarr)
 	{		
-		ind = i + G.xarr*j + G.xarr*G.yarr*k;
+		ind = G.get_ind(i,j,k);
 		u = G.C[ind].u;
 		v = G.C[ind].v;
 		w = G.C[ind].w;
 
 		xc = G.get_xc(i);
 		#if ndim > 1
-		yc = G.get_yc(j) + t_sh*G.orb_rot[i+G.xarr*k];
+		yc = G.get_yc(j);
 		#else
 		yc = 0.0;
 		#endif
@@ -498,15 +499,11 @@ __global__ void sourcez(Grid G, double dt, double t_sh, bool inplace)
 	return;
 }
 
-void solve(Grid* dev, double time, double dt)
+void evolvex(Grid* dev, double dt)
 {
 	double hdt = 0.5*dt;
 	int nx, ny, nz;
 	int bsz = 1024;
-
-	#ifdef visc_flag
-	apply_viscosity(dev,hdt);
-	#endif
 
 	boundx(dev);
 	for (int n=0; n<ndev; n++)
@@ -517,34 +514,22 @@ void solve(Grid* dev, double time, double dt)
 		ny = dev[n].yres;
 		nz = dev[n].zres;
 
-		sourcex<<< dim3((dev[n].xarr+bsz-1)/bsz,ny,nz), bsz, 0, dev[n].stream >>> (dev[n], hdt, 0.0, false);
+		sourcex<<< dim3((dev[n].xarr+bsz-1)/bsz,ny,nz), bsz, 0, dev[n].stream >>> (dev[n], hdt, false);
 
 		sweepx<<< dim3(nx/x_xdiv,ny/x_ydiv,nz/x_zdiv), dim3(x_xthd,x_ydiv,x_zdiv), 2*sizeof(double)*x_xthd*x_ydiv*x_zdiv, dev[n].stream >>>
 		      (dev[n], dt);
 
 		update<<< dim3(nx/x_xdiv,ny,nz), x_xthd, 0, dev[n].stream >>> (dev[n], dt, 0);
 	}
+	return;
+}
 
-	#if ndim>2
-	boundz(dev);
-	for (int n=0; n<ndev; n++)
-	{
-		cudaSetDevice(n);
+void evolvey(Grid* dev, double dt)
+{
+	double hdt = 0.5*dt;
+	int nx, ny, nz;
+	int bsz = 1024;
 
-		nx = dev[n].xres;
-		ny = dev[n].yres;
-		nz = dev[n].zres;
-
-		sourcez<<< dim3((nx+bsz-1)/bsz,ny,dev[n].zarr), bsz, 0, dev[n].stream >>> (dev[n], hdt, 0.0, false);
-
-		sweepz<<< dim3(nz/z_zdiv,nx/z_xdiv,ny/z_ydiv), dim3(z_zthd,z_xdiv,z_ydiv), 2*sizeof(double)*z_zthd*z_xdiv*z_ydiv, dev[n].stream >>>
-		      (dev[n], dt);
-
-		update<<< dim3(nx/x_xdiv,ny,nz), x_xthd, 0, dev[n].stream >>> (dev[n], dt, 2);
-	}
-	#endif
-
-	#if ndim>1
 	boundy(dev);
 	for (int n=0; n<ndev; n++)
 	{
@@ -554,92 +539,214 @@ void solve(Grid* dev, double time, double dt)
 		ny = dev[n].yres;
 		nz = dev[n].zres;
 
-		sourcey<<< dim3((nx+bsz-1)/bsz,dev[n].yarr,nz), bsz, 0, dev[n].stream >>> (dev[n], hdt, 0.0, false);
+		sourcey<<< dim3((nx+bsz-1)/bsz,dev[n].yarr,nz), bsz, 0, dev[n].stream >>> (dev[n], hdt, false);
 
 		sweepy<<< dim3(ny/y_ydiv,nx/y_xdiv,nz/y_zdiv), dim3(y_ythd,y_xdiv,y_zdiv), 2*sizeof(double)*y_ythd*y_xdiv*y_zdiv, dev[n].stream >>>
 		      (dev[n], dt);
 
 		update<<< dim3(nx/x_xdiv,ny,nz), x_xthd, 0, dev[n].stream >>> (dev[n], dt, 1);
 	}
+	return;
+}
+
+void evolvez(Grid* dev, double dt)
+{
+	double hdt = 0.5*dt;
+	int nx, ny, nz;
+	int bsz = 1024;
+
+	boundz(dev);
+	for (int n=0; n<ndev; n++)
+	{
+		cudaSetDevice(n);
+
+		nx = dev[n].xres;
+		ny = dev[n].yres;
+		nz = dev[n].zres;
+
+		sourcez<<< dim3((nx+bsz-1)/bsz,ny,dev[n].zarr), bsz, 0, dev[n].stream >>> (dev[n], hdt, false);
+
+		sweepz<<< dim3(nz/z_zdiv,nx/z_xdiv,ny/z_ydiv), dim3(z_zthd,z_xdiv,z_ydiv), 2*sizeof(double)*z_zthd*z_xdiv*z_ydiv, dev[n].stream >>>
+		      (dev[n], dt);
+
+		update<<< dim3(nx/x_xdiv,ny,nz), x_xthd, 0, dev[n].stream >>> (dev[n], dt, 2);
+	}
+	return;
+}
+
+__global__ void source_all(Grid G, double dt)
+{
+	int i = threadIdx.x + blockIdx.x*blockDim.x + xpad;
+	int j = threadIdx.y + blockIdx.y*blockDim.y + ypad;
+	int k = threadIdx.z + blockIdx.z*blockDim.z + zpad;
+
+	double u,v,w;
+	double xc,yc,zc;
+	double fx,fy,fz;
+	double gx,gy,gz;
+	int ind;
+
+	if (i>=xpad && i<G.xarr-xpad)
+	if (j>=ypad && j<G.yarr-ypad)
+	if (k>=zpad && k<G.zarr-zpad)
+	{		
+		ind = G.get_ind(i,j,k);
+		u = G.C[ind].u;
+		v = G.C[ind].v;
+		w = G.C[ind].w;
+
+		xc = G.get_xc(i);
+		#if ndim > 1
+		yc = G.get_yc(j);
+		#else
+		yc = 0.0;
+		#endif
+		#if ndim > 2
+		zc = G.get_zc(k);
+		#else
+		zc = 0.0;
+		#endif
+		
+		get_fict(xc,yc,zc,u,v,w,fx,fy,fz);
+		get_grav(xc,yc,zc,G.planets,0.0,gx,gy,gz);
+
+		#if ndim>1
+		v += (gy+fy)*dt;
+		get_fict(xc,yc,zc,u,v,w,fx,fy,fz);
+		#endif
+
+		#if ndim>2
+		w += (gz+fz)*dt;
+		get_fict(xc,yc,zc,u,v,w,fx,fy,fz);
+		#endif
+
+		//tx = gx;
+		//get_grav(G.get_xc(i),yc,zc,G.planets,0.0,gx,gy,gz);
+		//if (tx!=gx) printf("%f %f\n",tx,gx);
+
+		u += (gx+fx)*dt;
+
+		G.C[ind].u = u;
+		G.C[ind].v = v;
+		G.C[ind].w = w;
+	}
+
+	return;
+}
+
+void source_all(Grid* dev, double dt)
+{
+	int bsz = 1024;
+	int nx,ny,nz;
+	for (int n=0; n<ndev; n++)
+	{
+		cudaSetDevice(n);
+
+		nx = dev[n].xres;
+		ny = dev[n].yres;
+		nz = dev[n].zres;
+
+		source_all<<< dim3((nx+bsz-1)/bsz,ny,nz), bsz, 0, dev[n].stream >>> (dev[n], dt);
+	}
+	return;
+}
+
+__global__ void source_tmp(Grid G, double dt)
+{
+	int i = threadIdx.x + blockIdx.x*blockDim.x + xpad;
+	int j = threadIdx.y + blockIdx.y*blockDim.y + ypad;
+	int k = threadIdx.z + blockIdx.z*blockDim.z + zpad;
+
+	double u,v,w;
+	double xc,yc,zc;
+	double fx,fy,fz;
+	double gx,gy,gz;
+	int ind;
+
+	if (i>=xpad && i<G.xarr-xpad)
+	if (j>=ypad && j<G.yarr-ypad)
+	if (k>=zpad && k<G.zarr-zpad)
+	{		
+		ind = G.get_ind(i,j,k);
+		u = G.C[ind].u;
+		v = G.C[ind].v;
+		w = G.C[ind].w;
+
+		xc = G.get_xc(i);
+		#if ndim > 1
+		yc = G.get_yc(j);
+		#else
+		yc = 0.0;
+		#endif
+		#if ndim > 2
+		zc = G.get_zc(k);
+		#else
+		zc = 0.0;
+		#endif
+		
+		get_grav(xc,yc,zc,G.planets,dt,gx,gy,gz);
+		get_fict(xc,yc,zc,u,v,w,fx,fy,fz);
+
+		u += (gx+fx)*dt;
+
+		G.C[ind].u = u;
+	}
+
+	return;
+}
+
+void source_tmp(Grid* dev, double dt)
+{
+	int bsz = 1024;
+	int nx,ny,nz;
+	for (int n=0; n<ndev; n++)
+	{
+		cudaSetDevice(n);
+
+		nx = dev[n].xres;
+		ny = dev[n].yres;
+		nz = dev[n].zres;
+
+		source_tmp<<< dim3((nx+bsz-1)/bsz,ny,nz), bsz, 0, dev[n].stream >>> (dev[n], dt);
+	}
+	return;
+}
+
+void solve(Grid* dev, double time, double dt)
+{
+	double hdt = 0.5*dt;
+	int nx, ny, nz;
+	int bsz = 1024;
+
+	#ifdef visc_flag
+	apply_viscosity(dev,hdt);
+	#endif
+
+	evolvex(dev,dt);
+
+	#if ndim>2
+	evolvez(dev,dt);
+	#endif
+
+	#if ndim>1
+	evolvey(dev,dt);
 	#endif
 
 	#ifdef OrbAdv_flag
-	set_OrbAdv(dev, dt);
+	set_OrbAdv(dev,dt);
 	shift_OrbAdv(dev);
-	for (int n=0; n<ndev; n++)
-	{
-		cudaSetDevice(n);
-
-		nx = dev[n].xres;
-		ny = dev[n].yres;
-		nz = dev[n].zres;
-
-		boundy<<< dim3(nx,nz,2), dim3(ypad,1,1), 0, dev[n].stream >>>(dev[n]);
-		advecy<<< dim3(ny/y_ydiv,nx/y_xdiv,nz/y_zdiv), dim3(y_ythd,y_xdiv,y_zdiv), 2*sizeof(double)*y_ythd*y_xdiv*y_zdiv, dev[n].stream >>>
-		      (dev[n], dt);
-
-		updadv<<< dim3(nx/x_xdiv,ny,nz), x_xthd, 0, dev[n].stream >>> (dev[n], dt);
-	}
+	advecty(dev,dt);
 	#endif
 
-	for (int n=0; n<ndev; n++)
-	{
-		cudaSetDevice(n);
-		planet_evo<<< 1, n_planet, 0, dev[n].stream >>> (dev[n].planets, time+dt, dt);
-	}
-	for (int n=0; n<ndev; n++) cudaStreamSynchronize(dev[n].stream);
+	evolve_planet(dev,time,dt);
 
-	#if ndim>1
-	for (int n=0; n<ndev; n++)
-	{
-		cudaSetDevice(n);
+	source_all(dev,hdt);
 
-		nx = dev[n].xres;
-		ny = dev[n].yres;
-		nz = dev[n].zres;
-
-		sourcey<<< dim3((nx+bsz-1)/bsz,dev[n].yarr,nz), bsz, 0, dev[n].stream >>> (dev[n], hdt, 0.0, true);
-	}
+	#ifdef kill_flag
+	killwave(dev, dt);
 	#endif
 
-	#if ndim>2
-	for (int n=0; n<ndev; n++)
-	{
-		cudaSetDevice(n);
-
-		nx = dev[n].xres;
-		ny = dev[n].yres;
-		nz = dev[n].zres;
-
-		sourcez<<< dim3((nx+bsz-1)/bsz,ny,dev[n].zarr), bsz, 0, dev[n].stream >>> (dev[n], hdt, 0.0, true);
-	}
-	#endif
-
-	for (int n=0; n<ndev; n++)
-	{
-		cudaSetDevice(n);
-
-		nx = dev[n].xres;
-		ny = dev[n].yres;
-		nz = dev[n].zres;
-
-		sourcex<<< dim3((dev[n].xarr+bsz-1)/bsz,ny,nz), bsz, 0, dev[n].stream >>> (dev[n], hdt, 0.0, true);
-	}
-
-	for (int n=0; n<ndev; n++)
-	{
-		cudaSetDevice(n);
-
-		nx = dev[n].xres;
-		ny = dev[n].yres;
-		nz = dev[n].zres;
-
-		#ifdef kill_flag
-		killwave<<< dim3(nx/x_xdiv,ny/x_ydiv,nz/x_zdiv), dim3(x_xthd,x_ydiv,x_zdiv), 0, dev[n].stream >>> (dev[n],dt);
-		#endif
-	}
-	for (int n=0; n<ndev; n++) cudaStreamSynchronize(dev[n].stream);
-
+	syncallstreams(dev);
 	#ifdef visc_flag
 	viscosity_tensor_evaluation(dev);
 	apply_viscosity(dev,hdt);
