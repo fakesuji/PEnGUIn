@@ -21,7 +21,7 @@ string create_label()
 
 	if (n_planet>0)
 	{
-		if (planet_mass>JupiterMass)
+		if (planet_mass>=JupiterMass)
 		{
 			label += "_p"+int_to_string(planet_mass/JupiterMass)+"J";
 		}
