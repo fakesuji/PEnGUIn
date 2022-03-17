@@ -53,52 +53,49 @@ __global__ void boundy(Grid G)
 	int i = blockIdx.x + xpad;
 	int k = blockIdx.y;
 	int ib = blockIdx.z;
-
-	int mx = G.xarr;
-	int my = G.yarr;
 	Cell T;
 
 	if (ib==0)
 	{
 		if (bound_bak == 3)
 		{
-			T.copy(G.C[glo_idx(i,G.yres+n,k,mx,my)]);
+			T.copy(G.get_cell(i,G.yres+n,k));
 		}
 		else if (bound_bak == 2)
 		{
-			T.copy(G.C[glo_idx(i,2*ypad-1-n,k,mx,my)]);
+			T.copy(G.get_cell(i,2*ypad-1-n,k));
 			T.v *= -1.0;
 		}
 		else if (bound_bak == 1)
 		{
-			T.copy(G.C[glo_idx(i,ypad,k,mx,my)]);
+			T.copy(G.get_cell(i,ypad,k));
 		}
 		else if (bound_bak == 0)
 		{
 			T = init_C(G.get_xc(i),G.get_yc(n),G.get_zc(k));
 		}
-		G.C[glo_idx(i,n,k,mx,my)].copy(T);
+		G.C[G.get_ind(i,n,k)].copy(T);
 	}
 	else if (ib==1)
 	{
 		if (bound_frn == 3)
 		{
-			T.copy(G.C[glo_idx(i,ypad+n,k,mx,my)]);
+			T.copy(G.get_cell(i,ypad+n,k));
 		}
 		else if (bound_frn == 2)
 		{
-			T.copy(G.C[glo_idx(i,G.yres+ypad-1-n,k,mx,my)]);
+			T.copy(G.get_cell(i,G.yres+ypad-1-n,k));
 			T.v *= -1.0;
 		}
 		else if (bound_frn == 1)
 		{
-			T.copy(G.C[glo_idx(i,G.yres+ypad-1,k,mx,my)]);
+			T.copy(G.get_cell(i,G.yres+ypad-1,k));
 		}
 		else if (bound_frn == 0)
 		{
 			T = init_C(G.get_xc(i),G.get_yc(G.yres+ypad+n),G.get_zc(k));
 		}
-		G.C[glo_idx(i,G.yres+ypad+n,k,mx,my)].copy(T);
+		G.C[G.get_ind(i,G.yres+ypad+n,k)].copy(T);
 	}
 	return;
 }
@@ -164,7 +161,7 @@ __global__ void buff_left(int x_res, int x_arr, Cell* C, Cell* B)
 	int j = threadIdx.y + blockIdx.y*blockDim.y;
 	int k = threadIdx.z + blockIdx.z*blockDim.z;
 
-	B[i + xpad*(j + yres*k)].copy(C[i+xpad + x_arr*(j + yarr*k)]);
+	B[i + xpad*(j + yarr*k)].copy(C[i+xpad + x_arr*(j + yarr*k)]);
 	return;
 }
 
@@ -174,7 +171,7 @@ __global__ void buff_rght(int x_res, int x_arr, Cell* C, Cell* B)
 	int j = threadIdx.y + blockIdx.y*blockDim.y;
 	int k = threadIdx.z + blockIdx.z*blockDim.z;
 
-	B[i + xpad*(j + yres*k)].copy(C[i + x_res + x_arr*(j + yarr*k)]);
+	B[i + xpad*(j + yarr*k)].copy(C[i + x_res + x_arr*(j + yarr*k)]);
 	return;
 }
 
@@ -184,7 +181,7 @@ __global__ void dump_left(int x_res, int x_arr, Cell* C, Cell* B)
 	int j = threadIdx.y + blockIdx.y*blockDim.y;
 	int k = threadIdx.z + blockIdx.z*blockDim.z;
 
-	C[i + x_arr*(j + yarr*k)].copy(B[i + xpad*(j + yres*k)]);
+	C[i + x_arr*(j + yarr*k)].copy(B[i + xpad*(j + yarr*k)]);
 	return;
 }
 
@@ -194,7 +191,7 @@ __global__ void dump_rght(int x_res, int x_arr, Cell* C, Cell* B)
 	int j = threadIdx.y + blockIdx.y*blockDim.y;
 	int k = threadIdx.z + blockIdx.z*blockDim.z;
 
-	C[i+x_res+xpad + x_arr*(j + yarr*k)].copy(B[i + xpad*(j + yres*k)]);
+	C[i+x_res+xpad + x_arr*(j + yarr*k)].copy(B[i + xpad*(j + yarr*k)]);
 	return;
 }
 
