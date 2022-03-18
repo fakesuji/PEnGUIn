@@ -6,6 +6,7 @@
 #include "EOS.h"
 #include "init.h"
 #include "orbit.h"
+#include "planet.h"
 
 __device__ int glo_idx(int i, int j, int k, int imax, int jmax)
 {
@@ -45,7 +46,6 @@ void syncallstreams(Grid* dev)
 
 #include "kill/killwave.cu"
 #include "force/forces.cu"
-#include "planet/planet.cu"
 #include "recon/recon.cu"
 #include "boundary/boundary.cu"
 

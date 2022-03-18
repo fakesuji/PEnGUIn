@@ -8,14 +8,15 @@
 
 using namespace std;
 
+#include "parameters.h"
 #include "structs.h"
 #include "util.h"
-#include "parameters.h"
 #include "output.h"
 #include "timestep.h"
 #include "geom.h"
 #include "init.h"
 #include "orbit.h"
+#include "planet.h"
 #include "solver.h"
 
 void cpy_grid_DevicetoHost(Grid* hst, Grid* dev)
@@ -152,6 +153,15 @@ void save_check_point(ofstream &check_point, string fname, int &sstep, double cu
 
 int main(int narg, char *args[])
 {
+	double sta_time = 0.0;
+	double cur_time = sta_time;
+	double sav_time = 0.0;
+	double dt = end_time-cur_time;
+	int nstep = 0;
+	int sstep = 0;
+	int tmp;
+	ofstream check_point;
+
 	string label=create_label();
 	//string path =path_to_cwd()+"/binary/";
 	string path = "/mnt/penguin/fung/p2/";
@@ -166,46 +176,32 @@ int main(int narg, char *args[])
 
 	init(hst);
 	
-	for (int i=0; i<ndev; i++)
-	for (int n=0; n<n_planet; n++)
+	if (narg==3) 
 	{
-		hst[i].planets[n].m = planet_mass;
-		hst[i].planets[n].x = planet_radius;
-		hst[i].planets[n].y = pi;
-		hst[i].planets[n].z = hpi;
-
-		hst[i].planets[n].vx = 0.0;
-		hst[i].planets[n].vy = pow(hst[i].planets[n].x,-1.5);
-		hst[i].planets[n].vz = 0.0;
-		#if ndim==2
-		hst[i].planets[n].rs = 0.5*sc_h;
-		#else
-		hst[i].planets[n].rs = 0.5*pow(planet_mass,1.0/3.0);
+		fname = args[1];
+		sstep = atoi(args[2]);
+		sta_time = load_grid(hst,fname);
+		cur_time = sta_time;
+		sstep++;
+	}
+	else
+	{
+		fname = path+"binary_"+label+"_"+frame_num(sstep);
+		#ifdef dump_flag
+		save_check_point(check_point, fname, sstep, cur_time, hst);
+		sstep++;
 		#endif
 	}
 
-	cpy_grid_HosttoDevice(hst, dev);
-
 	///////////////////////////////////////////////////////////
+
+	init_planet(hst,cur_time);
+
+	cpy_grid_HosttoDevice(hst, dev);
 
 	init_OrbAdv(dev);
 
 	///////////////////////////////////////////////////////////
-
-	double cur_time = sta_time;
-	double sav_time = 0.0;
-	double dt = end_time-cur_time;
-	int nstep = 0;
-	int sstep = 0;
-	int tmp;
-
-	ofstream check_point;
-	fname = path+"binary_"+label+"_"+frame_num(sstep);
-	#ifdef dump_flag
-	cpy_grid_DevicetoHost(hst, dev);
-	save_check_point(check_point, fname, sstep, cur_time, hst);
-	sstep++;
-	#endif
 
 	auto clock = chrono::high_resolution_clock::now();
 	auto begin = chrono::high_resolution_clock::now();

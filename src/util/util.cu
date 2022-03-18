@@ -111,6 +111,12 @@ void close_output_file(ofstream& wfile)
 	return;
 }
 
+void close_output_file(ifstream& wfile)
+{
+	wfile.close();
+	return;
+}
+
 void open_binary_file(ofstream &wfile, string sfname)
 {
 	wfile.open(sfname.c_str(), ios::out | ios::binary);

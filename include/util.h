@@ -18,6 +18,7 @@ void syncdestreams(int,Grid*);
 void open_output_file(ofstream&,string);
 void append_output_file(ofstream&,string);
 void close_output_file(ofstream&);
+void close_output_file(ifstream&);
 void open_binary_file(ofstream&,string);
 void open_binary_file(ifstream&,string);
 

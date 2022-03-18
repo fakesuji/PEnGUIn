@@ -67,7 +67,7 @@ const int y_zdiv = 1;
 
 const int y_ythd = y_ydiv + 2*ypad;
 
-const int z_xdiv = 12;
+const int z_xdiv = 16;
 const int z_ydiv = 1;
 const int z_zdiv = 16;
 
@@ -83,9 +83,8 @@ const int ndev = 1;
 // Temporal parameters
 //=======================================================================
 
-const double sav_interval = 1.0*twopi;
-const double sta_time = 0.0;
-const double end_time = 1.0*twopi;
+const double sav_interval = 10.0*twopi;
+const double end_time = 1000.0*twopi;
 
 const int prt_interval = 100;
 const int max_step = 1000000000;
@@ -133,7 +132,7 @@ const double p_alpha = 0.5 - 0.5*p_beta + 1.5;          // midplane density ~ r^
 #else 
 const double p_alpha = 0.5;                             // surface density ~ r^-p_alpha
 #endif 
-const double ss_alpha = 0.01;                            // alpha-viscosity
+const double ss_alpha = 0.001;                            // alpha-viscosity
 const double sc_h = 0.05;                              // scale height at r=1, normalized to that at r = 100
 
 #if ndim==3
@@ -152,7 +151,7 @@ const double frame_omega = 1.0;
 //=======================================================================
 
 const int n_planet = 1;
-const double planet_mass = 11.0*JupiterMass;
+const double planet_mass = 1.0*JupiterMass;
 const double planet_radius = 1.0;
 
 const double ramp_time = twopi*10.0;

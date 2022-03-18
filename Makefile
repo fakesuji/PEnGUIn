@@ -5,10 +5,10 @@ SDIR=./src
 CC=nvcc -arch=native -O3 -std=c++11
 CFLAGS=-I$(IDIR)
 
-_DEPS = parameters.h structs.h util.h geom.h EOS.h output.h timestep.h init.h orbit.h solver.h
+_DEPS = parameters.h structs.h util.h geom.h EOS.h output.h timestep.h init.h orbit.h planet.h solver.h
 DEPS = $(patsubst %,$(IDIR)/%,$(_DEPS))
 
-_OBJ = util.o geom.o EOS.o output.o timestep.o init.o orbit.o solver.o main.o
+_OBJ = util.o geom.o EOS.o output.o timestep.o init.o orbit.o planet.o solver.o main.o
 OBJ = $(patsubst %,$(ODIR)/%,$(_OBJ))
 
 all: penguin
@@ -40,7 +40,10 @@ $(ODIR)/init.o: $(SDIR)/init/init.cu $(DEPS)
 $(ODIR)/orbit.o: $(SDIR)/orbit/orbit.cu $(DEPS)
 	$(CC) --device-c -o $@ $< $(CFLAGS)
 
-$(ODIR)/solver.o: $(SDIR)/solver/solve.cu $(SDIR)/solver/riemann/* $(SDIR)/solver/recon/* $(SDIR)/solver/boundary/* $(SDIR)/solver/force/* $(SDIR)/solver/kill/* $(SDIR)/solver/planet/* $(SDIR)/solver/advection/* $(DEPS)
+$(ODIR)/planet.o: $(SDIR)/planet/planet.cu $(DEPS)
+	$(CC) --device-c -o $@ $< $(CFLAGS)
+
+$(ODIR)/solver.o: $(SDIR)/solver/solve.cu $(SDIR)/solver/riemann/* $(SDIR)/solver/recon/* $(SDIR)/solver/boundary/* $(SDIR)/solver/force/* $(SDIR)/solver/kill/* $(SDIR)/solver/advection/* $(DEPS)
 	$(CC) --device-c -o $@ $< $(CFLAGS)
 
 clean:
@@ -53,5 +56,6 @@ clean:
 	rm -f $(SDIR)/output/*~
 	rm -f $(SDIR)/init/*~
 	rm -f $(SDIR)/orbit/*~
+	rm -f $(SDIR)/planet/*~
 	rm -f $(SDIR)/solver/*~
 	rm -f $(SDIR)/solver/recon/*~
