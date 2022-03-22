@@ -1,46 +1,3 @@
-
-//====================================================================
-
-__device__ void star_planet_grav(double rad, double azi, double pol, body p, double dt, double &fx, double &fy, double &fz)
-{
-	double cosfac, sinfac;
-	sincos(azi-(p.y+dt*p.vy), &sinfac, &cosfac);
-	double cospol, sinpol;
-	#if ndim==3
-	sincos(pol, &sinpol, &cospol);
-	#else
-	cospol = 0.0;
-	sinpol = 1.0;
-	#endif
-
-	double plm = p.m;
-	double plx = p.x;
-
-	double Rp = sqrt(rad*rad + plx*plx - 2.0*plx*rad*cosfac*sinpol);
-	double rs_fac = fmax(4.0-3.0*Rp/p.rs, 1.0)/fmax(p.rs*p.rs*p.rs, Rp*Rp*Rp);
-
-	fx = -plm*(rad-plx*cosfac*sinpol)*rs_fac - plm*sinpol*cosfac/plx/plx;
-	fy = -plm*plx*sinfac*rs_fac              + plm*sinpol*sinfac/plx/plx;
-	fz =  plm*plx*cosfac*cospol*rs_fac       - plm*cospol*cosfac/(sinpol*plx*plx);
-	return;
-}
-
-__device__ void star_planet_grav_cyl(double rad, double azi, double z, body p, double dt, double &fx, double &fy, double &fz)
-{
-	double cosfac, sinfac;
-	sincos(azi-(p.y+dt*p.vy), &sinfac, &cosfac);
-
-	double plm = p.m;
-	double plx = p.x;
-
-	double Rp = sqrt(rad*rad + plx*plx - 2.0*plx*rad*cosfac + z*z + p.rs*p.rs);
-
-	fx = -plm*(rad-plx*cosfac)/(Rp*Rp*Rp) - plm*cosfac/plx/plx;
-	fy = -plm*plx*sinfac/(Rp*Rp*Rp)       + plm*sinfac/plx/plx;
-	fz = -plm*z/(Rp*Rp*Rp);
-	return;
-}
-
 //====================================================================
 
 __device__ double get_fx(double rad, double azi, double pol,
@@ -63,7 +20,7 @@ __device__ double get_fx(double rad, double azi, double pol,
 		double gx_tmp, gy_tmp, gz_tmp;
 		for (int m=0; m<n_planet; m++)
 		{
-			star_planet_grav_cyl(rad, azi, pol, planet[m], 0.0, gx_tmp, gy_tmp, gz_tmp);
+			planet[m].grav_cyl(rad, azi, pol, gx_tmp, gy_tmp, gz_tmp);
 			gx += gx_tmp;
 		}
 
@@ -74,7 +31,7 @@ __device__ double get_fx(double rad, double azi, double pol,
 		double gx_tmp, gy_tmp, gz_tmp;
 		for (int m=0; m<n_planet; m++)
 		{
-			star_planet_grav(rad, azi, pol, planet[m], 0.0, gx_tmp, gy_tmp, gz_tmp);
+			planet[m].grav_sph(rad, azi, pol, gx_tmp, gy_tmp, gz_tmp);
 			gx += gx_tmp;
 		}
 
@@ -104,7 +61,7 @@ __device__ double get_fy(double rad, double azi, double pol,
 		double gx_tmp, gy_tmp, gz_tmp;
 		for (int m=0; m<n_planet; m++)
 		{
-			star_planet_grav_cyl(rad, azi, pol, planet[m], 0.0, gx_tmp, gy_tmp, gz_tmp);
+			planet[m].grav_cyl(rad, azi, pol, gx_tmp, gy_tmp, gz_tmp);
 			gy += gy_tmp;
 		}
 
@@ -115,7 +72,7 @@ __device__ double get_fy(double rad, double azi, double pol,
 		double gx_tmp, gy_tmp, gz_tmp;
 		for (int m=0; m<n_planet; m++)
 		{
-			star_planet_grav(rad, azi, pol, planet[m], 0.0, gx_tmp, gy_tmp, gz_tmp);
+			planet[m].grav_sph(rad, azi, pol, gx_tmp, gy_tmp, gz_tmp);
 			gy += gy_tmp;
 		}
 
@@ -147,7 +104,7 @@ __device__ double get_fz(double rad, double azi, double pol,
 		double gx_tmp, gy_tmp, gz_tmp;
 		for (int m=0; m<n_planet; m++)
 		{
-			star_planet_grav_cyl(rad, azi, pol, planet[m], 0.0, gx_tmp, gy_tmp, gz_tmp);
+			planet[m].grav_cyl(rad, azi, pol, gx_tmp, gy_tmp, gz_tmp);
 			gz += gz_tmp;
 		}
 		
@@ -158,7 +115,7 @@ __device__ double get_fz(double rad, double azi, double pol,
 		double gx_tmp, gy_tmp, gz_tmp;
 		for (int m=0; m<n_planet; m++)
 		{
-			star_planet_grav(rad, azi, pol, planet[m], 0.0, gx_tmp, gy_tmp, gz_tmp);
+			planet[m].grav_sph(rad, azi, pol, gx_tmp, gy_tmp, gz_tmp);
 			gz += gz_tmp;
 		}
 
@@ -195,7 +152,7 @@ __device__ void get_grav(double rad, double azi, double pol,
 		double gx_tmp, gy_tmp, gz_tmp;
 		for (int m=0; m<n_planet; m++)
 		{
-			star_planet_grav_cyl(rad, azi, pol, planet[m], 0.0, gx_tmp, gy_tmp, gz_tmp);
+			planet[m].grav_cyl(rad, azi, pol, gx_tmp, gy_tmp, gz_tmp);
 			gx += gx_tmp;
 			gy += gy_tmp;
 			gz += gz_tmp;
@@ -209,7 +166,7 @@ __device__ void get_grav(double rad, double azi, double pol,
 		double gx_tmp, gy_tmp, gz_tmp;
 		for (int m=0; m<n_planet; m++)
 		{
-			star_planet_grav(rad, azi, pol, planet[m], 0.0, gx_tmp, gy_tmp, gz_tmp);
+			planet[m].grav_sph(rad, azi, pol, gx_tmp, gy_tmp, gz_tmp);
 			gx += gx_tmp;
 			gy += gy_tmp;
 			gz += gz_tmp;

@@ -48,7 +48,6 @@ void syncallstreams(Grid* dev)
 #include "force/forces.cu"
 #include "recon/recon.cu"
 #include "boundary/boundary.cu"
-
 #include "force/viscosity.cu"
 #include "riemann/riemann.cu"
 #include "advection/advection.cu"
@@ -670,6 +669,7 @@ void solve(Grid* dev, double time, double dt)
 	double hdt = 0.5*dt;
 
 	#ifdef visc_flag
+	//viscosity_tensor_evaluation(dev);
 	apply_viscosity(dev,hdt);
 	#endif
 

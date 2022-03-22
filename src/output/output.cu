@@ -100,20 +100,24 @@ void write_grid_val(ofstream &ofile, Grid* G)
 	return;
 }
 
-void write_check_point(ofstream &ofile, double simtime, Grid* glo)
+void save_check_point(string fname, double cur_time, Grid* hst)
 {
-	ofile.write((char*)&simtime, sizeof(double));
+	ofstream check_point;
+	open_binary_file(check_point,fname);
 
-	for (int i=xpad; i<xres+xpad+1; i++) ofile.write((char*)&glo[0].xa[i], sizeof(double));
+	check_point.write((char*)&cur_time, sizeof(double));
+
+	for (int i=xpad; i<xres+xpad+1; i++) check_point.write((char*)&hst[0].xa[i], sizeof(double));
 	if (ndim>1) 
-	for (int i=ypad; i<yres+ypad+1; i++) ofile.write((char*)&glo[0].ya[i], sizeof(double));
+	for (int i=ypad; i<yres+ypad+1; i++) check_point.write((char*)&hst[0].ya[i], sizeof(double));
 	if (ndim>2) 
-	for (int i=zpad; i<zres+zpad+1; i++) ofile.write((char*)&glo[0].za[i], sizeof(double));
+	for (int i=zpad; i<zres+zpad+1; i++) check_point.write((char*)&hst[0].za[i], sizeof(double));
 
 	//////////////////////////////////////////////
 
-	write_grid_val(ofile, glo);
+	write_grid_val(check_point, hst);
 
+	close_output_file(check_point);
 	return;
 }
 

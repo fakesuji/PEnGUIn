@@ -4,7 +4,7 @@
 #define dump_flag
 #define kill_flag
 #define OrbAdv_flag
-#define visc_flag
+//#define visc_flag
 //#define advec_flag
 
 //=======================================================================
@@ -83,8 +83,8 @@ const int ndev = 1;
 // Temporal parameters
 //=======================================================================
 
-const double sav_interval = 10.0*twopi;
-const double end_time = 1000.0*twopi;
+const double sav_interval = 0.1*twopi;
+const double end_time = 0.1*twopi;
 
 const int prt_interval = 100;
 const int max_step = 1000000000;
