@@ -64,3 +64,38 @@ void init_planet(Grid* G, double time)
 	}
 	return;
 }
+
+__global__ void planet_torque(Grid G, int n)
+{
+	int i = threadIdx.x + blockIdx.x*blockDim.x + xpad;
+	int j = threadIdx.y + blockIdx.y*blockDim.y + ypad;
+	int k = threadIdx.z + blockIdx.z*blockDim.z + zpad;
+
+	double x = G.get_xc(i);
+	double y = G.get_yc(j);
+	double z = G.get_zc(k);
+
+	double rad, rad_cyl, fx, fy, fz;
+
+	#if geomx==0
+	rad = 1.0;
+	rad_cyl = 1.0;
+	fx = 0.0;
+	fy = 0.0;
+	fz = 0.0;
+	#elif geomx==1
+	rad = 1.0;
+	rad_cyl = x;
+	G.planet[n].grav_cyl(x,y,z,fx,fy,fz);
+	#elif geomx==2
+	rad = x;
+	rad_cyl = x*sin(z);
+	G.planet[n].grav_sph(x,y,z,fx,fy,fz);
+	#endif
+
+	G.fx[get_ind(i,j,k)] = -fx;
+	G.fy[get_ind(i,j,k)] = -rad_cyl*fy;
+	G.fz[get_ind(i,j,k)] = -rad*fz;
+
+	return;
+}
