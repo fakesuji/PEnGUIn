@@ -19,15 +19,30 @@ __global__ void planet_evo(body* planets, double time, double dt)
 	planets[n].m = ramp_function(time, ramp_time, planet_mass);
 
 	double rad;
-	#if geomx==0
-	rad = 1.0;
-	#else
-	rad = planets[n].x + 0.5*planets[n].vx*dt;
-	#endif
+	double fx, fy, fz;
+
+	rad = planets[n].x;
+	fx = planets[n].vy*planets[n].vy/rad/rad/rad - 1.0/rad/rad;
+	fy = 0.0;
+	fz = 0.0;
+
+	planets[n].vx += 0.5*fx*dt;
+	planets[n].vy += 0.5*fy*dt;
+	planets[n].vz += 0.5*fz*dt;
 
 	planets[n].x += planets[n].vx*dt;
-	planets[n].y += (planets[n].vy-frame_omega*rad)*dt;
+	planets[n].y += (planets[n].vy/planets[n].x/rad-frame_omega)*dt;
 	planets[n].z += planets[n].vz*dt;
+
+	rad = planets[n].x;
+	fx = planets[n].vy*planets[n].vy/rad/rad/rad - 1.0/rad/rad;
+	fy = 0.0;
+	fz = 0.0;
+
+	planets[n].vx += 0.5*fx*dt;
+	planets[n].vy += 0.5*fy*dt;
+	planets[n].vz += 0.5*fz*dt;
+
 	return;
 }
 
@@ -43,22 +58,23 @@ void evolve_planet(Grid* dev, double time, double dt)
 
 void init_planet(Grid* G, double time)
 {
+	double e = 0.25;
 	for (int i=0; i<ndev; i++)
 	{
 		for (int n=0; n<n_planet; n++)
 		{
 			G[i].planets[n].m = ramp_function(time, ramp_time, planet_mass);
-			G[i].planets[n].x = planet_radius;
+			G[i].planets[n].x = planet_radius*(1.0-e);
 			G[i].planets[n].y = pi;
 			G[i].planets[n].z = hpi;
 
 			G[i].planets[n].vx = 0.0;
-			G[i].planets[n].vy = pow(G[i].planets[n].x,-1.5);
+			G[i].planets[n].vy = sqrt((1.0+e)/(1.0-e)/planet_radius)*G[i].planets[n].x;
 			G[i].planets[n].vz = 0.0;
 			#if ndim==2
-			G[i].planets[n].rs = 0.5*sc_h;
+			G[i].planets[n].rs = 0.5*sc_h*planet_radius;
 			#else
-			G[i].planets[n].rs = 0.5*pow(planet_mass,1.0/3.0);
+			G[i].planets[n].rs = 0.3*pow(planet_mass,1.0/3.0)*planet_radius;
 			#endif
 		}
 	}

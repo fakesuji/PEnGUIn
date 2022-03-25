@@ -16,16 +16,28 @@ __host__ __device__ double get_cs2(double x, double y, double z)
 	#endif
 }
 
+
+__host__ __device__ double get_h(double x, double y, double z)
+{
+	#if geomx == 0
+	return sc_h;
+	#elif geomx == 1
+	return sqrt(get_cs2(x, y, z)*pow(x,3));
+	#elif geomx == 2
+	return sqrt(get_cs2(x, y, z)*pow(x*sin(z),3));
+	#endif
+}
+
 __host__ __device__ double get_nu(double x, double y, double z)
 {
-	double coeff = ss_alpha*sc_h*sc_h;
+	double coeff = ss_alpha*sqrt(get_cs2(x, y, z))*get_h(x, y, z);
 	#if geomx == 0
 	return coeff;
 	#elif geomx == 1
-	return coeff*pow(x,-p_beta)*pow(x,1.5);
+	return coeff*pow(x/planet_radius,p_alpha);//pow(x,-p_beta+1.5);
 	#elif geomx == 2
 	double rad_cyl = x*sin(z);
-	return coeff*pow(rad_cyl,-p_beta)*pow(rad_cyl,1.5);
+	return coeff*pow(rad_cyl/planet_radius,p_alpha);//pow(rad_cyl,-p_beta+1.5);
 	#endif
 }
 
@@ -49,26 +61,15 @@ __host__ __device__ double get_vertical(double x, double y, double z)
 
 }
 
-__host__ __device__ double get_h(double x, double y, double z)
-{
-	#if geomx == 0
-	return sc_h;
-	#elif geomx == 1
-	return sqrt(get_cs2(x, y, z)*pow(x,3));
-	#elif geomx == 2
-	return sqrt(get_cs2(x, y, z)*pow(x*sin(z),3));
-	#endif
-}
-
 __host__ __device__ double get_r(double x, double y, double z)
 {
 	#if geomx == 0
 	if (x>=0.3 && x <=0.7) return 2.0;
 	else                   return 1.0;
 	#elif geomx == 1
-	return pow(x,-p_alpha)*get_vertical(x,y,z);// + 0.2*exp(-((x-1.0)*(x-1.0)+(y-pi)*(y-pi))/(0.05));
+	return pow(x/planet_radius,-p_alpha)*get_vertical(x,y,z);// + 0.2*exp(-((x-1.0)*(x-1.0)+(y-pi)*(y-pi))/(0.05));
 	#elif geomx == 2
-	return pow(x*sin(z),-p_alpha)*get_vertical(x,y,z);
+	return pow(x*sin(z)/planet_radius,-p_alpha)*get_vertical(x,y,z);
 	#endif
 }
 
