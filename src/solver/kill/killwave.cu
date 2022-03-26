@@ -17,8 +17,8 @@ __global__ void killwave(Grid G, double dt)
 
 	double f, tau;
 	#ifdef shear_box
-	double d_in  = sc_h*kill_width;
-	double d_out = sc_h*kill_width;
+	double d_in  = 0.01;//sc_h*kill_width;
+	double d_out = 0.0;//sc_h*kill_width;
 	#else
 	double d_in  = get_h(xmin,0.0,hpi)*kill_width;
 	double d_out = get_h(xmax,0.0,hpi)*kill_width;
@@ -45,7 +45,7 @@ __global__ void killwave(Grid G, double dt)
 			#if geomx == 0
 			tau  = 1.0;
 			#else
-			tau  = 0.5*pow(rad,1.5);
+			tau  = pow(rad,1.5);
 			#endif
 
 			f  = get_ramping_fac(f);
@@ -53,12 +53,14 @@ __global__ void killwave(Grid G, double dt)
 
 			C_tmp = G.get_cell(i,j,k);
 			I_tmp = init_C(rad,azi,pol);
+			I_tmp.r *= 0.0001;
+			I_tmp.p *= 0.0001;
 
 			C_tmp.r += f * ( I_tmp.r - C_tmp.r );
 			C_tmp.p += f * ( I_tmp.p - C_tmp.p );
-			C_tmp.u += f * ( I_tmp.u - C_tmp.u );
-			C_tmp.v += f * ( I_tmp.v - C_tmp.v );
-			C_tmp.w += f * ( I_tmp.w - C_tmp.w );
+			//C_tmp.u += f * ( I_tmp.u - C_tmp.u );
+			//C_tmp.v += f * ( I_tmp.v - C_tmp.v );
+			//C_tmp.w += f * ( I_tmp.w - C_tmp.w );
 
 			G.write_cell(i,j,k,C_tmp);
 		}
@@ -72,7 +74,7 @@ __global__ void killwave(Grid G, double dt)
 			#if geomx == 0
 			tau  = 1.0;
 			#else
-			tau  = 0.5*pow(rad,1.5);
+			tau  = pow(rad,1.5);
 			#endif
 
 			f  = get_ramping_fac(f);

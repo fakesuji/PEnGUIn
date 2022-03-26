@@ -83,8 +83,10 @@ const int ndev = 2;
 // Temporal parameters
 //=======================================================================
 
-const double sav_interval = twopi/40.0;
-const double end_time = 10.0*twopi;
+const double frame_omega = 42.5872131567;
+
+const double sav_interval = 0.25*twopi/frame_omega;
+const double end_time = 201.0*twopi/frame_omega;
 
 const int prt_interval = 100;
 const int max_step = 1000000000;
@@ -143,8 +145,6 @@ const double Sigma_0 = (MMSN_1AU/0.76)*0.05;              // density at r=1 in u
 
 const double kill_width = 2.0;                      // in units of sc_h
 const double t_cool = 10.0;                          // in units of dynamical time for beta cooling
-
-const double frame_omega = 42.5872131567;
 
 //=======================================================================
 // planet parameters
