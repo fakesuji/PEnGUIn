@@ -85,7 +85,7 @@ const int ndev = 1;
 
 const double frame_omega = 1.0;
 
-const double sav_interval = 0.038;//1.0*twopi;
+const double sav_interval = 0.001;//1.0*twopi;
 const double sta_time = 0.0;
 const double end_time = 0.038;//1.0*twopi;
 
