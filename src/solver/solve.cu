@@ -108,11 +108,7 @@ __global__ void sweepx(Grid G, double dt)
 
 	/////////////////////////////////////////////////////
 	Cell Del;
-	#ifdef advec_flag
-	Del = advection(geomx, xa, dx, xv, xpad, &r[x_xthd*j], &p[x_xthd*j], &u[x_xthd*j], &v[x_xthd*j], &w[x_xthd*j], 1.0, dt);
-	#else
 	Del =   riemann(geomx, xa, dx, xv, rad, &r[x_xthd*j], &p[x_xthd*j], &u[x_xthd*j], &v[x_xthd*j], &w[x_xthd*j], force, dt);
-	#endif
 //if (idy==ypad && i<x_xthd-1) printf("%f %f: %f, %f, %e, %f, %e\n",xa[i],xv[i+1]-xv[i],r[i+x_xthd*j],p[i+x_xthd*j],u[i+x_xthd*j],force,Del.r);
 	Del.multiply(G.get_yv(idy)*G.get_zv(idz));
 
@@ -326,7 +322,6 @@ __global__ void update(Grid G, double dt, int axis=0)
 			printf("negative density at %f %f %f\n",G.get_xc(i),G.get_yc(j),G.get_zc(k));
 		}
 
-		#ifndef advec_flag
 		#if EOS_flag == 2
 		#if internal_e_flag==0
 		Q.p = fmax(Q.p*gamm/vol - Q.r*(Q.u*Q.u+Q.v*Q.v+Q.w*Q.w)/2.0/gamm,smallp);
@@ -335,7 +330,6 @@ __global__ void update(Grid G, double dt, int axis=0)
 		#endif
 		#elif EOS_flag == 0
 		Q.p = get_cs2(G.get_xc(i),G.get_yc(j),G.get_zc(k))*Q.r;
-		#endif
 		#endif
 
 		G.C[ind].copy(Q);
@@ -668,6 +662,8 @@ void source_all(Grid* dev, double dt)
 void solve(Grid* dev, double time, double dt)
 {
 	double hdt = 0.5*dt;
+	
+	#ifndef advec_flag
 
 	#ifdef visc_flag
 	apply_viscosity(dev,hdt);
@@ -701,6 +697,16 @@ void solve(Grid* dev, double time, double dt)
 	#ifdef visc_flag
 	viscosity_tensor_evaluation(dev);
 	apply_viscosity(dev,hdt);
+	#endif
+
+	#else
+
+	advectx(dev,dt);
+
+	#if ndim>1
+	advecty(dev,dt);
+	#endif
+
 	#endif
 
 	return;
