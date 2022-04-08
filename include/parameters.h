@@ -77,7 +77,7 @@ const int z_zthd = z_zdiv + 2*zpad;
 // Geometric parameters
 //=======================================================================
 
-const int ndev = 2;
+const int ndev = 1;
 
 //=======================================================================
 // Temporal parameters
