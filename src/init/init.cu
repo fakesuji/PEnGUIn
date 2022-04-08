@@ -30,6 +30,8 @@ __host__ __device__ double get_h(double x, double y, double z)
 
 __host__ __device__ double get_nu(double x, double y, double z)
 {
+	#ifdef visc_flag
+
 	double coeff = ss_alpha*sqrt(get_cs2(x, y, z))*get_h(x, y, z);
 	#if geomx == 0
 	return coeff;
@@ -38,6 +40,12 @@ __host__ __device__ double get_nu(double x, double y, double z)
 	#elif geomx == 2
 	double rad_cyl = x*sin(z);
 	return coeff*pow(rad_cyl/planet_radius,p_alpha);//pow(rad_cyl,-p_beta+1.5);
+	#endif
+
+	#else
+
+	return 0.0;
+
 	#endif
 }
 
@@ -63,63 +71,149 @@ __host__ __device__ double get_vertical(double x, double y, double z)
 
 __host__ __device__ double get_r(double x, double y, double z)
 {
-	#if geomx == 0
+	#if init_flag == 0
 	if (x>=0.3 && x <=0.7) return 2.0;
 	else                   return 1.0;
-	#elif geomx == 1
-	return pow(x/planet_radius,-p_alpha)*get_vertical(x,y,z);// + 0.2*exp(-((x-1.0)*(x-1.0)+(y-pi)*(y-pi))/(0.05));
-	#elif geomx == 2
+
+	#elif init_flag == 1
+	return 1.0;
+
+	#elif init_flag == 2
+	return pow(x/planet_radius,-p_alpha)*get_vertical(x,y,z);
+
+	#elif init_flag == 3
 	return pow(x*sin(z)/planet_radius,-p_alpha)*get_vertical(x,y,z);
+
+	#elif init_flag == 4
+
+	#elif init_flag == 5
+
+	#elif init_flag == 6
+
+	#elif init_flag == 7
+
+	#elif init_flag == 8
+
 	#endif
 }
 
 
 __host__ __device__ double get_p(double x, double y, double z)
 {
-	#if geomx == 0
+	#if init_flag == 0
+	return 1.0;
+
+	#elif init_flag == 1
 	if      (x<=0.1) return 1000.0;
 	else if (x>=0.9) return 100.0;
 	else             return 0.01;
-	#else
+
+	#elif init_flag == 2
 	return get_cs2(x,y,z)*get_r(x,y,z);
+
+	#elif init_flag == 3
+	return get_cs2(x,y,z)*get_r(x,y,z);
+
+	#elif init_flag == 4
+
+	#elif init_flag == 5
+
+	#elif init_flag == 6
+
+	#elif init_flag == 7
+
+	#elif init_flag == 8
+
 	#endif
 }
 
 __host__ __device__ double get_u(double x, double y, double z)
 {
-	#if geomx == 0
+	#if init_flag == 0
 	return 1.0;
-	#else
-	#ifdef visc_flag
-		#if geomx == 2
-		double r = x * sin(z);
-		return -1.5*get_nu(x,y,z)/r;
-		#else
-		return -1.5*get_nu(x,y,z)/x;
-		#endif
-	#else
+
+	#elif init_flag == 1
 	return 0.0;
-	#endif
+
+	#elif init_flag == 2
+	return -1.5*get_nu(x,y,z)/x;
+
+	#elif init_flag == 3
+	double r = x * sin(z);
+	return -1.5*get_nu(x,y,z)/r;
+
+	#elif init_flag == 4
+
+	#elif init_flag == 5
+
+	#elif init_flag == 6
+
+	#elif init_flag == 7
+
+	#elif init_flag == 8
+
 	#endif
 }
 
 __host__ __device__ double get_v(double x, double y, double z)
 {
-	#if geomx > 0
-	//return sqrt(1.0/x - (p_beta+p_alpha)*get_cs2(x,y,z));
+	#if init_flag == 0
+	return 0.0;
+
+	#elif init_flag == 1
+	return 0.0;
+
+	#elif init_flag == 2
 	double rho = get_r(x,y,z);
 	double dr = 1.1514178e-7;
 	double dP_dr = (get_p(x+dr,y,z)-get_p(x-dr,y,z))/(2.0*dr);
 	return sqrt(1.0/x + (x/rho)*dP_dr);
-	#else
-	return 0.0;
+
+	#elif init_flag == 3
+	double rho = get_r(x,y,z);
+	double dr = 1.1514178e-7;
+	double dP_dr = (get_p(x+dr,y,z)-get_p(x-dr,y,z))/(2.0*dr);
+	return sqrt(1.0/x + (x/rho)*dP_dr);
+
+	#elif init_flag == 4
+
+	#elif init_flag == 5
+
+	#elif init_flag == 6
+
+	#elif init_flag == 7
+
+	#elif init_flag == 8
+
 	#endif
 }
 
 
 __host__ __device__ double get_w(double x, double y, double z)
 {
+	#if init_flag == 0
 	return 0.0;
+
+	#elif init_flag == 1
+	return 0.0;
+
+	#elif init_flag == 2
+	return 0.0;
+
+	#elif init_flag == 3
+	return 0.0;
+
+	#elif init_flag == 4
+
+	#elif init_flag == 5
+
+	#elif init_flag == 6
+
+	#elif init_flag == 7
+
+	#elif init_flag == 8
+
+	#endif
 }
 
 __host__ __device__ Cell init_C(double x, double y, double z)

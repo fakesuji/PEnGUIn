@@ -4,6 +4,7 @@
 #define dump_flag
 //#define kill_flag
 //#define OrbAdv_flag
+//#define visc_flag
 //#define advec_flag
 
 //=======================================================================
@@ -21,8 +22,8 @@ const double NeptuneMass = 0.00005;
 const double SaturnMass = 0.0002857;
 const double JupiterMass = 0.0009543;
 const double MMSN_1AU = 0.00019126835;
-const double smallp = 1.0e-12;
-const double smallr = 1.0e-12;
+const double smallp = 1.0e-14;
+const double smallr = 1.0e-14;
 
 //=======================================================================
 // Geometric parameters
@@ -82,6 +83,8 @@ const int ndev = 1;
 // Temporal parameters
 //=======================================================================
 
+const double frame_omega = 1.0;
+
 const double sav_interval = 0.013;//1.0*twopi;
 const double sta_time = 0.0;
 const double end_time = 0.013;//1.0*twopi;
@@ -93,7 +96,7 @@ const int max_step = 1000000000;
 // Hydro parameters
 //=======================================================================
 
-#define recon_flag 1
+#define recon_flag 0
 
 #define EOS_flag 2
 #define internal_e_flag 0
@@ -112,6 +115,8 @@ const double CFL = 0.5;
 //=======================================================================
 // boundary parameters
 //=======================================================================
+
+#define init_flag 1
 
 const int bound_lft = 2;
 const int bound_rgh = 2;
@@ -134,7 +139,6 @@ const double p_alpha = 1.5;                             // surface density ~ r^-
 #endif 
 const double ss_alpha = 0.004;                            // alpha-viscosity
 const double sc_h = 0.05;                              // scale height at r=1, normalized to that at r = 100
-const double vis_nu = ss_alpha*sc_h*sc_h;               // kinematic viscosity
 
 #if ndim==3
 const double Sigma_0 = 0.1*MMSN_1AU/(sqrt_hpi*sc_h);    // midplane density at r=1 in units of M_solar/AU^3
@@ -144,8 +148,6 @@ const double Sigma_0 = (MMSN_1AU/0.76)*0.05;              // density at r=1 in u
 
 const double kill_width = 2.0;                      // in units of sc_h
 const double t_cool = 10.0;                          // in units of dynamical time for beta cooling
-
-const double frame_omega = 1.0;
 
 //=======================================================================
 // planet parameters
