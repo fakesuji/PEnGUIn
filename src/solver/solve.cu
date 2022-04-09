@@ -324,7 +324,7 @@ __global__ void update(Grid G, double dt, int axis=0)
 
 		#if EOS_flag == 2
 		#if internal_e_flag==0
-		Q.p = fmax(Q.p*gamm/vol - Q.r*(Q.u*Q.u+Q.v*Q.v+Q.w*Q.w)/2.0/gamm,smallp);
+		Q.p = fmax(Q.p*gamm/vol - gamm*Q.r*(Q.u*Q.u+Q.v*Q.v+Q.w*Q.w)/2.0,smallp);
 		#else
 		Q.p = fmax(Q.p*gamm/vol,smallp);
 		#endif
