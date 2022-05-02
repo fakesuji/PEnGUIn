@@ -34,6 +34,10 @@ string create_label()
 	#ifdef visc_flag
 	label += "_a"+int_to_string(log10(ss_alpha));
 	#endif
+
+	#ifdef cool_flag
+	label += "_b"+int_to_string(log10(beta_cool));
+	#endif
 	
 	#ifdef OrbAdv_flag
 	label += "_OA";

@@ -44,6 +44,7 @@ void syncallstreams(Grid* dev)
 	for (int n=0; n<ndev; n++) cudaStreamSynchronize(dev[n].stream);
 }
 
+#include "cool/cool.cu"
 #include "kill/killwave.cu"
 #include "force/forces.cu"
 #include "recon/recon.cu"
@@ -665,47 +666,55 @@ void solve(Grid* dev, double time, double dt)
 	
 	#ifndef advec_flag
 
-	#ifdef visc_flag
-	apply_viscosity(dev,hdt);
-	#endif
+		#ifdef cool_flag
+		cooling(dev,hdt);
+		#endif
 
-	evolvex(dev,dt);
+		#ifdef visc_flag
+		apply_viscosity(dev,hdt);
+		#endif
 
-	#if ndim>2
-	evolvez(dev,dt);
-	#endif
+		evolvex(dev,dt);
 
-	#if ndim>1
-	evolvey(dev,dt);
-	#endif
+		#if ndim>2
+		evolvez(dev,dt);
+		#endif
 
-	#ifdef OrbAdv_flag
-	set_OrbAdv(dev,dt);
-	shift_OrbAdv(dev);
-	advecty(dev,dt);
-	#endif
+		#if ndim>1
+		evolvey(dev,dt);
+		#endif
 
-	evolve_planet(dev,time,dt);
+		#ifdef OrbAdv_flag
+		set_OrbAdv(dev,dt);
+		shift_OrbAdv(dev);
+		advecty(dev,dt);
+		#endif
 
-	source_all(dev,hdt);
+		evolve_planet(dev,time,dt);
 
-	#ifdef kill_flag
-	killwave(dev, dt);
-	#endif
+		source_all(dev,hdt);
 
-	syncallstreams(dev);
-	#ifdef visc_flag
-	viscosity_tensor_evaluation(dev);
-	apply_viscosity(dev,hdt);
-	#endif
+		#ifdef cool_flag
+		cooling(dev,hdt);
+		#endif
+
+		#ifdef kill_flag
+		killwave(dev, dt);
+		#endif
+
+		syncallstreams(dev);
+		#ifdef visc_flag
+		viscosity_tensor_evaluation(dev);
+		apply_viscosity(dev,hdt);
+		#endif
 
 	#else
 
-	advectx(dev,dt);
+		advectx(dev,dt);
 
-	#if ndim>1
-	advecty(dev,dt);
-	#endif
+		#if ndim>1
+		advecty(dev,dt);
+		#endif
 
 	#endif
 

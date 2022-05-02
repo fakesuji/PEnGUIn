@@ -58,7 +58,7 @@ void evolve_planet(Grid* dev, double time, double dt)
 
 void init_planet(Grid* G, double time)
 {
-	double e = 0.25;
+	double e = planet_ecc;
 	for (int i=0; i<ndev; i++)
 	{
 		for (int n=0; n<n_planet; n++)
