@@ -48,8 +48,8 @@ const int zpad = npad;
 const int zpad = 0;
 #endif
 
-const int xres = 512;
-const int yres = 1536;
+const int xres = 1024;
+const int yres = 3072;
 const int zres = 1;
 
 const int xarr = xres + 2*xpad;
