@@ -125,6 +125,7 @@ struct Grid
 	int* shfR;
 
 	Cell* C;
+	Cell* T;
 	Cell* F;
 
 	Cell* BuffL;
@@ -134,6 +135,8 @@ struct Grid
 	double* fx;
 	double* fy;
 	double* fz;
+
+	double* ext;
 
 	body* planets;
 

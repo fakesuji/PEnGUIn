@@ -61,7 +61,7 @@ __global__ void clear_flux(int mx, int my, int mz, Cell* F)
 	return;
 }
 
-__global__ void sweepx(Grid G, double dt)
+__global__ void sweepx(Grid G, Cell* C, double dt)
 {
 	__shared__ double xa[x_xthd+1], dx[x_xthd], xv[x_xthd];
 	__shared__ double r[x_xthd*x_ydiv], p[x_xthd*x_ydiv], u[x_xthd*x_ydiv], v[x_xthd*x_ydiv], w[x_xthd*x_ydiv];
@@ -86,11 +86,11 @@ __global__ void sweepx(Grid G, double dt)
 	}
 	__syncthreads();
 
-	r[i+x_xthd*j] = G.C[ind].r;
-	p[i+x_xthd*j] = G.C[ind].p;
-	u[i+x_xthd*j] = G.C[ind].u;
-	v[i+x_xthd*j] = G.C[ind].v;
-	w[i+x_xthd*j] = G.C[ind].w;
+	r[i+x_xthd*j] = C[ind].r;
+	p[i+x_xthd*j] = C[ind].p;
+	u[i+x_xthd*j] = C[ind].u;
+	v[i+x_xthd*j] = C[ind].v;
+	w[i+x_xthd*j] = C[ind].w;
 	if (i>0) force = 0.5*(G.fx[ind] + G.fx[G.get_ind(idx-1,idy,idz)]);
 
 	__syncthreads();
@@ -121,7 +121,7 @@ __global__ void sweepx(Grid G, double dt)
 		Del.v /= rad_cyl;
 		Del.w /= rad;
 		#endif
-		G.F[ind].copy(Del);
+		G.F[ind].add(Del);
 	}
 	//if (idx==12 && G.get_j_shf(idx,idy,idz)==17) printf("sweepx: rad=%f azi=%f\n",G.get_xc(idx),G.get_yc(idy));
 
@@ -129,7 +129,7 @@ __global__ void sweepx(Grid G, double dt)
 }
 
 
-__global__ void sweepy(Grid G, double dt)
+__global__ void sweepy(Grid G, Cell* C, double dt)
 {
 	__shared__ double ya[y_ythd+1], dy[y_ythd], yv[y_ythd];
 	__shared__ double r[y_ythd*y_xdiv], p[y_ythd*y_xdiv], u[y_ythd*y_xdiv], v[y_ythd*y_xdiv], w[y_ythd*y_xdiv];
@@ -166,11 +166,11 @@ __global__ void sweepy(Grid G, double dt)
 	rad = 1.0;
 	#endif
 
-	r[i+y_ythd*j] = G.C[ind].r;
-	p[i+y_ythd*j] = G.C[ind].p;
-	u[i+y_ythd*j] = G.C[ind].v - G.get_rot(idx,idz);
-	v[i+y_ythd*j] = G.C[ind].w;
-	w[i+y_ythd*j] = G.C[ind].u;
+	r[i+y_ythd*j] = C[ind].r;
+	p[i+y_ythd*j] = C[ind].p;
+	u[i+y_ythd*j] = C[ind].v - G.get_rot(idx,idz);
+	v[i+y_ythd*j] = C[ind].w;
+	w[i+y_ythd*j] = C[ind].u;
 
 	#if geomy == 3 || geomy == 4
 	u[i+y_ythd*j] -= rad*frame_omega;
@@ -191,21 +191,21 @@ __global__ void sweepy(Grid G, double dt)
 
 	if (i>=ypad && i<y_ythd-ypad)
 	{
-		G.F[ind].r = Del.r;
-		G.F[ind].p = Del.p;
-		G.F[ind].u = Del.w;
+		G.F[ind].r += Del.r;
+		G.F[ind].p += Del.p;
+		G.F[ind].u += Del.w;
 		#if geomy == 3 || geomy == 4
-		G.F[ind].v = Del.u + (G.get_rot(idx,idz) + rad*frame_omega)*Del.r;
+		G.F[ind].v += Del.u + (G.get_rot(idx,idz) + rad*frame_omega)*Del.r;
 		#else
-		G.F[ind].v = Del.u + G.get_rot(idx,idz)*Del.r;
+		G.F[ind].v += Del.u + G.get_rot(idx,idz)*Del.r;
 		#endif
-		G.F[ind].w = Del.v;
+		G.F[ind].w += Del.v;
 	}
 
 	return;
 }
 
-__global__ void sweepz(Grid G, double dt)
+__global__ void sweepz(Grid G, Cell* C, double dt)
 {
 	__shared__ double za[z_zthd+1], dz[z_zthd], zv[z_zthd];
 	__shared__ double r[z_zthd*z_xdiv], p[z_zthd*z_xdiv], u[z_zthd*z_xdiv], v[z_zthd*z_xdiv], w[z_zthd*z_xdiv];
@@ -232,11 +232,11 @@ __global__ void sweepz(Grid G, double dt)
 
 	if (j==0) dz[i] = za[i+1] - za[i];
 	
-	r[i+z_zthd*j] = G.C[ind].r;
-	p[i+z_zthd*j] = G.C[ind].p;
-	u[i+z_zthd*j] = G.C[ind].w;
-	v[i+z_zthd*j] = G.C[ind].u;
-	w[i+z_zthd*j] = G.C[ind].v;
+	r[i+z_zthd*j] = C[ind].r;
+	p[i+z_zthd*j] = C[ind].p;
+	u[i+z_zthd*j] = C[ind].w;
+	v[i+z_zthd*j] = C[ind].u;
+	w[i+z_zthd*j] = C[ind].v;
 	if (i>0) force = 0.5*(G.fz[ind] + G.fz[G.get_ind(idx,idy,idz-1)]);
 	__syncthreads();
 
@@ -264,11 +264,11 @@ __global__ void sweepz(Grid G, double dt)
 		#if geomz == 5
 		Del.w /= rad_cyl;
 		#endif
-		G.F[ind].r = Del.r;
-		G.F[ind].p = Del.p;
-		G.F[ind].u = Del.v;
-		G.F[ind].v = Del.w;
-		G.F[ind].w = Del.u;
+		G.F[ind].r += Del.r;
+		G.F[ind].p += Del.p;
+		G.F[ind].u += Del.v;
+		G.F[ind].v += Del.w;
+		G.F[ind].w += Del.u;
 	}
 
 	return;
@@ -339,6 +339,70 @@ __global__ void update(Grid G, double dt, int axis=0)
 	return;
 }
 
+__global__ void update(Grid G, Cell* in, Cell* out, double dt, double div)
+{
+	int i = threadIdx.x + blockIdx.x*blockDim.x + xpad;
+	int j = threadIdx.y + blockIdx.y*blockDim.y + ypad;
+	int k = threadIdx.z + blockIdx.z*blockDim.z + zpad;
+	double vol;
+	Cell Q;
+	Cell D;
+	int ind;
+
+	if (i>=xpad && i<G.xarr-xpad)
+	if (j>=ypad && j<G.yarr-ypad)
+	if (k>=zpad && k<G.zarr-zpad)
+	{
+		ind = i + G.xarr*j + G.xarr*G.yarr*k;
+		vol = G.get_xv(i)*G.get_yv(j)*G.get_zv(k);
+
+		Q.copy(in[ind]);
+		D.copy(G.F[ind]);
+		D.multiply(div*dt);
+
+		Q.u += G.fx[ind]*dt;
+		Q.v += G.fy[ind]*dt;
+		Q.w += G.fz[ind]*dt;
+
+		Q.p = get_energy(Q.r,Q.p,Q.u,Q.v,Q.w);
+		Q.r *= vol;
+		Q.p *= Q.r;
+		Q.u *= Q.r;
+		Q.v *= Q.r;
+		Q.w *= Q.r;
+
+		Q.add(D);
+
+		Q.u /= Q.r;
+		Q.v /= Q.r;
+		Q.w /= Q.r;
+		Q.r /= vol;
+
+		if (Q.r<=0.0)
+		{
+			Q.r = smallr;
+			Q.u = 0.0;
+			Q.v = G.orb_rot[i+G.xarr*k];
+			Q.w = 0.0;
+			printf("negative density at %f %f %f\n",G.get_xc(i),G.get_yc(j),G.get_zc(k));
+		}
+
+		#if EOS_flag == 2
+		#if internal_e_flag==0
+		Q.p = fmax(Q.p*gamm/vol - gamm*Q.r*(Q.u*Q.u+Q.v*Q.v+Q.w*Q.w)/2.0,smallp);
+		#else
+		Q.p = fmax(Q.p*gamm/vol,smallp);
+		#endif
+		#elif EOS_flag == 0
+		Q.p = get_cs2(G.get_xc(i),G.get_yc(j),G.get_zc(k))*Q.r;
+		#endif
+
+		out[ind].copy(Q);
+	}
+
+	return;
+}
+
 __global__ void source(Grid G, double dt)
 {
 	int i = threadIdx.x + blockIdx.x*blockDim.x + xpad;
@@ -391,7 +455,7 @@ __global__ void source(Grid G, double dt)
 	return;
 }
 
-__global__ void sourcex(Grid G, double dt, bool inplace)
+__global__ void sourcex(Grid G, Cell* C, double dt)
 {
 	int i = threadIdx.x + blockIdx.x*blockDim.x;
 	int j = threadIdx.y + blockIdx.y*blockDim.y + ypad;
@@ -407,9 +471,9 @@ __global__ void sourcex(Grid G, double dt, bool inplace)
 	if (k>=zpad && k<G.zarr-zpad)
 	{		
 		ind = G.get_ind(i,j,k);
-		u = G.C[ind].u;
-		v = G.C[ind].v;
-		w = G.C[ind].w;
+		u = C[ind].u;
+		v = C[ind].v;
+		w = C[ind].w;
 
 		xc = G.get_xc(i);
 		#if ndim > 1
@@ -424,15 +488,14 @@ __global__ void sourcex(Grid G, double dt, bool inplace)
 		#endif
 
 		fx = get_fx(xc,yc,zc,u,v,w,G.planets,dt);
-		if (inplace) G.C[ind].u = u+fx*dt;
-		else         G.fx[ind] = fx;
+		G.fx[ind] = fx;
 	}
 	//if (i==12 && j==17) printf("sourcx: rad=%f azi=%f\n",G.get_xc(i),G.get_yc(i,j,k));
 
 	return;
 }
 
-__global__ void sourcey(Grid G, double dt, bool inplace)
+__global__ void sourcey(Grid G, Cell* C, double dt)
 {
 	int i = threadIdx.x + blockIdx.x*blockDim.x + xpad;
 	int j = threadIdx.y + blockIdx.y*blockDim.y;
@@ -448,9 +511,9 @@ __global__ void sourcey(Grid G, double dt, bool inplace)
 	if (k>=zpad && k<G.zarr-zpad)
 	{		
 		ind = G.get_ind(i,j,k);
-		u = G.C[ind].u;
-		v = G.C[ind].v;
-		w = G.C[ind].w;
+		u = C[ind].u;
+		v = C[ind].v;
+		w = C[ind].w;
 
 		xc = G.get_xc(i);
 		#if ndim > 1
@@ -465,14 +528,13 @@ __global__ void sourcey(Grid G, double dt, bool inplace)
 		#endif
 
 		fy = get_fy(xc,yc,zc,u,v,w,G.planets,dt);
-		if (inplace) G.C[ind].v = v+fy*dt;
-		else         G.fy[ind] = fy;
+		G.fy[ind] = fy;
 	}
 
 	return;
 }
 
-__global__ void sourcez(Grid G, double dt, bool inplace)
+__global__ void sourcez(Grid G, Cell* C, double dt)
 {
 	int i = threadIdx.x + blockIdx.x*blockDim.x + xpad;
 	int j = threadIdx.y + blockIdx.y*blockDim.y + ypad;
@@ -488,9 +550,9 @@ __global__ void sourcez(Grid G, double dt, bool inplace)
 	if (k>=0 && k<G.zarr)
 	{		
 		ind = G.get_ind(i,j,k);
-		u = G.C[ind].u;
-		v = G.C[ind].v;
-		w = G.C[ind].w;
+		u = C[ind].u;
+		v = C[ind].v;
+		w = C[ind].w;
 
 		xc = G.get_xc(i);
 		#if ndim > 1
@@ -505,8 +567,7 @@ __global__ void sourcez(Grid G, double dt, bool inplace)
 		#endif
 
 		fz = get_fz(xc,yc,zc,u,v,w,G.planets,dt);
-		if (inplace) G.C[ind].w = w+fz*dt;
-		else         G.fz[ind] = fz;
+		G.fz[ind] = fz;
 	}
 
 	return;
@@ -527,10 +588,10 @@ void evolvex(Grid* dev, double dt)
 		ny = dev[n].yres;
 		nz = dev[n].zres;
 
-		sourcex<<< dim3((dev[n].xarr+bsz-1)/bsz,ny,nz), bsz, 0, dev[n].stream >>> (dev[n], hdt, false);
+		sourcex<<< dim3((dev[n].xarr+bsz-1)/bsz,ny,nz), bsz, 0, dev[n].stream >>> (dev[n], dev[n].C, hdt);
 
 		sweepx<<< dim3(nx/x_xdiv,ny/x_ydiv,nz/x_zdiv), dim3(x_xthd,x_ydiv,x_zdiv), 2*sizeof(double)*x_xthd*x_ydiv*x_zdiv, dev[n].stream >>>
-		      (dev[n], dt);
+		      (dev[n], dev[n].C, dt);
 
 		update<<< dim3(nx/x_xdiv,ny,nz), x_xthd, 0, dev[n].stream >>> (dev[n], dt, 0);
 	}
@@ -552,10 +613,10 @@ void evolvey(Grid* dev, double dt)
 		ny = dev[n].yres;
 		nz = dev[n].zres;
 
-		sourcey<<< dim3((nx+bsz-1)/bsz,dev[n].yarr,nz), bsz, 0, dev[n].stream >>> (dev[n], hdt, false);
+		sourcey<<< dim3((nx+bsz-1)/bsz,dev[n].yarr,nz), bsz, 0, dev[n].stream >>> (dev[n], dev[n].C, hdt);
 
 		sweepy<<< dim3(ny/y_ydiv,nx/y_xdiv,nz/y_zdiv), dim3(y_ythd,y_xdiv,y_zdiv), 2*sizeof(double)*y_ythd*y_xdiv*y_zdiv, dev[n].stream >>>
-		      (dev[n], dt);
+		      (dev[n], dev[n].C, dt);
 
 		update<<< dim3(nx/x_xdiv,ny,nz), x_xthd, 0, dev[n].stream >>> (dev[n], dt, 1);
 	}
@@ -577,12 +638,99 @@ void evolvez(Grid* dev, double dt)
 		ny = dev[n].yres;
 		nz = dev[n].zres;
 
-		sourcez<<< dim3((nx+bsz-1)/bsz,ny,dev[n].zarr), bsz, 0, dev[n].stream >>> (dev[n], hdt, false);
+		sourcez<<< dim3((nx+bsz-1)/bsz,ny,dev[n].zarr), bsz, 0, dev[n].stream >>> (dev[n], dev[n].C, hdt);
 
 		sweepz<<< dim3(nz/z_zdiv,nx/z_xdiv,ny/z_ydiv), dim3(z_zthd,z_xdiv,z_ydiv), 2*sizeof(double)*z_zthd*z_xdiv*z_ydiv, dev[n].stream >>>
-		      (dev[n], dt);
+		      (dev[n], dev[n].C, dt);
 
 		update<<< dim3(nx/x_xdiv,ny,nz), x_xthd, 0, dev[n].stream >>> (dev[n], dt, 2);
+	}
+	return;
+}
+
+void evolvexyz(Grid* dev, double dt)
+{
+	double hdt = 0.5*dt;
+	int nx, ny, nz;
+	int mx, my, mz;
+	int bsz = 1024;
+
+	boundx(dev);
+	#if ndim>1
+	boundy(dev);
+	#endif
+	#if ndim>2
+	boundz(dev);
+	#endif
+	for (int n=0; n<ndev; n++)
+	{
+		cudaSetDevice(n);
+
+		nx = dev[n].xres;
+		ny = dev[n].yres;
+		nz = dev[n].zres;
+
+		mx = dev[n].xarr;
+		my = dev[n].yarr;
+		mz = dev[n].zarr;
+
+		clear_flux<<< (mx*my*mz+bsz-1)/bsz, bsz, 0, dev[n].stream >>>(mx, my, mz, dev[n].F);
+
+		sourcex<<< dim3((dev[n].xarr+bsz-1)/bsz,ny,nz), bsz, 0, dev[n].stream >>> (dev[n], dev[n].C, hdt);
+		sweepx<<< dim3(nx/x_xdiv,ny/x_ydiv,nz/x_zdiv), dim3(x_xthd,x_ydiv,x_zdiv), 2*sizeof(double)*x_xthd*x_ydiv*x_zdiv, dev[n].stream >>>
+		      (dev[n], dev[n].C, hdt);
+
+		#if ndim>1
+		sourcey<<< dim3((nx+bsz-1)/bsz,dev[n].yarr,nz), bsz, 0, dev[n].stream >>> (dev[n], dev[n].C, hdt);
+		sweepy<<< dim3(ny/y_ydiv,nx/y_xdiv,nz/y_zdiv), dim3(y_ythd,y_xdiv,y_zdiv), 2*sizeof(double)*y_ythd*y_xdiv*y_zdiv, dev[n].stream >>>
+		      (dev[n], dev[n].C, hdt);
+		#endif
+
+		#if ndim>2
+		sourcez<<< dim3((nx+bsz-1)/bsz,ny,dev[n].zarr), bsz, 0, dev[n].stream >>> (dev[n], dev[n].C, hdt);
+		sweepz<<< dim3(nz/z_zdiv,nx/z_xdiv,ny/z_ydiv), dim3(z_zthd,z_xdiv,z_ydiv), 2*sizeof(double)*z_zthd*z_xdiv*z_ydiv, dev[n].stream >>>
+		      (dev[n], dev[n].C, hdt);
+		#endif
+
+		update<<< dim3(nx/x_xdiv,ny,nz), x_xthd, 0, dev[n].stream >>> (dev[n], dev[n].C, dev[n].T, hdt, 1.0);
+	}
+
+	boundx2(dev);
+	#if ndim>1
+	boundy2(dev);
+	#endif
+	#if ndim>2
+	boundz2(dev);
+	#endif
+	for (int n=0; n<ndev; n++)
+	{
+		cudaSetDevice(n);
+
+		nx = dev[n].xres;
+		ny = dev[n].yres;
+		nz = dev[n].zres;
+
+		mx = dev[n].xarr;
+		my = dev[n].yarr;
+		mz = dev[n].zarr;
+
+		sourcex<<< dim3((dev[n].xarr+bsz-1)/bsz,ny,nz), bsz, 0, dev[n].stream >>> (dev[n], dev[n].T, hdt);
+		sweepx<<< dim3(nx/x_xdiv,ny/x_ydiv,nz/x_zdiv), dim3(x_xthd,x_ydiv,x_zdiv), 2*sizeof(double)*x_xthd*x_ydiv*x_zdiv, dev[n].stream >>>
+		      (dev[n], dev[n].T, hdt);
+
+		#if ndim>1
+		sourcey<<< dim3((nx+bsz-1)/bsz,dev[n].yarr,nz), bsz, 0, dev[n].stream >>> (dev[n], dev[n].T, hdt);
+		sweepy<<< dim3(ny/y_ydiv,nx/y_xdiv,nz/y_zdiv), dim3(y_ythd,y_xdiv,y_zdiv), 2*sizeof(double)*y_ythd*y_xdiv*y_zdiv, dev[n].stream >>>
+		      (dev[n], dev[n].T, hdt);
+		#endif
+
+		#if ndim>2
+		sourcez<<< dim3((nx+bsz-1)/bsz,ny,dev[n].zarr), bsz, 0, dev[n].stream >>> (dev[n], dev[n].T, hdt);
+		sweepz<<< dim3(nz/z_zdiv,nx/z_xdiv,ny/z_ydiv), dim3(z_zthd,z_xdiv,z_ydiv), 2*sizeof(double)*z_zthd*z_xdiv*z_ydiv, dev[n].stream >>>
+		      (dev[n], dev[n].T, hdt);
+		#endif
+
+		update<<< dim3(nx/x_xdiv,ny,nz), x_xthd, 0, dev[n].stream >>> (dev[n], dev[n].C, dev[n].C, dt, 0.5);
 	}
 	return;
 }
@@ -666,6 +814,10 @@ void solve(Grid* dev, double time, double dt)
 	
 	#ifndef advec_flag
 
+		#ifdef RadPres_flag
+		compute_extinction(dev, 1.0);
+		#endif
+
 		#ifdef cool_flag
 		cooling(dev,hdt);
 		#endif
@@ -674,8 +826,9 @@ void solve(Grid* dev, double time, double dt)
 		apply_viscosity(dev,hdt);
 		#endif
 
-		evolvex(dev,dt);
+		evolvexyz(dev,dt);
 
+/*
 		#if ndim>2
 		evolvez(dev,dt);
 		#endif
@@ -683,6 +836,7 @@ void solve(Grid* dev, double time, double dt)
 		#if ndim>1
 		evolvey(dev,dt);
 		#endif
+*/
 
 		#ifdef OrbAdv_flag
 		set_OrbAdv(dev,dt);
@@ -692,7 +846,7 @@ void solve(Grid* dev, double time, double dt)
 
 		evolve_planet(dev,time,dt);
 
-		source_all(dev,hdt);
+		//source_all(dev,hdt);
 
 		#ifdef cool_flag
 		cooling(dev,hdt);

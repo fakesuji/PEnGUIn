@@ -92,6 +92,7 @@ void mem_allocation(Grid* hst, Grid* dev)
 		cudaMalloc( (void**)&dev[n].Buff, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(double) );
 
 		cudaMalloc( (void**)&dev[n].C, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(Cell) );
+		cudaMalloc( (void**)&dev[n].T, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(Cell) );
 		cudaMalloc( (void**)&dev[n].F, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(Cell) );
 
 		cudaMalloc( (void**)&dev[n].fx, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(double) );
@@ -106,6 +107,10 @@ void mem_allocation(Grid* hst, Grid* dev)
 		#elif ndim==3
 		cudaMalloc( (void**)&dev[n].vis_tensor, 6*dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(double) );
 		#endif
+		#endif
+
+		#ifdef RadPres_flag
+		cudaMalloc( (void**)&dev[n].ext, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(double) );
 		#endif
 
 		cudaMalloc( (void**)&dev[n].BuffL, xpad*dev[n].yarr*dev[n].zarr*sizeof(Cell) );

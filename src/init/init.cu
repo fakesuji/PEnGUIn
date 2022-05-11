@@ -85,6 +85,7 @@ __host__ __device__ double get_r(double x, double y, double z)
 	return pow(x*sin(z)/planet_radius,-p_alpha)*get_vertical(x,y,z);
 
 	#elif init_flag == 4
+	return 1.0;
 
 	#elif init_flag == 5
 
@@ -115,6 +116,8 @@ __host__ __device__ double get_p(double x, double y, double z)
 	return get_cs2(x,y,z)*get_r(x,y,z);
 
 	#elif init_flag == 4
+	if (x<0.5 && y<0.5) return 2.0;
+	else return 1.0;
 
 	#elif init_flag == 5
 
@@ -143,6 +146,7 @@ __host__ __device__ double get_u(double x, double y, double z)
 	return -1.5*get_nu(x,y,z)/r;
 
 	#elif init_flag == 4
+	return 0.0;
 
 	#elif init_flag == 5
 
@@ -176,6 +180,7 @@ __host__ __device__ double get_v(double x, double y, double z)
 	return sqrt(1.0/x + (x/rho)*dP_dr);
 
 	#elif init_flag == 4
+	return 0.0;
 
 	#elif init_flag == 5
 
@@ -204,6 +209,7 @@ __host__ __device__ double get_w(double x, double y, double z)
 	return 0.0;
 
 	#elif init_flag == 4
+	return 0.0;
 
 	#elif init_flag == 5
 

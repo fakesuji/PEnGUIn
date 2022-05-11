@@ -83,11 +83,11 @@ const int ndev = 1;
 // Temporal parameters
 //=======================================================================
 
-const double frame_omega = 1.0;
+const double frame_omega = 0.0;
 
-const double sav_interval = 0.013;//1.0*twopi;
+const double sav_interval = 0.0001;//1.0*twopi;
 const double sta_time = 0.0;
-const double end_time = 0.013;//1.0*twopi;
+const double end_time = 0.038;//1.0*twopi;
 
 const int prt_interval = 100;
 const int max_step = 1000000000;
@@ -147,7 +147,7 @@ const double Sigma_0 = (MMSN_1AU/0.76)*0.05;              // density at r=1 in u
 #endif
 
 const double kill_width = 2.0;                      // in units of sc_h
-const double t_cool = 10.0;                          // in units of dynamical time for beta cooling
+const double beta_cool = 10.0;                          // in units of dynamical time for beta cooling
 
 //=======================================================================
 // planet parameters
@@ -156,6 +156,7 @@ const double t_cool = 10.0;                          // in units of dynamical ti
 const int n_planet = 0;
 const double planet_mass = NeptuneMass;
 const double planet_radius = 1.0;
+const double planet_ecc = 0.0;
 
 const double ramp_time = twopi*5.0;
 
