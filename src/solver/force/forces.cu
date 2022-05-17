@@ -44,7 +44,7 @@ __device__ void star_planet_grav_cyl(double rad, double azi, double z, body p, d
 //====================================================================
 
 __device__ double get_fx(double rad, double azi, double pol,
-                         double u, double v, double w, body *planet, double dt)
+                         double u, double v, double w, body *planet)
 {
 	double gx, fx;
 
@@ -86,7 +86,7 @@ __device__ double get_fx(double rad, double azi, double pol,
 //====================================================================
 
 __device__ double get_fy(double rad, double azi, double pol,
-                         double u, double v, double w, body *planet, double dt)
+                         double u, double v, double w, body *planet)
 {
 	double gy, fy;
 
@@ -128,7 +128,7 @@ __device__ double get_fy(double rad, double azi, double pol,
 //====================================================================
 
 __device__ double get_fz(double rad, double azi, double pol,
-                         double u, double v, double w, body *planet, double dt)
+                         double u, double v, double w, body *planet)
 {
 	double gz, fz;
 

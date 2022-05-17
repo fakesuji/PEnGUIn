@@ -45,7 +45,7 @@ __global__ void killwave(Grid G, double dt)
 			#if geomx == 0
 			tau  = 1.0;
 			#else
-			tau  = pow(rad,1.5);
+			tau  = twopi*pow(rad,1.5);
 			#endif
 
 			f  = get_ramping_fac(f);
@@ -53,8 +53,10 @@ __global__ void killwave(Grid G, double dt)
 
 			C_tmp = G.get_cell(i,j,k);
 			I_tmp = init_C(rad,azi,pol);
-			//I_tmp.r *= 0.0001;
-			//I_tmp.p *= 0.0001;
+			#if kill_flag == 2
+			I_tmp.r *= 0.0;
+			I_tmp.p *= 0.0;
+			#endif
 
 			C_tmp.r += f * ( I_tmp.r - C_tmp.r );
 			C_tmp.p += f * ( I_tmp.p - C_tmp.p );

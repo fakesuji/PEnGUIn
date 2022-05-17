@@ -218,10 +218,6 @@ int main(int narg, char *args[])
 	bool savep = false;
 	bool contu = true;
 
-	#ifdef visc_flag
-	viscosity_tensor_evaluation(dev);
-	#endif
-
 	while (contu)
 	{
 		dt = global_dt(hst, dev, dt);

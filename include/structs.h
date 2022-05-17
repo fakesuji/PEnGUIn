@@ -136,6 +136,10 @@ struct Grid
 	double* fy;
 	double* fz;
 
+	double* fx2;
+	double* fy2;
+	double* fz2;
+
 	double* ext;
 
 	body* planets;
