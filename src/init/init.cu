@@ -32,7 +32,7 @@ __host__ __device__ double get_nu(double x, double y, double z)
 {
 	#ifdef visc_flag
 
-	double coeff = ss_alpha*sqrt(get_cs2(x, y, z))*get_h(x, y, z);
+	double coeff = ss_alpha*sqrt(get_cs2(planet_radius, y, z))*get_h(planet_radius, y, z);
 	#if geomx == 0
 	return coeff;
 	#elif geomx == 1

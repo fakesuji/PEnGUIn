@@ -209,6 +209,8 @@ __device__ double viscous_fy(Grid G, Cell* C, int i, int j, int k)
 	fy += (tt[4]-td[4])/dz;
 	#endif
 
+	//if (i==3 || i==180) printf("%i %f %f %f %f %f %f %e\n",i,fy/C[ind].r,-0.75*get_nu(r,0.0,0.0)*pow(r,-1.5)/r, t0[1]/r, -1.5*get_nu(r,0.0,0.0)*C[ind].r*pow(r,-2.5), (tf[1]-tb[1])/dr, 1.5*1.5*get_nu(r,0.0,0.0)*C[ind].r*pow(r,-2.5), get_nu(r,0.0,0.0)*C[ind].r);
+
 	return fy;
 }
 

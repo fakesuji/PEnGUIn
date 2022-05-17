@@ -3,7 +3,7 @@
 
 #define mode_flag 0
 #define dump_flag
-#define kill_flag 2
+#define kill_flag 1
 #define OrbAdv_flag
 #define visc_flag
 //#define advec_flag
@@ -110,7 +110,7 @@ const double gamm = gam - 1.0;
 const double gamp = gam + 1.0;
 const double gammfac = gamm/gam/2.0;
 const double gampfac = gamp/gam/2.0;
-const double CFL = 0.5;
+const double CFL = 0.3;
 
 //=======================================================================
 // boundary parameters
@@ -118,8 +118,8 @@ const double CFL = 0.5;
 
 #define init_flag 2
 
-const int bound_lft = 1;
-const int bound_rgh = 1;
+const int bound_lft = 0;
+const int bound_rgh = 0;
 
 const int bound_bak = 3;
 const int bound_frn = 3;

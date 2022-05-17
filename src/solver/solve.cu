@@ -286,7 +286,7 @@ __global__ void sweepz(Grid G, Cell* C, double dt)
 	return;
 }
 
-__global__ void update(Grid G, Cell* in, Cell* out, double dt, double div, int axis=0)
+__global__ void update(Grid G, Cell* in, Cell* out, double dt, double div=1.0, int axis=0)
 {
 	int i = threadIdx.x + blockIdx.x*blockDim.x + xpad;
 	int j = threadIdx.y + blockIdx.y*blockDim.y + ypad;
@@ -332,21 +332,24 @@ __global__ void update(Grid G, Cell* in, Cell* out, double dt, double div, int a
 		if (Q.r<=0.0)
 		{
 			Q.r = smallr;
+			Q.p = get_cs2(G.get_xc(i),G.get_yc(j),G.get_zc(k))*Q.r;
 			Q.u = 0.0;
 			Q.v = G.orb_rot[i+G.xarr*k];
 			Q.w = 0.0;
-			//printf("negative density at %f %f %f\n",G.get_xc(i),G.get_yc(j),G.get_zc(k));
+			printf("negative density at %f %f %f\n",G.get_xc(i),G.get_yc(j),G.get_zc(k));
 		}
-
-		#if EOS_flag == 2
-		#if internal_e_flag==0
-		Q.p = fmax(Q.p*gamm/vol - gamm*Q.r*(Q.u*Q.u+Q.v*Q.v+Q.w*Q.w)/2.0,smallp);
-		#else
-		Q.p = fmax(Q.p*gamm/vol,smallp);
-		#endif
-		#elif EOS_flag == 0
-		Q.p = get_cs2(G.get_xc(i),G.get_yc(j),G.get_zc(k))*Q.r;
-		#endif
+		else
+		{
+			#if EOS_flag == 2
+			#if internal_e_flag==0
+			Q.p = fmax(Q.p*gamm/vol - gamm*Q.r*(Q.u*Q.u+Q.v*Q.v+Q.w*Q.w)/2.0,smallp);
+			#else
+			Q.p = fmax(Q.p*gamm/vol,smallp);
+			#endif
+			#elif EOS_flag == 0
+			Q.p = get_cs2(G.get_xc(i),G.get_yc(j),G.get_zc(k))*Q.r;
+			#endif
+		}
 
 		out[ind].copy(Q);
 	}
@@ -496,6 +499,8 @@ void RK2(Grid* dev, double time, double dt)
 	int mx, my, mz;
 	int bsz = 1024;
 
+	syncallstreams(dev);
+
 	#ifdef visc_flag
 		viscosity_tensor_evaluation1(dev);
 	#else
@@ -539,18 +544,16 @@ void RK2(Grid* dev, double time, double dt)
 		      (dev[n], dev[n].C, 0.0);
 		#endif
 
-		update<<< dim3(nx/x_xdiv,ny,nz), x_xthd, 0, dev[n].stream >>> (dev[n], dev[n].C, dev[n].T, dt, 1.0);
+		update<<< dim3(nx/x_xdiv,ny,nz), x_xthd, 0, dev[n].stream >>> (dev[n], dev[n].C, dev[n].T, dt);
 	}
+
+	#ifdef kill_flag
+	killwave2(dev, dt);
+	#endif
 
 	evolve_planet(dev,time+dt,dt);
 
-	#ifdef kill_flag
-	killwave(dev, dt);
-	#endif
-
-	#ifdef cool_flag
-	cooling(dev, dt);
-	#endif
+	syncallstreams(dev);
 
 	#ifdef visc_flag
 		viscosity_tensor_evaluation2(dev);
@@ -594,6 +597,15 @@ void RK2(Grid* dev, double time, double dt)
 
 		update<<< dim3(nx/x_xdiv,ny,nz), x_xthd, 0, dev[n].stream >>> (dev[n], dev[n].C, dev[n].C, dt, 0.5);
 	}
+
+	#ifdef cool_flag
+	cooling(dev, dt);
+	#endif
+
+	#ifdef kill_flag
+	killwave(dev, dt);
+	#endif
+
 	return;
 }
 
@@ -614,6 +626,8 @@ void dimensional_splitting(Grid* dev, double time, double dt)
 	cooling(dev,hdt);
 	#endif
 
+	syncallstreams(dev);
+
 	#ifdef visc_flag
 	viscosity_tensor_evaluation1(dev);
 	#else
@@ -633,7 +647,6 @@ void dimensional_splitting(Grid* dev, double time, double dt)
 		mz = dev[n].zarr;
 
 		clear_flux<<< (mx*my*mz+bsz-1)/bsz, bsz, 0, dev[n].stream >>>(mx, my, mz, dev[n].F);
-		clear_forces<<< (mx*my*mz+bsz-1)/bsz, bsz, 0, dev[n].stream >>>(mx, my, mz, dev[n].fx, dev[n].fy, dev[n].fz);
 
 		sourcex<<< dim3((dev[n].xarr+bsz-1)/bsz,ny,nz), bsz, 0, dev[n].stream >>> (dev[n], dev[n].C, hdt);
 		sweepx<<< dim3(nx/x_xdiv,ny/x_ydiv,nz/x_zdiv), dim3(x_xthd,x_ydiv,x_zdiv), 2*sizeof(double)*x_xthd*x_ydiv*x_zdiv, dev[n].stream >>>
@@ -643,6 +656,8 @@ void dimensional_splitting(Grid* dev, double time, double dt)
 	}
 
 	#if ndim>2
+
+	syncallstreams(dev);
 
 	#ifdef visc_flag
 	viscosity_tensor_evaluation1(dev);
@@ -673,6 +688,8 @@ void dimensional_splitting(Grid* dev, double time, double dt)
 	#endif
 
 	#if ndim>1
+
+	syncallstreams(dev);
 
 	#ifdef visc_flag
 	viscosity_tensor_evaluation1(dev);
@@ -736,9 +753,6 @@ void solve(Grid* dev, double time, double dt)
 		shift_OrbAdv(dev);
 		advecty(dev,dt);
 		#endif
-
-		syncallstreams(dev);
-
 	#else
 
 		advectx(dev,dt);

@@ -7,7 +7,7 @@ __device__ double get_ramping_fac(double x)
 }
 
 
-__global__ void killwave(Grid G, double dt)
+__global__ void killwave(Grid G, Cell* C, double dt)
 {
 	int i = threadIdx.x + blockIdx.x*blockDim.x + xpad;
 	int j = threadIdx.y + blockIdx.y*blockDim.y + ypad;
@@ -29,12 +29,14 @@ __global__ void killwave(Grid G, double dt)
 
 	Cell C_tmp;
 	Cell I_tmp;
+	int ind;
 
 	if (i>=xpad && i<G.xarr-xpad)
 	if (j>=ypad && j<G.yarr-ypad)
 	if (k>=zpad && k<G.zarr-zpad)
 	{
 		rad = G.get_xc(i);
+		ind = G.get_ind(i,j,k);
 
 		if (rad<inner) 
 		{
@@ -51,7 +53,7 @@ __global__ void killwave(Grid G, double dt)
 			f  = get_ramping_fac(f);
 			f *= dt/tau;
 
-			C_tmp = G.get_cell(i,j,k);
+			C_tmp.copy(C[ind]);
 			I_tmp = init_C(rad,azi,pol);
 			#if kill_flag == 2
 			I_tmp.r *= 0.0;
@@ -64,7 +66,7 @@ __global__ void killwave(Grid G, double dt)
 			C_tmp.v += f * ( I_tmp.v - C_tmp.v );
 			C_tmp.w += f * ( I_tmp.w - C_tmp.w );
 
-			G.write_cell(i,j,k,C_tmp);
+			C[ind].copy(C_tmp);
 		}
 
 		if (rad>outer)
@@ -82,7 +84,7 @@ __global__ void killwave(Grid G, double dt)
 			f  = get_ramping_fac(f);
 			f *= dt/tau;
 
-			C_tmp = G.get_cell(i,j,k);
+			C_tmp.copy(C[ind]);
 			I_tmp = init_C(rad,azi,pol);
 
 			C_tmp.r += f * ( I_tmp.r - C_tmp.r );
@@ -91,7 +93,7 @@ __global__ void killwave(Grid G, double dt)
 			C_tmp.v += f * ( I_tmp.v - C_tmp.v );
 			C_tmp.w += f * ( I_tmp.w - C_tmp.w );
 
-			G.write_cell(i,j,k,C_tmp);
+			C[ind].copy(C_tmp);
 		}
 	}
 	return;
@@ -108,7 +110,23 @@ void killwave(Grid* dev, double dt)
 		ny = dev[n].yres;
 		nz = dev[n].zres;
 
-		killwave<<< dim3(nx/x_xdiv,ny/x_ydiv,nz/x_zdiv), dim3(x_xthd,x_ydiv,x_zdiv), 0, dev[n].stream >>> (dev[n],dt);
+		killwave<<< dim3(nx/x_xdiv,ny/x_ydiv,nz/x_zdiv), dim3(x_xthd,x_ydiv,x_zdiv), 0, dev[n].stream >>> (dev[n],dev[n].C,dt);
+	}
+	return;
+}
+
+void killwave2(Grid* dev, double dt)
+{
+	int nx, ny, nz;
+	for (int n=0; n<ndev; n++)
+	{
+		cudaSetDevice(n);
+
+		nx = dev[n].xres;
+		ny = dev[n].yres;
+		nz = dev[n].zres;
+
+		killwave<<< dim3(nx/x_xdiv,ny/x_ydiv,nz/x_zdiv), dim3(x_xthd,x_ydiv,x_zdiv), 0, dev[n].stream >>> (dev[n],dev[n].T,dt);
 	}
 	return;
 }
