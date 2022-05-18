@@ -119,10 +119,12 @@ __global__ void sweepx(Grid G, Cell* C, double dt)
 	#endif
 	__syncthreads();
 
+//if (idy==2) printf("%f %f %f\n",rad,r[y_ythd*j+i],p[y_ythd*j+i]);
+
 	/////////////////////////////////////////////////////
 	Cell Del;
 	Del =   riemann(geomx, xa, dx, xv, rad, &r[x_xthd*j], &p[x_xthd*j], &u[x_xthd*j], &v[x_xthd*j], &w[x_xthd*j], force, dt);
-//if (idy==ypad && i<x_xthd-1) printf("%f %f: %f, %f, %e, %f, %e\n",xa[i],xv[i+1]-xv[i],r[i+x_xthd*j],p[i+x_xthd*j],u[i+x_xthd*j],force,Del.r);
+//if (idy==ypad && i>=xpad && i<x_xthd-xpad && idx>270 && idx<290) printf("%f %f: %f, %f, %e, %f, %f, %e\n",xa[i],xv[i+1]-xv[i],r[i+x_xthd*j],p[i+x_xthd*j],u[i+x_xthd*j],force,G.get_rot(idx,idz),Del.r);
 	Del.multiply(G.get_yv(idy)*G.get_zv(idz));
 
 	if (i>=xpad && i<x_xthd-xpad)
@@ -333,9 +335,9 @@ __global__ void update(Grid G, Cell* in, Cell* out, double dt, double div=1.0, i
 		{
 			Q.r = smallr;
 			Q.p = get_cs2(G.get_xc(i),G.get_yc(j),G.get_zc(k))*Q.r;
-			Q.u = 0.0;
-			Q.v = G.orb_rot[i+G.xarr*k];
-			Q.w = 0.0;
+			Q.u = in[ind].u;
+			Q.v = in[ind].v;
+			Q.w = in[ind].w;
 			printf("negative density at %f %f %f\n",G.get_xc(i),G.get_yc(j),G.get_zc(k));
 		}
 		else
@@ -633,7 +635,6 @@ void dimensional_splitting(Grid* dev, double time, double dt)
 	#else
 	boundx(dev);
 	#endif
-
 	for (int n=0; n<ndev; n++)
 	{
 		cudaSetDevice(n);
@@ -648,7 +649,7 @@ void dimensional_splitting(Grid* dev, double time, double dt)
 
 		clear_flux<<< (mx*my*mz+bsz-1)/bsz, bsz, 0, dev[n].stream >>>(mx, my, mz, dev[n].F);
 
-		sourcex<<< dim3((dev[n].xarr+bsz-1)/bsz,ny,nz), bsz, 0, dev[n].stream >>> (dev[n], dev[n].C, hdt);
+		sourcex<<< dim3((dev[n].xarr+bsz-1)/bsz,ny,nz), bsz, 0, dev[n].stream >>> (dev[n], dev[n].C, hdt, 0.0);
 		sweepx<<< dim3(nx/x_xdiv,ny/x_ydiv,nz/x_zdiv), dim3(x_xthd,x_ydiv,x_zdiv), 2*sizeof(double)*x_xthd*x_ydiv*x_zdiv, dev[n].stream >>>
 		      (dev[n], dev[n].C, dt);
 
@@ -679,7 +680,7 @@ void dimensional_splitting(Grid* dev, double time, double dt)
 
 		clear_flux<<< (mx*my*mz+bsz-1)/bsz, bsz, 0, dev[n].stream >>>(mx, my, mz, dev[n].F);
 
-		sourcez<<< dim3((nx+bsz-1)/bsz,ny,dev[n].zarr), bsz, 0, dev[n].stream >>> (dev[n], dev[n].C, hdt);
+		sourcez<<< dim3((nx+bsz-1)/bsz,ny,dev[n].zarr), bsz, 0, dev[n].stream >>> (dev[n], dev[n].C, hdt, 0.0);
 		sweepz<<< dim3(nz/z_zdiv,nx/z_xdiv,ny/z_ydiv), dim3(z_zthd,z_xdiv,z_ydiv), 2*sizeof(double)*z_zthd*z_xdiv*z_ydiv, dev[n].stream >>>
 		      (dev[n], dev[n].C, dt);
 
@@ -711,7 +712,7 @@ void dimensional_splitting(Grid* dev, double time, double dt)
 
 		clear_flux<<< (mx*my*mz+bsz-1)/bsz, bsz, 0, dev[n].stream >>>(mx, my, mz, dev[n].F);
 
-		sourcey<<< dim3((nx+bsz-1)/bsz,dev[n].yarr,nz), bsz, 0, dev[n].stream >>> (dev[n], dev[n].C, hdt);
+		sourcey<<< dim3((nx+bsz-1)/bsz,dev[n].yarr,nz), bsz, 0, dev[n].stream >>> (dev[n], dev[n].C, hdt, 0.0);
 		sweepy<<< dim3(ny/y_ydiv,nx/y_xdiv,nz/y_zdiv), dim3(y_ythd,y_xdiv,y_zdiv), 2*sizeof(double)*y_ythd*y_xdiv*y_zdiv, dev[n].stream >>>
 		      (dev[n], dev[n].C, dt);
 

@@ -27,7 +27,53 @@ __device__ double net_flux(double* fluxes, double flux)
 	else return 0.0;
 }
 
-__device__ void net_source(Cell &flux, int geom, double* xa, double pres, double uprs)
+__device__ void check_flux(Cell &flux, int geom, double* r, double* xa, double* dx, double gfac, double dt)
+{
+	int imax = blockDim.x;
+	int i = threadIdx.x;
+
+	flux.r *= gfac;
+	flux.p *= gfac;
+	flux.u *= gfac;
+	flux.v *= gfac;
+	flux.w *= gfac;
+
+	double old_flux = flux.r;
+	double vol;
+
+	if (i>=npad && i<imax-npad+1)
+	{
+		if (flux.r>0.0)
+		{
+			vol = 0.99*get_volume_dev(geom, xa[i-1], dx[i-1]);
+			if (flux.r*dt>r[i-1]*vol)
+			{
+				flux.r = r[i-1]*vol/dt;
+				flux.p *= flux.r/old_flux;
+				flux.u *= flux.r/old_flux;
+				flux.v *= flux.r/old_flux;
+				flux.w *= flux.r/old_flux;
+				printf("Flux too high; consider lowering the Courant number.\n");
+			}
+		}
+		else 
+		{
+			vol = 0.99*get_volume_dev(geom, xa[i], dx[i]);
+			if (-flux.r*dt>r[i]*vol)
+			{
+				flux.r = -r[i]*vol/dt;
+				flux.p *= flux.r/old_flux;
+				flux.u *= flux.r/old_flux;
+				flux.v *= flux.r/old_flux;
+				flux.w *= flux.r/old_flux;
+				printf("Flux too high; consider lowering the Courant number.\n");
+			}
+		}
+	}	
+	return;
+}
+
+__device__ void net_source(Cell &flux, int geom, double* r, double* xa, double* dx, double pres, double uprs, double dt)
 {
 	int imax = blockDim.x;
 	int i = threadIdx.x;
@@ -63,15 +109,18 @@ __device__ void net_source(Cell &flux, int geom, double* xa, double pres, double
 	#endif
 	__syncthreads();
 
-	flux.r = net_flux(tmp1,flux.r*gfac);
+	check_flux(flux, geom, r, xa, dx, gfac, dt);
 	__syncthreads();
-	flux.p = net_flux(tmp1,flux.p*gfac) + de;
+
+	flux.r = net_flux(tmp1,flux.r);
 	__syncthreads();
-	flux.u = net_flux(tmp1,flux.u*gfac) + du;
+	flux.p = net_flux(tmp1,flux.p) + de;
 	__syncthreads();
-	flux.v = net_flux(tmp1,flux.v*gfac);
+	flux.u = net_flux(tmp1,flux.u) + du;
 	__syncthreads();
-	flux.w = net_flux(tmp1,flux.w*gfac);
+	flux.v = net_flux(tmp1,flux.v);
+	__syncthreads();
+	flux.w = net_flux(tmp1,flux.w);
 	__syncthreads();
 	return;
 }
@@ -109,7 +158,7 @@ __device__ Cell riemann(int geom, double* xa, double* dx, double* dv, double rad
 		HLLC_fluxes(S, pm, sl, sm, sr, flux, pres, uprs);
 	}
 
-	net_source(flux, geom, xa, pres, uprs);
+	net_source(flux, geom, r, xa, dx, pres, uprs, dt);
 
 	return flux;
 }

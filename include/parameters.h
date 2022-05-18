@@ -3,7 +3,7 @@
 
 #define mode_flag 0
 #define dump_flag
-#define kill_flag 1
+//#define kill_flag 1
 #define OrbAdv_flag
 #define visc_flag
 //#define advec_flag
@@ -23,8 +23,8 @@ const double NeptuneMass = 0.00005;
 const double SaturnMass = 0.0002857;
 const double JupiterMass = 0.0009543;
 const double MMSN_1AU = 0.00019126835;
-const double smallp = 1.0e-14;
-const double smallr = 1.0e-14;
+const double smallp = 1.0e-10;
+const double smallr = 1.0e-10;
 
 //=======================================================================
 // Geometric parameters
@@ -118,7 +118,7 @@ const double CFL = 0.3;
 
 #define init_flag 2
 
-const int bound_lft = 0;
+const int bound_lft = 1;
 const int bound_rgh = 0;
 
 const int bound_bak = 3;
@@ -158,7 +158,7 @@ const double planet_mass = 0.0123;
 const double planet_radius = 0.082;
 const double planet_ecc = 0.25;
 
-const double ramp_time = 100.0*twopi/frame_omega;
+const double ramp_time = 50.0*twopi/frame_omega;
 
 //=======================================================================
 // Grid parameters

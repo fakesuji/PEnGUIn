@@ -231,14 +231,15 @@ __global__ void advect_update(Grid G, double dt)
 		Q.w *= Q.r;
 
 		Q.add(D);
-		Q.r = fmax(Q.r,smallr);
-		Q.p = fmax(Q.p,smallp);
 
 		G.C[ind].r = Q.r/vol;
 		G.C[ind].p = Q.p/vol;
 		G.C[ind].u = Q.u/Q.r;
 		G.C[ind].v = Q.v/Q.r;
 		G.C[ind].w = Q.w/Q.r;
+
+		Q.r = fmax(Q.r,smallr);
+		Q.p = fmax(Q.p,smallp);
 	}
 
 	return;
