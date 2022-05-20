@@ -31,7 +31,7 @@ __device__ double get_pm_simple(State &S)
 
 	pm = 0.5*(S.pr+S.pl) - 0.5*(S.ur-S.ul)*r_*c_;
 
-	return pm;
+	return fmax(pm,0.0);
 }
 
 //=================================================================================
@@ -346,7 +346,8 @@ __device__ void wave_speeds(State S, double &pm, double &sl, double &sm, double 
 	//pm = get_pm_simple(S);
 	//sm = get_sm(S,sl,sr);
 	#else
-	get_pm_um_iso(S, pm, sm);
+	//get_pm_um_iso(S, pm, sm);
+	pm = get_pm_simple(S);
 	get_lr_speeds_iso(S, pm, sl, sr);
 	sm = get_sm(S, sl, sr);
 	#endif

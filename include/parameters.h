@@ -3,7 +3,7 @@
 
 #define mode_flag 0
 #define dump_flag
-//#define kill_flag 1
+//#define kill_flag 3
 #define OrbAdv_flag
 #define visc_flag
 //#define advec_flag
@@ -48,8 +48,8 @@ const int zpad = npad;
 const int zpad = 0;
 #endif
 
-const int xres = 960;
-const int yres = 2016;
+const int xres = 480;
+const int yres = 1008;
 const int zres = 1;
 
 const int xarr = xres + 2*xpad;
@@ -89,7 +89,7 @@ const double frame_omega = 42.5872131567;
 const double sav_interval = 1.25*twopi/frame_omega;
 const double end_time = 1000.0*twopi/frame_omega;
 
-const int prt_interval = 200;
+const int prt_interval = 1000;
 const int max_step = 1000000000;
 
 //=======================================================================
@@ -110,7 +110,7 @@ const double gamm = gam - 1.0;
 const double gamp = gam + 1.0;
 const double gammfac = gamm/gam/2.0;
 const double gampfac = gamp/gam/2.0;
-const double CFL = 0.3;
+const double CFL = 0.2;
 
 //=======================================================================
 // boundary parameters
@@ -137,7 +137,7 @@ const double p_alpha = 2.24 - 0.5*p_beta + 1.5;          // midplane density ~ r
 #else 
 const double p_alpha = 2.24;                             // surface density ~ r^-p_alpha
 #endif 
-const double ss_alpha = 0.1;                            // alpha-viscosity
+const double ss_alpha = 0.01;                            // alpha-viscosity
 const double sc_h = 0.025;                              // scale height at r=1, normalized to that at r = 100
 
 #if ndim==3
@@ -158,7 +158,7 @@ const double planet_mass = 0.0123;
 const double planet_radius = 0.082;
 const double planet_ecc = 0.25;
 
-const double ramp_time = 5.0*twopi/frame_omega;
+const double ramp_time = 10.0*twopi/frame_omega;
 
 //=======================================================================
 // Grid parameters

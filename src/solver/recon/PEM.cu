@@ -58,16 +58,16 @@ __device__ void get_PEM_parameters(int i, int geom, double* x, double* dx, doubl
 
 	if (sR*sL<=0.0)
 	{
-		par[0] = 0.0;
+		par[0] = aL;
 		par[1] = a2;
-		par[2] = 0.0;
+		par[2] = aR;
 		par[3] = 1.0;
 	}
 	else
 	{
-		par[0] = sL;
+		par[0] = aL;
 		par[1] = a2;
-		par[2] = sR;
+		par[2] = aR;
 		par[3] = sR/sL;
     	}
 	return;
@@ -109,7 +109,7 @@ __device__ double get_PEM_1(double r0, double rx, double r1, double aM, double s
 __device__ double get_PEM_aveR(int geom, double rL, double r0, double rR, double* par)
 {
 	double aM = par[1];
-	double sR = par[2];
+	double sR = par[2] - aM;
 	double eta = par[3];
 	double val;
 
@@ -124,7 +124,7 @@ __device__ double get_PEM_aveR(int geom, double rL, double r0, double rR, double
 __device__ double get_PEM_aveL(int geom, double rL, double r0, double rR, double* par)
 {
 	double aM = par[1];
-	double sL = par[0];
+	double sL = aM - par[0];
 	double eta = par[3];
 	double val;
 
