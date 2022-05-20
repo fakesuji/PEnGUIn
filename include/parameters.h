@@ -110,7 +110,7 @@ const double gamm = gam - 1.0;
 const double gamp = gam + 1.0;
 const double gammfac = gamm/gam/2.0;
 const double gampfac = gamp/gam/2.0;
-const double CFL = 0.2;
+const double CFL = 0.5;
 
 //=======================================================================
 // boundary parameters
@@ -137,7 +137,7 @@ const double p_alpha = 2.24 - 0.5*p_beta + 1.5;          // midplane density ~ r
 #else 
 const double p_alpha = 2.24;                             // surface density ~ r^-p_alpha
 #endif 
-const double ss_alpha = 0.01;                            // alpha-viscosity
+const double ss_alpha = 0.1;                            // alpha-viscosity
 const double sc_h = 0.025;                              // scale height at r=1, normalized to that at r = 100
 
 #if ndim==3
