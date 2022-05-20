@@ -125,6 +125,7 @@ __global__ void sweepx(Grid G, Cell* C, double dt)
 	Cell Del;
 	Del =   riemann(geomx, xa, dx, xv, rad, &r[x_xthd*j], &p[x_xthd*j], &u[x_xthd*j], &v[x_xthd*j], &w[x_xthd*j], force, dt);
 //if (idy==ypad && i>=xpad && i<x_xthd-xpad && idx>270 && idx<290) printf("%f %f: %f, %f, %e, %f, %f, %e\n",xa[i],xv[i+1]-xv[i],r[i+x_xthd*j],p[i+x_xthd*j],u[i+x_xthd*j],force,G.get_rot(idx,idz),Del.r);
+
 	Del.multiply(G.get_yv(idy)*G.get_zv(idz));
 
 	if (i>=xpad && i<x_xthd-xpad)
@@ -197,6 +198,7 @@ __global__ void sweepy(Grid G, Cell* C, double dt)
 
 	Cell Del;
 	Del = riemann(geomy, ya, dy, yv, rad, &r[y_ythd*j], &p[y_ythd*j], &u[y_ythd*j], &v[y_ythd*j], &w[y_ythd*j], force, dt);
+
 	Del.multiply(G.get_xv(idx)*G.get_zv(idz));
 
 	#if geomy > 2
@@ -338,7 +340,7 @@ __global__ void update(Grid G, Cell* in, Cell* out, double dt, double div=1.0, i
 			Q.u = in[ind].u;
 			Q.v = in[ind].v;
 			Q.w = in[ind].w;
-			printf("negative density at %f %f %f\n",G.get_xc(i),G.get_yc(j),G.get_zc(k));
+			printf("Error: negative density at %f %f %f\n",G.get_xc(i),G.get_yc(j),G.get_zc(k));
 		}
 		else
 		{

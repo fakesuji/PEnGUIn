@@ -13,7 +13,6 @@ __device__ double get_pm_rare(State &S)
 	prz = pow(S.pr,z);
 
 	pm = pow( (cl + cr - gam*z*(S.ur-S.ul))/(cl/plz + cr/prz) , 1.0/z);
-	pm = fmax(pm, smallp);
 
 	return pm;
 }
@@ -135,26 +134,52 @@ __device__ void get_pm_um_rare(State &S, double &pm, double &um)
 
 __device__ void get_pm_um_iso(State &S, double &pm, double &um)
 {
-	double rl, rr, du, t1, t2;
+	double rl, rr, du;
 
 	rl   = sqrt(S.rl);
 	rr   = sqrt(S.rr);
 	du   = S.ur-S.ul;
 
-	double a, b, c;
+	double b, c;
 
-	a = rl + rr;
-	b = du*rl*rr/2.0;
-	c = S.pr*rl + S.pl*rr;
+	b = (du*rl*rr/2.0) / (rl+rr);
+	c = (S.pr*rl + S.pl*rr) / (rl+rr);
 
-	pm = (sqrt(b*b + a*c) - b) / a;
+	if (b*b>1.0e6*c && b>0.0)
+	{
+		pm = (S.pr*rl + S.pl*rr)/(du*rl*rr);
+	}
+	else
+	{
+		pm = sqrt(b*b + c) - b;
+	}
 
-	t1  = rl * pm;
-	t2  = rr * pm;
-
+	um = 0.5 * (S.ur + S.ul + pm/rr - pm/rl + (S.pl/rl-S.pr/rr)/pm);
 	pm = pm*pm;
-
-	um = 0.5 * (S.ur + S.ul + (pm-S.pr)/t2 - (pm-S.pl)/t1);
+/*
+	if (isnan(um))
+	{
+		if (rr>rl)
+		{
+			b = du*rl/2.0;
+			c = S.pr*rl/rr;
+		}
+		else if (rl>rr)
+		{
+			b = du*rr/2.0;
+			c = S.pl*rr/rl;
+		}
+		pm = fmax(sqrt(b*b + c) - b, smallp);
+		um = 0.5 * (S.ur + S.ul + pm/rr - pm/rl + (S.pl/rl-S.pr/rr)/pm);
+		pm = pm*pm;
+	}
+*/
+	if ( (isnan(pm) || isnan(um)) && !isnan(S.rl) && !isnan(S.pl) && !isnan(S.ul) && !isnan(S.rr) && !isnan(S.pr) && !isnan(S.ur) )
+	{
+		printf("Error: isothermal riemann solver error, %e, %e, %e, %e, %e, %e\n %e, %e, %e, %e, %e\n", S.rl, S.pl, S.ul, S.rr, S.pr, S.ur, pm,um,b,c,sqrt(b*b+c));
+		pm = 0.0;
+		um = 0.5 * (S.ur + S.ul);
+	}
 
 	return;
 }
@@ -214,6 +239,25 @@ __device__ void get_pm_um_iterative(State &S, double &pm, double &um)
 		}
 	}
  	um = 0.5*(uml+umr);
+	return;
+}
+
+//=================================================================================
+
+__device__ void get_lr_speeds_iso(State S, double pm, double &sl, double &sr)
+{
+	double cl, cr;
+
+	cl = sqrt(S.pl/S.rl);
+	cr = sqrt(S.pr/S.rr);
+	//c_ = 0.5*(cl+cr);
+
+	if (pm<=S.pl) sl = S.ul - cl;
+	else          sl = S.ul - cl*sqrt(pm/S.pl);
+
+	if (pm<=S.pr) sr = S.ur + cr;
+	else          sr = S.ur + cr*sqrt(pm/S.pr);
+	
 	return;
 }
 
@@ -302,8 +346,9 @@ __device__ void wave_speeds(State S, double &pm, double &sl, double &sm, double 
 	//pm = get_pm_simple(S);
 	//sm = get_sm(S,sl,sr);
 	#else
-	get_pm_um_iso(S, pm, sm);	
-	get_lr_speeds_Einfeldt(S, sl, sr);
+	get_pm_um_iso(S, pm, sm);
+	get_lr_speeds_iso(S, pm, sl, sr);
+	sm = get_sm(S, sl, sr);
 	#endif
 	return;
 }

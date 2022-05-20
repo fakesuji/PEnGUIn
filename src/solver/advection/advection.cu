@@ -232,14 +232,17 @@ __global__ void advect_update(Grid G, double dt)
 
 		Q.add(D);
 
-		G.C[ind].r = Q.r/vol;
-		G.C[ind].p = Q.p/vol;
-		G.C[ind].u = Q.u/Q.r;
-		G.C[ind].v = Q.v/Q.r;
-		G.C[ind].w = Q.w/Q.r;
+		Q.w /= Q.r;
+		Q.v /= Q.r;
+		Q.u /= Q.r;
+		Q.p /= vol;
+		Q.r /= vol;
 
-		Q.r = fmax(Q.r,smallr);
-		Q.p = fmax(Q.p,smallp);
+		#if EOS_flag == 0
+		Q.p = get_cs2(G.get_xc(i),G.get_yc(j),G.get_zc(k))*Q.r;
+		#endif
+
+		G.C[ind].copy(Q);
 	}
 
 	return;

@@ -53,7 +53,7 @@ __device__ void check_flux(Cell &flux, int geom, double* r, double* xa, double* 
 				flux.u *= flux.r/old_flux;
 				flux.v *= flux.r/old_flux;
 				flux.w *= flux.r/old_flux;
-				printf("Flux too high; consider lowering the Courant number.\n");
+				printf("Error: flux too high; consider lowering the Courant number.\n");
 			}
 		}
 		else 
@@ -66,7 +66,7 @@ __device__ void check_flux(Cell &flux, int geom, double* r, double* xa, double* 
 				flux.u *= flux.r/old_flux;
 				flux.v *= flux.r/old_flux;
 				flux.w *= flux.r/old_flux;
-				printf("Flux too high; consider lowering the Courant number.\n");
+				printf("Error: flux too high; consider lowering the Courant number.\n");
 			}
 		}
 	}	

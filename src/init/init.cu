@@ -6,13 +6,13 @@
 
 __host__ __device__ double get_cs2(double x, double y, double z)
 {
-	double coeff = sc_h*sc_h;
+	double coeff = sc_h*sc_h*(1.0/planet_radius);
 	#if geomx == 0
 	return coeff;
 	#elif geomx == 1
-	return coeff*pow(x,-p_beta);
+	return coeff*pow(x/planet_radius,-p_beta);
 	#elif geomx == 2
-	return coeff*pow(x*sin(z),-p_beta);
+	return coeff*pow(x*sin(z)/planet_radius,-p_beta);
 	#endif
 }
 

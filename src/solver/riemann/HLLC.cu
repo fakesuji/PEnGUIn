@@ -33,6 +33,8 @@ __device__ void HLLC_fluxes(State S, double pm, double sl, double sm, double sr,
 	fl = get_energy(S.rl, S.pl, S.ul, 0.0, 0.0);
 	fr = get_energy(S.rr, S.pr, S.ur, 0.0, 0.0);
 	F.p = get_flux(fl, fl, fr, fr, sl, sm, sr)*F.r;
+	#else
+	F.p = 0.0;
 	#endif
 
 	/////////////////////////////////////////////////////////
@@ -41,9 +43,14 @@ __device__ void HLLC_fluxes(State S, double pm, double sl, double sm, double sr,
 	f_l = (sl*pm-sm*S.pl)/(sl-sm);
 	f_r = (sr*pm-sm*S.pr)/(sr-sm);
 	fr  = S.pr;
+	#if mode_flag==0
+	pres = get_flux(fl, f_l, f_r, fr, sl, sm, sr);//0.5*(fl+fr);
+	#elif mode_flag==1
 	pres = get_flux(fl, f_l, f_r, fr, sl, sm, sr);
+	#endif
 
 	#if EOS_flag==2
+
 	#if internal_e_flag==0
 	fl  = S.ul*S.pl;
 	f_l = sm*(sl*pm-S.ul*S.pl)/(sl-sm);
@@ -55,9 +62,17 @@ __device__ void HLLC_fluxes(State S, double pm, double sl, double sm, double sr,
 	f_r = sm*(sr-S.ur)/(sr-sm);
 	fr  = S.ur;
 	#endif
+
+	#if mode_flag==0
 	uprs = get_flux(fl, f_l, f_r, fr, sl, sm, sr);
+	#elif mode_flag==1
+	uprs = get_flux(fl, f_l, f_r, fr, sl, sm, sr);
+	#endif
+
 	#else
+
 	uprs = 0.0;
+
 	#endif
 
 	return;

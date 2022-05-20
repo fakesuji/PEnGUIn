@@ -89,7 +89,7 @@ const double frame_omega = 42.5872131567;
 const double sav_interval = 1.25*twopi/frame_omega;
 const double end_time = 1000.0*twopi/frame_omega;
 
-const int prt_interval = 100;
+const int prt_interval = 200;
 const int max_step = 1000000000;
 
 //=======================================================================
@@ -137,7 +137,7 @@ const double p_alpha = 2.24 - 0.5*p_beta + 1.5;          // midplane density ~ r
 #else 
 const double p_alpha = 2.24;                             // surface density ~ r^-p_alpha
 #endif 
-const double ss_alpha = 0.01;                            // alpha-viscosity
+const double ss_alpha = 0.1;                            // alpha-viscosity
 const double sc_h = 0.025;                              // scale height at r=1, normalized to that at r = 100
 
 #if ndim==3
@@ -158,7 +158,7 @@ const double planet_mass = 0.0123;
 const double planet_radius = 0.082;
 const double planet_ecc = 0.25;
 
-const double ramp_time = 50.0*twopi/frame_omega;
+const double ramp_time = 5.0*twopi/frame_omega;
 
 //=======================================================================
 // Grid parameters

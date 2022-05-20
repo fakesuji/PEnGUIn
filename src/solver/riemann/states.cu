@@ -8,6 +8,18 @@ __device__ void set_L_state(int i, int geom, double* xa, double* dx, double* dv,
 
 	double xl = xa[i];
 	double xr = xa[i+1];
+	#if mode_flag==0
+	double rl = get_CON_aveR(geom, xl, xr, xr, r_par);
+	double pl = get_CON_aveR(geom, xl, xr, xr, p_par);
+	double ul = get_PRM_aveR(geom, xl, xr, xr, u_par);
+
+	if (rl==0.0) printf("Error: recontruction, %e, %e, %e, %e, %e, %e\n",r_par[0],r_par[1],r_par[2],r[i-1],r[i],r[i+1]);
+
+	S.pl = pl;
+	S.ul = ul;
+	S.rl = rl;
+
+	#elif mode_flag==1
 	double cl = sqrt(gam*p[i]/r[i]);
 	double tmp = xr - fmax(cl, u[i]+cl)*dt;
 
@@ -53,6 +65,7 @@ __device__ void set_L_state(int i, int geom, double* xa, double* dx, double* dv,
 	S.pl = pl + (Bp + Bm)*C*C;
 	S.ul = ul + (Bp - Bm)*C;
 	S.rl = 1.0/( 1.0/rl - (B0 + Bp + Bm) );
+	#endif
 
 	return;
 }
@@ -67,6 +80,19 @@ __device__ void set_R_state(int i, int geom, double* xa, double* dx, double* dv,
 
 	double xl = xa[i];
 	double xr = xa[i+1];
+
+	#if mode_flag==0
+	double rr = get_CON_aveL(geom, xl, xl, xr, r_par);
+	double pr = get_CON_aveL(geom, xl, xl, xr, p_par);
+	double ur = get_PRM_aveL(geom, xl, xl, xr, u_par);
+
+	if (rr==0.0) printf("Error: recontruction, %e, %e, %e, %e, %e, %e\n",r_par[0],r_par[1],r_par[2],r[i-1],r[i],r[i+1]);
+
+	S.pr = pr;
+	S.ur = ur;
+	S.rr = rr;
+
+	#elif mode_flag==1
 	double cr = sqrt(gam*p[i]/r[i]);
 	double tmp = xl + fmax(cr, -u[i]+cr)*dt;
 
@@ -112,6 +138,7 @@ __device__ void set_R_state(int i, int geom, double* xa, double* dx, double* dv,
 	S.pr = pr + (Bp + Bm)*C*C;
 	S.ur = ur + (Bp - Bm)*C;
 	S.rr = 1.0/( 1.0/rr - (B0 + Bp + Bm) );
+	#endif
 
 	return;
 }
