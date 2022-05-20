@@ -137,7 +137,7 @@ const double p_alpha = 2.24 - 0.5*p_beta + 1.5;          // midplane density ~ r
 #else 
 const double p_alpha = 2.24;                             // surface density ~ r^-p_alpha
 #endif 
-const double ss_alpha = 0.1;                            // alpha-viscosity
+const double ss_alpha = 0.01;                            // alpha-viscosity
 const double sc_h = 0.025;                              // scale height at r=1, normalized to that at r = 100
 
 #if ndim==3
