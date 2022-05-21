@@ -144,12 +144,12 @@ __device__ Cell riemann(int geom, double* xa, double* dx, double* dv, double rad
 
 		set_L_state(i-1, geom, xa, dx, dv, rad, r, p, u, v, w, dt, 0.0, S);
 		set_R_state(  i, geom, xa, dx, dv, rad, r, p, u, v, w, dt, 0.0, S);
-		//S.ur += 0.5*dt*force;
-		//S.ul += 0.5*dt*force;
+		S.ur += 0.5*dt*force;
+		S.ul += 0.5*dt*force;
 		wave_speeds(S, pm, sl, sm, sr);
-		sl += 0.5*dt*force;
-		sm += 0.5*dt*force;
-		sr += 0.5*dt*force;
+		//sl += 0.5*dt*force;
+		//sm += 0.5*dt*force;
+		//sr += 0.5*dt*force;
 		set_L_state_passive(i-1, geom, xa, dx, dv, rad, sl, sm, u, v, w, dt, S);
 		set_R_state_passive(  i, geom, xa, dx, dv, rad, sr, sm, u, v, w, dt, S);
 

@@ -86,7 +86,7 @@ const int ndev = 1;
 
 const double frame_omega = 42.5872131567;
 
-const double sav_interval = 1.25*twopi/frame_omega;
+const double sav_interval = 0.25*twopi/frame_omega;
 const double end_time = 1000.0*twopi/frame_omega;
 
 const int prt_interval = 1000;

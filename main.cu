@@ -275,7 +275,7 @@ int main(int narg, char *args[])
 			save_check_point(check_point, fname, sstep, cur_time, hst);
 
 			printf("Check point!\n");
-			printf("  Current time %f | End time %f | Time step %e\n", cur_time, end_time, dt);
+			//printf("  Current time %f | End time %f | Time step %e\n", cur_time, end_time, dt);
 			printf("  %s is saved. \n\n", fname.c_str());
 
 			sstep++;
