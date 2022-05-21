@@ -318,15 +318,15 @@ __global__ void update(Grid G, Cell* in, Cell* out, double dt, double div=1.0, i
 		Q.v *= Q.r;
 		Q.w *= Q.r;
 
-		if (axis==0 || axis==1) Q.u += 0.5*Q.r*G.fx[ind]*dt;
-		if (axis==0 || axis==2) Q.v += 0.5*Q.r*G.fy[ind]*dt;
-		if (axis==0 || axis==3) Q.w += 0.5*Q.r*G.fz[ind]*dt;
+		//if (axis==0 || axis==1) Q.u += 0.5*Q.r*G.fx[ind]*dt;
+		//if (axis==0 || axis==2) Q.v += 0.5*Q.r*G.fy[ind]*dt;
+		//if (axis==0 || axis==3) Q.w += 0.5*Q.r*G.fz[ind]*dt;
 
 		Q.add(D);
 
-		if (axis==0 || axis==1) Q.u += 0.5*Q.r*G.fx[ind]*dt;
-		if (axis==0 || axis==2) Q.v += 0.5*Q.r*G.fy[ind]*dt;
-		if (axis==0 || axis==3) Q.w += 0.5*Q.r*G.fz[ind]*dt;
+		//if (axis==0 || axis==1) Q.u += 0.5*Q.r*G.fx[ind]*dt;
+		//if (axis==0 || axis==2) Q.v += 0.5*Q.r*G.fy[ind]*dt;
+		//if (axis==0 || axis==3) Q.w += 0.5*Q.r*G.fz[ind]*dt;
 
 		Q.u /= Q.r;
 		Q.v /= Q.r;
