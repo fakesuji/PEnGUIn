@@ -290,7 +290,7 @@ __global__ void sweepz(Grid G, Cell* C, double dt)
 	return;
 }
 
-__global__ void update(Grid G, Cell* in, Cell* out, double dt, double div=1.0, int axis=0)
+__global__ void update(Grid G, Cell* in, Cell* out, double dt, double div=1.0)
 {
 	int i = threadIdx.x + blockIdx.x*blockDim.x + xpad;
 	int j = threadIdx.y + blockIdx.y*blockDim.y + ypad;
@@ -299,6 +299,14 @@ __global__ void update(Grid G, Cell* in, Cell* out, double dt, double div=1.0, i
 	Cell Q;
 	Cell D;
 	int ind;
+
+	double fx;
+	#if ndim>1
+	double fy;
+	#endif
+	#if ndim>2
+	double fz;
+	#endif
 
 	if (i>=xpad && i<G.xarr-xpad)
 	if (j>=ypad && j<G.yarr-ypad)
@@ -317,16 +325,27 @@ __global__ void update(Grid G, Cell* in, Cell* out, double dt, double div=1.0, i
 		Q.u *= Q.r;
 		Q.v *= Q.r;
 		Q.w *= Q.r;
-
-		if (axis==0 || axis==1) Q.u += 0.5*Q.r*G.fx[ind]*dt;
-		if (axis==0 || axis==2) Q.v += 0.5*Q.r*G.fy[ind]*dt;
-		if (axis==0 || axis==3) Q.w += 0.5*Q.r*G.fz[ind]*dt;
+		
+		fx = G.fx[ind];
+		Q.u += 0.5*Q.r*fx*dt;
+		#if ndim>1
+		fy = G.fy[ind];
+		Q.v += 0.5*Q.r*fy*dt;
+		#endif
+		#if ndim>2
+		fz = G.fz[ind];
+		Q.w += 0.5*Q.r*fz*dt;
+		#endif
 
 		Q.add(D);
 
-		if (axis==0 || axis==1) Q.u += 0.5*Q.r*G.fx[ind]*dt;
-		if (axis==0 || axis==2) Q.v += 0.5*Q.r*G.fy[ind]*dt;
-		if (axis==0 || axis==3) Q.w += 0.5*Q.r*G.fz[ind]*dt;
+		Q.u += 0.5*Q.r*fx*dt;
+		#if ndim>1
+		Q.v += 0.5*Q.r*fy*dt;
+		#endif
+		#if ndim>2
+		Q.w += 0.5*Q.r*fz*dt;
+		#endif
 
 		Q.u /= Q.r;
 		Q.v /= Q.r;
@@ -670,7 +689,7 @@ void RK2(Grid* dev, double time, double dt)
 
 	#ifdef visc_flag
 	viscosity_tensor_evaluation1(dev);
-	#endif
+	#else
 
 	syncallstreams(dev);
 
@@ -680,6 +699,8 @@ void RK2(Grid* dev, double time, double dt)
 	#endif
 	#if ndim>2
 	boundz(dev);
+	#endif
+
 	#endif
 
 	for (int n=0; n<ndev; n++)
@@ -695,7 +716,6 @@ void RK2(Grid* dev, double time, double dt)
 		mz = dev[n].zarr;
 
 		clear_flux<<< (mx*my*mz+bsz-1)/bsz, bsz, 0, dev[n].stream >>>(mx, my, mz, dev[n].F);
-		//clear_forces<<< (mx*my*mz+bsz-1)/bsz, bsz, 0, dev[n].stream >>>(mx, my, mz, dev[n].fx, dev[n].fy, dev[n].fz);
 		compute_forces<<< dim3((mx+bsz-1)/bsz,my,mz), bsz, 0, dev[n].stream >>> (dev[n], dev[n].C, 0.0, 0.0);
 
 		sweepx<<< dim3(nx/x_xdiv,ny/x_ydiv,nz/x_zdiv), dim3(x_xthd,x_ydiv,x_zdiv), 2*sizeof(double)*x_xthd*x_ydiv*x_zdiv, dev[n].stream >>>
@@ -711,14 +731,6 @@ void RK2(Grid* dev, double time, double dt)
 		      (dev[n], dev[n].C, hdt);
 		#endif
 	}
-
-	#ifdef kill_flag
-	killwave(dev, dt);
-	#endif
-
-	#ifdef cool_flag
-	cooling(dev, dt);
-	#endif
 
 	evolve_planet(dev,time+hdt,hdt);
 
@@ -739,9 +751,16 @@ void RK2(Grid* dev, double time, double dt)
 		mz = dev[n].zarr;
 
 		compute_forces<<< dim3((mx+bsz-1)/bsz,my,mz), bsz, 0, dev[n].stream >>> (dev[n], dev[n].C, dt, hdt);
-		//apply_forces<<< dim3(nx/x_xdiv,ny,nz), x_xthd, 0, dev[n].stream >>> (dev[n], dev[n].C, hdt);
 		update<<< dim3(nx/x_xdiv,ny,nz), x_xthd, 0, dev[n].stream >>> (dev[n], dev[n].C, dev[n].C, hdt);
 	}
+
+	#ifdef kill_flag
+	killwave(dev, hdt);
+	#endif
+
+	#ifdef cool_flag
+	cooling(dev, hdt);
+	#endif
 
 	syncallstreams(dev);
 
@@ -766,7 +785,6 @@ void RK2(Grid* dev, double time, double dt)
 		mz = dev[n].zarr;
 
 		clear_flux<<< (mx*my*mz+bsz-1)/bsz, bsz, 0, dev[n].stream >>>(mx, my, mz, dev[n].F);
-		//clear_forces<<< (mx*my*mz+bsz-1)/bsz, bsz, 0, dev[n].stream >>>(mx, my, mz, dev[n].fx, dev[n].fy, dev[n].fz);
 
 		sweepx<<< dim3(nx/x_xdiv,ny/x_ydiv,nz/x_zdiv), dim3(x_xthd,x_ydiv,x_zdiv), 2*sizeof(double)*x_xthd*x_ydiv*x_zdiv, dev[n].stream >>>
 		      (dev[n], dev[n].C, hdt);
@@ -782,133 +800,17 @@ void RK2(Grid* dev, double time, double dt)
 		#endif
 
 		update<<< dim3(nx/x_xdiv,ny,nz), x_xthd, 0, dev[n].stream >>> (dev[n], dev[n].C, dev[n].C, hdt);
-		//apply_forces<<< dim3(nx/x_xdiv,ny,nz), x_xthd, 0, dev[n].stream >>> (dev[n], dev[n].C, hdt);
 	}
 
 	evolve_planet(dev,time+dt,hdt);
-
-	return;
-}
-
-void dimensional_splitting(Grid* dev, double time, double dt)
-{
-	double hdt = 0.5*dt;
-	int nx, ny, nz;
-	int mx, my, mz;
-	int bsz = 1024;
-
-	evolve_planet(dev,time+hdt,hdt);
 
 	#ifdef kill_flag
 	killwave(dev, hdt);
 	#endif
 
 	#ifdef cool_flag
-	cooling(dev,hdt);
+	cooling(dev, hdt);
 	#endif
-
-	syncallstreams(dev);
-
-	#ifdef visc_flag
-	viscosity_tensor_evaluation1(dev);
-	#else
-	boundx(dev);
-	#endif
-	for (int n=0; n<ndev; n++)
-	{
-		cudaSetDevice(n);
-
-		nx = dev[n].xres;
-		ny = dev[n].yres;
-		nz = dev[n].zres;
-
-		mx = dev[n].xarr;
-		my = dev[n].yarr;
-		mz = dev[n].zarr;
-
-		clear_flux<<< (mx*my*mz+bsz-1)/bsz, bsz, 0, dev[n].stream >>>(mx, my, mz, dev[n].F);
-
-		sourcex<<< dim3((dev[n].xarr+bsz-1)/bsz,ny,nz), bsz, 0, dev[n].stream >>> (dev[n], dev[n].C, hdt, 0.0);
-		sweepx<<< dim3(nx/x_xdiv,ny/x_ydiv,nz/x_zdiv), dim3(x_xthd,x_ydiv,x_zdiv), 2*sizeof(double)*x_xthd*x_ydiv*x_zdiv, dev[n].stream >>>
-		      (dev[n], dev[n].C, dt);
-
-		update<<< dim3(nx/x_xdiv,ny,nz), x_xthd, 0, dev[n].stream >>> (dev[n], dev[n].C, dev[n].C, dt, 1.0, 1);
-	}
-
-	#if ndim>2
-
-	syncallstreams(dev);
-
-	#ifdef visc_flag
-	viscosity_tensor_evaluation1(dev);
-	#else
-	boundz(dev);
-	#endif
-
-	for (int n=0; n<ndev; n++)
-	{
-		cudaSetDevice(n);
-
-		nx = dev[n].xres;
-		ny = dev[n].yres;
-		nz = dev[n].zres;
-
-		mx = dev[n].xarr;
-		my = dev[n].yarr;
-		mz = dev[n].zarr;
-
-		clear_flux<<< (mx*my*mz+bsz-1)/bsz, bsz, 0, dev[n].stream >>>(mx, my, mz, dev[n].F);
-
-		sourcez<<< dim3((nx+bsz-1)/bsz,ny,dev[n].zarr), bsz, 0, dev[n].stream >>> (dev[n], dev[n].C, hdt, 0.0);
-		sweepz<<< dim3(nz/z_zdiv,nx/z_xdiv,ny/z_ydiv), dim3(z_zthd,z_xdiv,z_ydiv), 2*sizeof(double)*z_zthd*z_xdiv*z_ydiv, dev[n].stream >>>
-		      (dev[n], dev[n].C, dt);
-
-		update<<< dim3(nx/x_xdiv,ny,nz), x_xthd, 0, dev[n].stream >>> (dev[n], dev[n].C, dev[n].C, dt, 1.0, 3);
-	}
-	#endif
-
-	#if ndim>1
-
-	syncallstreams(dev);
-
-	#ifdef visc_flag
-	viscosity_tensor_evaluation1(dev);
-	#else
-	boundy(dev);
-	#endif
-
-	for (int n=0; n<ndev; n++)
-	{
-		cudaSetDevice(n);
-
-		nx = dev[n].xres;
-		ny = dev[n].yres;
-		nz = dev[n].zres;
-
-		mx = dev[n].xarr;
-		my = dev[n].yarr;
-		mz = dev[n].zarr;
-
-		clear_flux<<< (mx*my*mz+bsz-1)/bsz, bsz, 0, dev[n].stream >>>(mx, my, mz, dev[n].F);
-
-		sourcey<<< dim3((nx+bsz-1)/bsz,dev[n].yarr,nz), bsz, 0, dev[n].stream >>> (dev[n], dev[n].C, hdt, 0.0);
-		sweepy<<< dim3(ny/y_ydiv,nx/y_xdiv,nz/y_zdiv), dim3(y_ythd,y_xdiv,y_zdiv), 2*sizeof(double)*y_ythd*y_xdiv*y_zdiv, dev[n].stream >>>
-		      (dev[n], dev[n].C, dt);
-
-		update<<< dim3(nx/x_xdiv,ny,nz), x_xthd, 0, dev[n].stream >>> (dev[n], dev[n].C, dev[n].C, dt, 1.0, 2);
-	}
-	#endif
-
-	evolve_planet(dev,time+dt,hdt);
-
-	#ifdef cool_flag
-	cooling(dev,hdt);
-	#endif
-
-	#ifdef kill_flag
-	killwave(dev, hdt);
-	#endif
-
 	return;
 }
 
@@ -925,7 +827,6 @@ void solve(Grid* dev, double time, double dt)
 		#if mode_flag == 0
 		RK2(dev,time,dt);
 		#elif mode_flag == 1
-		dimensional_splitting(dev,time,dt);
 		#endif
 
 		#ifdef OrbAdv_flag

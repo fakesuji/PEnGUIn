@@ -2,8 +2,8 @@
 #define PARAMETERS_H
 
 #define mode_flag 0
-#define dump_flag
-//#define kill_flag 3
+//#define dump_flag
+//#define kill_flag 1
 #define OrbAdv_flag
 #define visc_flag
 //#define advec_flag
@@ -84,10 +84,10 @@ const int ndev = 1;
 // Temporal parameters
 //=======================================================================
 
-const double frame_omega = 42.5872131567;
+const double frame_omega = 1.0;
 
-const double sav_interval = 0.25*twopi/frame_omega;
-const double end_time = 1000.0*twopi/frame_omega;
+const double sav_interval = 1.0*twopi/frame_omega;
+const double end_time = 5.0*twopi/frame_omega;
 
 const int prt_interval = 1000;
 const int max_step = 1000000000;
@@ -118,7 +118,7 @@ const double CFL = 0.5;
 
 #define init_flag 2
 
-const int bound_lft = 1;
+const int bound_lft = 0;
 const int bound_rgh = 0;
 
 const int bound_bak = 3;
@@ -133,12 +133,12 @@ const int bound_top = 2;
 
 const double p_beta = 7.0/7.0;                             // temperature ~ r^-p_beta
 #if ndim==3
-const double p_alpha = 2.24 - 0.5*p_beta + 1.5;          // midplane density ~ r^-p_alpha (isothermal limit)
+const double p_alpha = 1.0 - 0.5*p_beta + 1.5;          // midplane density ~ r^-p_alpha (isothermal limit)
 #else 
-const double p_alpha = 2.24;                             // surface density ~ r^-p_alpha
+const double p_alpha = 1.0;                             // surface density ~ r^-p_alpha
 #endif 
-const double ss_alpha = 0.01;                            // alpha-viscosity
-const double sc_h = 0.025;                              // scale height at r=1, normalized to that at r = 100
+const double ss_alpha = 0.001;                            // alpha-viscosity
+const double sc_h = 0.05;                              // scale height at r=1, normalized to that at r = 100
 
 #if ndim==3
 const double Sigma_0 = 0.1*MMSN_1AU/(sqrt_hpi*sc_h);    // midplane density at r=1 in units of M_solar/AU^3
@@ -146,7 +146,7 @@ const double Sigma_0 = 0.1*MMSN_1AU/(sqrt_hpi*sc_h);    // midplane density at r
 const double Sigma_0 = (MMSN_1AU/0.76)*0.05;              // density at r=1 in units of M_solar/AU^2
 #endif
 
-const double kill_width = 4.0;                      // in units of sc_h
+const double kill_width = 2.0;                      // in units of sc_h
 const double beta_cool = 10.0;                          // in units of dynamical time for beta cooling
 
 //=======================================================================
@@ -154,18 +154,18 @@ const double beta_cool = 10.0;                          // in units of dynamical
 //=======================================================================
 
 const int n_planet = 1;
-const double planet_mass = 0.0123;
-const double planet_radius = 0.082;
-const double planet_ecc = 0.25;
+const double planet_mass = 0.004;
+const double planet_radius = 1.0;
+const double planet_ecc = 0.0;
 
-const double ramp_time = 10.0*twopi/frame_omega;
+const double ramp_time = 5.0*twopi/frame_omega;
 
 //=======================================================================
 // Grid parameters
 //=======================================================================
 
-const double xmin = 0.02;
-const double xmax = 0.4;
+const double xmin = 0.3;
+const double xmax = 6.0;
 const double ymin = 0.0;
 const double ymax = twopi;
 const double zmin = hpi-4.0*sc_h;
