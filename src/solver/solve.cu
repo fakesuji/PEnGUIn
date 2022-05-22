@@ -318,15 +318,15 @@ __global__ void update(Grid G, Cell* in, Cell* out, double dt, double div=1.0, i
 		Q.v *= Q.r;
 		Q.w *= Q.r;
 
-		//if (axis==0 || axis==1) Q.u += 0.5*Q.r*G.fx[ind]*dt;
-		//if (axis==0 || axis==2) Q.v += 0.5*Q.r*G.fy[ind]*dt;
-		//if (axis==0 || axis==3) Q.w += 0.5*Q.r*G.fz[ind]*dt;
+		if (axis==0 || axis==1) Q.u += 0.5*Q.r*G.fx[ind]*dt;
+		if (axis==0 || axis==2) Q.v += 0.5*Q.r*G.fy[ind]*dt;
+		if (axis==0 || axis==3) Q.w += 0.5*Q.r*G.fz[ind]*dt;
 
 		Q.add(D);
 
-		//if (axis==0 || axis==1) Q.u += 0.5*Q.r*G.fx[ind]*dt;
-		//if (axis==0 || axis==2) Q.v += 0.5*Q.r*G.fy[ind]*dt;
-		//if (axis==0 || axis==3) Q.w += 0.5*Q.r*G.fz[ind]*dt;
+		if (axis==0 || axis==1) Q.u += 0.5*Q.r*G.fx[ind]*dt;
+		if (axis==0 || axis==2) Q.v += 0.5*Q.r*G.fy[ind]*dt;
+		if (axis==0 || axis==3) Q.w += 0.5*Q.r*G.fz[ind]*dt;
 
 		Q.u /= Q.r;
 		Q.v /= Q.r;
@@ -710,8 +710,6 @@ void RK2(Grid* dev, double time, double dt)
 		sweepz<<< dim3(nz/z_zdiv,nx/z_xdiv,ny/z_ydiv), dim3(z_zthd,z_xdiv,z_ydiv), 2*sizeof(double)*z_zthd*z_xdiv*z_ydiv, dev[n].stream >>>
 		      (dev[n], dev[n].C, hdt);
 		#endif
-
-		update<<< dim3(nx/x_xdiv,ny,nz), x_xthd, 0, dev[n].stream >>> (dev[n], dev[n].C, dev[n].C, hdt);
 	}
 
 	#ifdef kill_flag
@@ -741,7 +739,8 @@ void RK2(Grid* dev, double time, double dt)
 		mz = dev[n].zarr;
 
 		compute_forces<<< dim3((mx+bsz-1)/bsz,my,mz), bsz, 0, dev[n].stream >>> (dev[n], dev[n].C, dt, hdt);
-		apply_forces<<< dim3(nx/x_xdiv,ny,nz), x_xthd, 0, dev[n].stream >>> (dev[n], dev[n].C, dt);
+		//apply_forces<<< dim3(nx/x_xdiv,ny,nz), x_xthd, 0, dev[n].stream >>> (dev[n], dev[n].C, hdt);
+		update<<< dim3(nx/x_xdiv,ny,nz), x_xthd, 0, dev[n].stream >>> (dev[n], dev[n].C, dev[n].C, hdt);
 	}
 
 	syncallstreams(dev);
@@ -783,6 +782,7 @@ void RK2(Grid* dev, double time, double dt)
 		#endif
 
 		update<<< dim3(nx/x_xdiv,ny,nz), x_xthd, 0, dev[n].stream >>> (dev[n], dev[n].C, dev[n].C, hdt);
+		//apply_forces<<< dim3(nx/x_xdiv,ny,nz), x_xthd, 0, dev[n].stream >>> (dev[n], dev[n].C, hdt);
 	}
 
 	evolve_planet(dev,time+dt,hdt);
