@@ -308,6 +308,10 @@ __global__ void update(Grid G, Cell* in, Cell* out, double dt, double div=1.0)
 	double fz;
 	#endif
 
+	#ifdef cool_flag
+	double e, e0, tc;	
+	#endif
+
 	if (i>=xpad && i<G.xarr-xpad)
 	if (j>=ypad && j<G.yarr-ypad)
 	if (k>=zpad && k<G.zarr-zpad)
@@ -318,6 +322,14 @@ __global__ void update(Grid G, Cell* in, Cell* out, double dt, double div=1.0)
 		Q.copy(in[ind]);
 		D.copy(G.F[ind]);
 		D.multiply(div*dt);
+
+		#ifdef cool_flag
+		tc = get_tc(G.get_xc(i));
+		e0 = get_cs2(G.get_xc(i),G.get_yc(j),G.get_zc(k));
+		e  = Q.p/Q.r;
+
+		Q.p = Q.r*e0 + Q.r*(e-e0)*exp(-0.5*dt/tc);
+		#endif
 
 		Q.p = get_energy(Q.r,Q.p,Q.u,Q.v,Q.w);
 		Q.r *= vol;
@@ -373,6 +385,11 @@ __global__ void update(Grid G, Cell* in, Cell* out, double dt, double div=1.0)
 			Q.p = get_cs2(G.get_xc(i),G.get_yc(j),G.get_zc(k))*Q.r;
 			#endif
 		}
+
+		#ifdef cool_flag
+		e  = Q.p/Q.r;
+		Q.p = Q.r*e0 + Q.r*(e-e0)*exp(-0.5*dt/tc);
+		#endif
 
 		out[ind].copy(Q);
 	}
@@ -555,7 +572,7 @@ __global__ void apply_viscosity(Grid G, Cell* C, double dt)
 	return;
 }
 
-__global__ void compute_forces(Grid G, Cell* C, double dt, double x_dt)
+__global__ void compute_forces(Grid G, Cell* C, double dt, double x_dt, bool ave=false)
 {
 	int i = threadIdx.x + blockIdx.x*blockDim.x;
 	int j = threadIdx.y + blockIdx.y*blockDim.y;
@@ -592,7 +609,8 @@ __global__ void compute_forces(Grid G, Cell* C, double dt, double x_dt)
 		#ifdef visc_flag
 		fy += viscous_fy(G, C, i, j, k)/T.r;
 		#endif
-		G.fy[ind] = fy;
+		if (ave) G.fy[ind] = (G.fy[ind] + fy)/2.0;
+		else     G.fy[ind] = fy;
 		#endif
 
 		#if ndim > 2
@@ -600,14 +618,16 @@ __global__ void compute_forces(Grid G, Cell* C, double dt, double x_dt)
 		#ifdef visc_flag
 		fz += viscous_fz(G, C, i, j, k)/T.r;
 		#endif
-		G.fz[ind] = fz;
+		if (ave) G.fz[ind] = (G.fz[ind] + fz)/2.0;
+		else     G.fz[ind] = fy;
 		#endif
 
 		fx = get_fx(xc,yc,zc,T.u,T.v+0.5*dt*fy,T.w+0.5*dt*fz,G.planets);
 		#ifdef visc_flag
 		fx += viscous_fx(G, C, i, j, k)/T.r;
 		#endif
-		G.fx[ind] = fx;
+		if (ave) G.fx[ind] = (G.fx[ind] + fx)/2.0;
+		else     G.fx[ind] = fx;
 
 	}
 
@@ -687,6 +707,12 @@ void RK2(Grid* dev, double time, double dt)
 	int mx, my, mz;
 	int bsz = 1024;
 
+	evolve_planet(dev,time+hdt,hdt);
+
+	#ifdef kill_flag
+	killwave(dev, hdt);
+	#endif
+
 	#ifdef visc_flag
 	viscosity_tensor_evaluation1(dev);
 	#else
@@ -716,7 +742,7 @@ void RK2(Grid* dev, double time, double dt)
 		mz = dev[n].zarr;
 
 		clear_flux<<< (mx*my*mz+bsz-1)/bsz, bsz, 0, dev[n].stream >>>(mx, my, mz, dev[n].F);
-		compute_forces<<< dim3((mx+bsz-1)/bsz,my,mz), bsz, 0, dev[n].stream >>> (dev[n], dev[n].C, 0.0, 0.0);
+		compute_forces<<< dim3((mx+bsz-1)/bsz,my,mz), bsz, 0, dev[n].stream >>> (dev[n], dev[n].C, 0.0, hdt);
 
 		sweepx<<< dim3(nx/x_xdiv,ny/x_ydiv,nz/x_zdiv), dim3(x_xthd,x_ydiv,x_zdiv), 2*sizeof(double)*x_xthd*x_ydiv*x_zdiv, dev[n].stream >>>
 		      (dev[n], dev[n].C, hdt);
@@ -731,8 +757,6 @@ void RK2(Grid* dev, double time, double dt)
 		      (dev[n], dev[n].C, hdt);
 		#endif
 	}
-
-	evolve_planet(dev,time+hdt,hdt);
 
 	#ifdef visc_flag
 	viscosity_tensor_evaluation1(dev);
@@ -753,14 +777,6 @@ void RK2(Grid* dev, double time, double dt)
 		compute_forces<<< dim3((mx+bsz-1)/bsz,my,mz), bsz, 0, dev[n].stream >>> (dev[n], dev[n].C, dt, hdt);
 		update<<< dim3(nx/x_xdiv,ny,nz), x_xthd, 0, dev[n].stream >>> (dev[n], dev[n].C, dev[n].C, hdt);
 	}
-
-	#ifdef kill_flag
-	killwave(dev, hdt);
-	#endif
-
-	#ifdef cool_flag
-	cooling(dev, hdt);
-	#endif
 
 	syncallstreams(dev);
 
@@ -808,9 +824,88 @@ void RK2(Grid* dev, double time, double dt)
 	killwave(dev, hdt);
 	#endif
 
-	#ifdef cool_flag
-	cooling(dev, hdt);
+	return;
+}
+
+void DS(Grid* dev, double time, double dt)
+{
+	double hdt = 0.5*dt;
+	int nx, ny, nz;
+	int mx, my, mz;
+	int bsz = 1024;
+
+	#ifdef visc_flag
+	viscosity_tensor_evaluation1(dev);
+	#else
+
+	syncallstreams(dev);
+
+	boundx(dev);
+	#if ndim>1
+	boundy(dev);
 	#endif
+	#if ndim>2
+	boundz(dev);
+	#endif
+
+	#endif
+
+	for (int n=0; n<ndev; n++)
+	{
+		cudaSetDevice(n);
+
+		nx = dev[n].xres;
+		ny = dev[n].yres;
+		nz = dev[n].zres;
+
+		mx = dev[n].xarr;
+		my = dev[n].yarr;
+		mz = dev[n].zarr;
+
+		clear_flux<<< (mx*my*mz+bsz-1)/bsz, bsz, 0, dev[n].stream >>>(mx, my, mz, dev[n].F);
+		compute_forces<<< dim3((mx+bsz-1)/bsz,my,mz), bsz, 0, dev[n].stream >>> (dev[n], dev[n].C, 0.0, 0.0);
+
+		sweepx<<< dim3(nx/x_xdiv,ny/x_ydiv,nz/x_zdiv), dim3(x_xthd,x_ydiv,x_zdiv), 2*sizeof(double)*x_xthd*x_ydiv*x_zdiv, dev[n].stream >>>
+		      (dev[n], dev[n].C, dt);
+
+		#if ndim>1
+		sweepy<<< dim3(ny/y_ydiv,nx/y_xdiv,nz/y_zdiv), dim3(y_ythd,y_xdiv,y_zdiv), 2*sizeof(double)*y_ythd*y_xdiv*y_zdiv, dev[n].stream >>>
+		      (dev[n], dev[n].C, dt);
+		#endif
+
+		#if ndim>2
+		sweepz<<< dim3(nz/z_zdiv,nx/z_xdiv,ny/z_ydiv), dim3(z_zthd,z_xdiv,z_ydiv), 2*sizeof(double)*z_zthd*z_xdiv*z_ydiv, dev[n].stream >>>
+		      (dev[n], dev[n].C, dt);
+		#endif
+		update<<< dim3(nx/x_xdiv,ny,nz), x_xthd, 0, dev[n].stream >>> (dev[n], dev[n].C, dev[n].T, dt);
+	}
+
+	#ifdef visc_flag
+	viscosity_tensor_evaluation2(dev);
+	#endif
+
+	evolve_planet(dev,time+dt,dt);
+
+	for (int n=0; n<ndev; n++)
+	{
+		cudaSetDevice(n);
+
+		nx = dev[n].xres;
+		ny = dev[n].yres;
+		nz = dev[n].zres;
+
+		mx = dev[n].xarr;
+		my = dev[n].yarr;
+		mz = dev[n].zarr;
+
+		compute_forces<<< dim3((mx+bsz-1)/bsz,my,mz), bsz, 0, dev[n].stream >>> (dev[n], dev[n].T, 0.0, dt, true);
+		update<<< dim3(nx/x_xdiv,ny,nz), x_xthd, 0, dev[n].stream >>> (dev[n], dev[n].C, dev[n].C, dt);
+	}
+
+	#ifdef kill_flag
+	killwave(dev, dt);
+	#endif
+
 	return;
 }
 
@@ -825,7 +920,7 @@ void solve(Grid* dev, double time, double dt)
 		#endif
 
 		#if mode_flag == 0
-		RK2(dev,time,dt);
+		DS(dev,time,dt);
 		#elif mode_flag == 1
 		#endif
 

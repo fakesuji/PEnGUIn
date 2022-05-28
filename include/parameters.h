@@ -2,10 +2,11 @@
 #define PARAMETERS_H
 
 #define mode_flag 0
-//#define dump_flag
-//#define kill_flag 1
+#define dump_flag
+#define kill_flag 1
 #define OrbAdv_flag
 #define visc_flag
+#define cool_flag
 //#define advec_flag
 
 //=======================================================================
@@ -48,7 +49,7 @@ const int zpad = npad;
 const int zpad = 0;
 #endif
 
-const int xres = 480;
+const int xres = 576;
 const int yres = 1008;
 const int zres = 1;
 
@@ -86,8 +87,8 @@ const int ndev = 1;
 
 const double frame_omega = 1.0;
 
-const double sav_interval = 1.0*twopi/frame_omega;
-const double end_time = 5.0*twopi/frame_omega;
+const double sav_interval = 10.0*twopi/frame_omega;
+const double end_time = 10000.0*twopi/frame_omega;
 
 const int prt_interval = 1000;
 const int max_step = 1000000000;
@@ -98,7 +99,7 @@ const int max_step = 1000000000;
 
 #define recon_flag 1
 
-#define EOS_flag 0
+#define EOS_flag 2
 #define internal_e_flag 1
 
 #if EOS_flag == 0
@@ -110,7 +111,7 @@ const double gamm = gam - 1.0;
 const double gamp = gam + 1.0;
 const double gammfac = gamm/gam/2.0;
 const double gampfac = gamp/gam/2.0;
-const double CFL = 0.5;
+const double CFL = 0.4;
 
 //=======================================================================
 // boundary parameters
@@ -137,7 +138,7 @@ const double p_alpha = 1.0 - 0.5*p_beta + 1.5;          // midplane density ~ r^
 #else 
 const double p_alpha = 1.0;                             // surface density ~ r^-p_alpha
 #endif 
-const double ss_alpha = 0.001;                            // alpha-viscosity
+const double ss_alpha = 0.0001;                            // alpha-viscosity
 const double sc_h = 0.05;                              // scale height at r=1, normalized to that at r = 100
 
 #if ndim==3
@@ -154,7 +155,7 @@ const double beta_cool = 10.0;                          // in units of dynamical
 //=======================================================================
 
 const int n_planet = 1;
-const double planet_mass = 0.004;
+const double planet_mass = 0.001;//20.0*EarthMass;
 const double planet_radius = 1.0;
 const double planet_ecc = 0.0;
 
@@ -164,8 +165,8 @@ const double ramp_time = 5.0*twopi/frame_omega;
 // Grid parameters
 //=======================================================================
 
-const double xmin = 0.3;
-const double xmax = 6.0;
+const double xmin = 0.28;
+const double xmax = 10.0;
 const double ymin = 0.0;
 const double ymax = twopi;
 const double zmin = hpi-4.0*sc_h;

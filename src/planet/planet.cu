@@ -21,27 +21,35 @@ __global__ void planet_evo(body* planets, double time, double dt)
 	double rad;
 	double fx, fy, fz;
 
-	rad = planets[n].x;
-	fx = planets[n].vy*planets[n].vy/rad/rad/rad - 1.0/rad/rad;
-	fy = 0.0;
-	fz = 0.0;
+	if (planet_ecc==0.0)
+	{
+		rad = planets[n].x;
+		planets[n].y += (planets[n].vy/planets[n].x/rad-frame_omega)*dt;
+	}
+	else
+	{
+		rad = planets[n].x;
+		fx = planets[n].vy*planets[n].vy/rad/rad/rad - 1.0/rad/rad;
+		fy = 0.0;
+		fz = 0.0;
 
-	planets[n].vx += 0.5*fx*dt;
-	planets[n].vy += 0.5*fy*dt;
-	planets[n].vz += 0.5*fz*dt;
+		planets[n].vx += 0.5*fx*dt;
+		planets[n].vy += 0.5*fy*dt;
+		planets[n].vz += 0.5*fz*dt;
+	
+		planets[n].x += planets[n].vx*dt;
+		planets[n].y += (planets[n].vy/planets[n].x/rad-frame_omega)*dt;
+		planets[n].z += planets[n].vz*dt;
+	
+		rad = planets[n].x;
+		fx = planets[n].vy*planets[n].vy/rad/rad/rad - 1.0/rad/rad;
+		fy = 0.0;
+		fz = 0.0;
 
-	planets[n].x += planets[n].vx*dt;
-	planets[n].y += (planets[n].vy/planets[n].x/rad-frame_omega)*dt;
-	planets[n].z += planets[n].vz*dt;
-
-	rad = planets[n].x;
-	fx = planets[n].vy*planets[n].vy/rad/rad/rad - 1.0/rad/rad;
-	fy = 0.0;
-	fz = 0.0;
-
-	planets[n].vx += 0.5*fx*dt;
-	planets[n].vy += 0.5*fy*dt;
-	planets[n].vz += 0.5*fz*dt;
+		planets[n].vx += 0.5*fx*dt;
+		planets[n].vy += 0.5*fy*dt;
+		planets[n].vz += 0.5*fz*dt;
+	}
 
 	return;
 }
