@@ -97,7 +97,7 @@ const int max_step = 1000000000;
 // Hydro parameters
 //=======================================================================
 
-#define recon_flag 1
+#define recon_flag 0
 
 #define EOS_flag 2
 #define internal_e_flag 1
@@ -159,7 +159,7 @@ const double planet_mass = 0.001;//20.0*EarthMass;
 const double planet_radius = 1.0;
 const double planet_ecc = 0.0;
 
-const double ramp_time = 5.0*twopi/frame_omega;
+const double ramp_time = 20.0*twopi/frame_omega;
 
 //=======================================================================
 // Grid parameters
