@@ -47,7 +47,7 @@ __global__ void killwave(Grid G, Cell* C, double dt)
 			#if geomx == 0
 			tau  = 1.0;
 			#else
-			tau  = pow(rad,1.5);
+			tau  = 0.1*pow(rad,1.5);
 			#endif
 
 			f  = get_ramping_fac(f);
@@ -60,19 +60,15 @@ __global__ void killwave(Grid G, Cell* C, double dt)
 			I_tmp.p *= 0.0;
 			#endif
 
-			#if kill_flag < 3
 			C_tmp.r += f * ( I_tmp.r - C_tmp.r );
 			C_tmp.p += f * ( I_tmp.p - C_tmp.p );
-			#endif
 			C_tmp.u += f * ( I_tmp.u - C_tmp.u );
-			#if kill_flag < 3
 			C_tmp.v += f * ( I_tmp.v - C_tmp.v );
-			#endif
 			C_tmp.w += f * ( I_tmp.w - C_tmp.w );
 
 			C[ind].copy(C_tmp);
 		}
-/*
+
 		if (rad>outer)
 		{
 			azi = G.get_yc(j);
@@ -82,7 +78,7 @@ __global__ void killwave(Grid G, Cell* C, double dt)
 			#if geomx == 0
 			tau  = 1.0;
 			#else
-			tau  = pow(rad,1.5);
+			tau  = 0.1*pow(rad,1.5);
 			#endif
 
 			f  = get_ramping_fac(f);
@@ -99,7 +95,6 @@ __global__ void killwave(Grid G, Cell* C, double dt)
 
 			C[ind].copy(C_tmp);
 		}
-*/
 	}
 	return;
 }

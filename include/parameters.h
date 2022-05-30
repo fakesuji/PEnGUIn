@@ -155,11 +155,11 @@ const double beta_cool = 10.0;                          // in units of dynamical
 //=======================================================================
 
 const int n_planet = 1;
-const double planet_mass = 0.001;//20.0*EarthMass;
+const double planet_mass = 0.001/4.0;//20.0*EarthMass;
 const double planet_radius = 1.0;
 const double planet_ecc = 0.0;
 
-const double ramp_time = 20.0*twopi/frame_omega;
+const double ramp_time = 10.0*twopi/frame_omega;
 
 //=======================================================================
 // Grid parameters
