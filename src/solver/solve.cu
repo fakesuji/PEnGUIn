@@ -308,10 +308,6 @@ __global__ void update(Grid G, Cell* in, Cell* out, double dt, double div=1.0)
 	double fz;
 	#endif
 
-	#ifdef cool_flag
-	double e, e0, tc;	
-	#endif
-
 	if (i>=xpad && i<G.xarr-xpad)
 	if (j>=ypad && j<G.yarr-ypad)
 	if (k>=zpad && k<G.zarr-zpad)
@@ -323,13 +319,7 @@ __global__ void update(Grid G, Cell* in, Cell* out, double dt, double div=1.0)
 		D.copy(G.F[ind]);
 		D.multiply(div*dt);
 
-		#ifdef cool_flag
-		tc = get_tc(G.get_xc(i));
-		e0 = get_cs2(G.get_xc(i),G.get_yc(j),G.get_zc(k));
-		e  = Q.p/Q.r;
-
-		Q.p = Q.r*e0 + Q.r*(e-e0)*exp(-0.5*dt/tc);
-		#endif
+		if (isnan(D.r)) printf("Error: update, %f, %f\n %e, %e, %e, %e, %e\n %e, %e, %e, %e, %e\n",G.get_xc(i),G.get_yc(j),Q.r,Q.p,Q.u,Q.v,Q.w,D.r,D.p,D.u,D.v,D.w);
 
 		Q.p = get_energy(Q.r,Q.p,Q.u,Q.v,Q.w);
 		Q.r *= vol;
@@ -373,6 +363,11 @@ __global__ void update(Grid G, Cell* in, Cell* out, double dt, double div=1.0)
 			Q.w = in[ind].w;
 			printf("Error: negative density at %f %f %f\n",G.get_xc(i),G.get_yc(j),G.get_zc(k));
 		}
+		else if (Q.p<=0.0)
+		{
+			Q.p = get_cs2(G.get_xc(i),G.get_yc(j),G.get_zc(k))*Q.r;
+			printf("Error: negative pressure at %f %f %f\n",G.get_xc(i),G.get_yc(j),G.get_zc(k));
+		}
 		else
 		{
 			#if EOS_flag == 2
@@ -385,11 +380,6 @@ __global__ void update(Grid G, Cell* in, Cell* out, double dt, double div=1.0)
 			Q.p = get_cs2(G.get_xc(i),G.get_yc(j),G.get_zc(k))*Q.r;
 			#endif
 		}
-
-		#ifdef cool_flag
-		e  = Q.p/Q.r;
-		Q.p = Q.r*e0 + Q.r*(e-e0)*exp(-0.5*dt/tc);
-		#endif
 
 		out[ind].copy(Q);
 	}
@@ -690,6 +680,10 @@ void solve(Grid* dev, double time, double dt)
 {
 	#ifndef advec_flag
 
+		#ifdef cool_flag
+		cooling(dev, 0.5*dt);
+		#endif
+
 		#ifdef RadPres_flag
 		compute_extinction(dev, 1.0);
 		#endif
@@ -703,6 +697,10 @@ void solve(Grid* dev, double time, double dt)
 		set_OrbAdv(dev,dt);
 		shift_OrbAdv(dev);
 		advecty(dev,dt);
+		#endif
+
+		#ifdef cool_flag
+		cooling(dev, 0.5*dt);
 		#endif
 	#else
 

@@ -1,27 +1,25 @@
 __device__ void set_L_state(int i, int geom, double* xa, double* dx, double* dv, double rad, 
-                            double* r, double* p, double* u, double* v, double* w, double dt, double force, State &S)
+                            double* r, double* p, double* u, double* v, double* w, double dt, double us, State &S)
 {
 	double r_par[4], p_par[4], u_par[4];
 	get_CON_parameters(i, geom, xa, dx, dv, r, r_par);
 	get_CON_parameters(i, geom, xa, dx, dv, p, p_par);
 	get_PRM_parameters(i, geom, xa, dx, dv, u, u_par);
 
-	//#if mode_flag==0
-	//double rl = r_par[2];//get_CON_aveR(geom, xl, xr, xr, r_par);
-	//double pl = p_par[2];//get_CON_aveR(geom, xl, xr, xr, p_par);
-	//double ul = u_par[2];//get_PRM_aveR(geom, xl, xr, xr, u_par);
-
-	//if (rl==0.0) printf("Error: recontruction, %e, %e, %e, %e, %e, %e\n",r_par[0],r_par[1],r_par[2],r[i-1],r[i],r[i+1]);
-
-	//S.pl = pl;
-	//S.ul = ul;
-	//S.rl = rl;
-
-	//#elif mode_flag==1
 	double xl = xa[i];
 	double xr = xa[i+1];
 	double cl = sqrt(gam*p[i]/r[i]);
 	double tmp = xr - fmax(cl, u[i]+cl)*dt;
+
+	if (tmp<xl) 
+	{
+		//printf("Error: reconstruction out of bound at L_state step 1 (%f, %f, %f), %f, %f, %f, %f, %f, \n", xl, tmp, xr, u[i-1], u[i], u[i+1], cl, dt); 
+		tmp = xl;
+	}
+
+	if (isnan(u[i])) {printf("Error: (%f, %f, %f)\n", u[i-1], u[i], u[i+1]);}
+	if (isnan(u[i-1])) {printf("Error: (%f, %f, %f)\n", u[i-1], u[i], u[i+1]);}
+	if (isnan(u[i+1])) {printf("Error: (%f, %f, %f)\n", u[i-1], u[i], u[i+1]);}
 
 	double rl = get_CON_aveR(geom, xl, tmp, xr, r_par);
 	double pl = get_CON_aveR(geom, xl, tmp, xr, p_par);
@@ -38,15 +36,17 @@ __device__ void set_L_state(int i, int geom, double* xa, double* dx, double* dv,
 	if (ul>-cl)
 	{
 		tmp = xr - (ul+cl)*dt;
+
 		p_ = get_CON_aveR(geom, xl, tmp, xr, p_par);
 		u_ = get_PRM_aveR(geom, xl, tmp, xr, u_par);
 
-		Bp = -( (ul-u_) + (pl-p_)/C - dt*force)/2.0/C;
+		Bp = -( (ul-u_) + (pl-p_)/C - us)/2.0/C;
 	}
 
 	if (ul>0.0)
 	{
 		tmp = xr - ul*dt;
+
 		r_ = get_CON_aveR(geom, xl, tmp, xr, r_par);
 		p_ = get_CON_aveR(geom, xl, tmp, xr, p_par);
 
@@ -56,44 +56,34 @@ __device__ void set_L_state(int i, int geom, double* xa, double* dx, double* dv,
 	if (ul>cl)
 	{
 		tmp = xr - (ul-cl)*dt;
+
 		p_ = get_CON_aveR(geom, xl, tmp, xr, p_par);
 		u_ = get_PRM_aveR(geom, xl, tmp, xr, u_par);
 
-		Bm =  ( (ul-u_) - (pl-p_)/C - dt*force)/2.0/C;
+		Bm =  ( (ul-u_) - (pl-p_)/C - us)/2.0/C;
 	}
 
 	S.pl = pl + (Bp + Bm)*C*C;
 	S.ul = ul + (Bp - Bm)*C;
 	S.rl = 1.0/( 1.0/rl - (B0 + Bp + Bm) );
-	//#endif
 
 	return;
 }
 
 __device__ void set_R_state(int i, int geom, double* xa, double* dx, double* dv, double rad, 
-                            double* r, double* p, double* u, double* v, double* w, double dt, double force, State &S)
+                            double* r, double* p, double* u, double* v, double* w, double dt, double us, State &S)
 {
 	double r_par[4], p_par[4], u_par[4];
 	get_CON_parameters(i, geom, xa, dx, dv, r, r_par);
 	get_CON_parameters(i, geom, xa, dx, dv, p, p_par);
 	get_PRM_parameters(i, geom, xa, dx, dv, u, u_par);
 
-	//#if mode_flag==0
-	//double rr = r_par[0];//get_CON_aveL(geom, xl, xl, xr, r_par);
-	//double pr = p_par[0];//get_CON_aveL(geom, xl, xl, xr, p_par);
-	//double ur = u_par[0];//get_PRM_aveL(geom, xl, xl, xr, u_par);
-
-	//if (rr==0.0) printf("Error: recontruction, %e, %e, %e, %e, %e, %e\n",r_par[0],r_par[1],r_par[2],r[i-1],r[i],r[i+1]);
-
-	//S.pr = pr;
-	//S.ur = ur;
-	//S.rr = rr;
-
-	//#elif mode_flag==1
 	double xl = xa[i];
 	double xr = xa[i+1];
 	double cr = sqrt(gam*p[i]/r[i]);
 	double tmp = xl + fmax(cr, -u[i]+cr)*dt;
+
+	if (tmp>xr) {printf("Error: reconstruction out of bound at R_state step 1 %f, %f, %f\n", xl, tmp, xr); tmp = xr;}
 
 	double rr = get_CON_aveL(geom, xl, tmp, xr, r_par);
 	double pr = get_CON_aveL(geom, xl, tmp, xr, p_par);
@@ -110,15 +100,17 @@ __device__ void set_R_state(int i, int geom, double* xa, double* dx, double* dv,
 	if (ur<-cr)
 	{
 		tmp = xl - (ur+cr)*dt;
+
 		p_ = get_CON_aveL(geom, xl, tmp, xr, p_par);
 		u_ = get_PRM_aveL(geom, xl, tmp, xr, u_par);
 
-		Bp = -( (ur-u_) + (pr-p_)/C - dt*force)/2.0/C;
+		Bp = -( (ur-u_) + (pr-p_)/C - us)/2.0/C;
 	}
 
 	if (ur<0.0)
 	{
 		tmp = xl - ur*dt;
+
 		r_ = get_CON_aveL(geom, xl, tmp, xr, r_par);
 		p_ = get_CON_aveL(geom, xl, tmp, xr, p_par);
 
@@ -128,16 +120,16 @@ __device__ void set_R_state(int i, int geom, double* xa, double* dx, double* dv,
 	if (ur<cr)
 	{
 		tmp = xl - (ur-cr)*dt;
+
 		p_ = get_CON_aveL(geom, xl, tmp, xr, p_par);
 		u_ = get_PRM_aveL(geom, xl, tmp, xr, u_par);
 
-		Bm =  ( (ur-u_) - (pr-p_)/C - dt*force)/2.0/C;
+		Bm =  ( (ur-u_) - (pr-p_)/C - us)/2.0/C;
 	}
 
 	S.pr = pr + (Bp + Bm)*C*C;
 	S.ur = ur + (Bp - Bm)*C;
 	S.rr = 1.0/( 1.0/rr - (B0 + Bp + Bm) );
-	//#endif
 
 	return;
 }

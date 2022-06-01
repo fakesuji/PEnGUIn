@@ -13,8 +13,8 @@ __device__ void get_CON_parameters(int i, int geom, double* x, double* dx, doubl
 
 __device__ double get_CON_aveR(int geom, double rL, double r0, double rR, double* par)
 {
-	if (r0<rL) {printf("Error: reconstruction out of bound %f, %f, %f\n", rL, r0, rR); r0 = rL;}
-	if (r0>rR) {printf("Error: reconstruction out of bound %f, %f, %f\n", rL, r0, rR); r0 = rR;}
+	//if (r0<rL) {printf("Error: reconstruction out of bound %f, %f, %f\n", rL, r0, rR); r0 = rL;}
+	//if (r0>rR) {printf("Error: reconstruction out of bound %f, %f, %f\n", rL, r0, rR); r0 = rR;}
 	#if recon_flag==0
 	return get_PEM_aveR(geom, rL, r0, rR, par);
 	#elif recon_flag==1
@@ -24,8 +24,8 @@ __device__ double get_CON_aveR(int geom, double rL, double r0, double rR, double
 
 __device__ double get_CON_aveL(int geom, double rL, double r0, double rR, double* par)
 {
-	if (r0<rL) {printf("Error: reconstruction out of bound %f, %f, %f\n", rL, r0, rR); r0 = rL;}
-	if (r0>rR) {printf("Error: reconstruction out of bound %f, %f, %f\n", rL, r0, rR); r0 = rR;}
+	//if (r0<rL) {printf("Error: reconstruction out of bound %f, %f, %f\n", rL, r0, rR); r0 = rL;}
+	//if (r0>rR) {printf("Error: reconstruction out of bound %f, %f, %f\n", rL, r0, rR); r0 = rR;}
 	#if recon_flag==0
 	return get_PEM_aveL(geom, rL, r0, rR, par);
 	#elif recon_flag==1

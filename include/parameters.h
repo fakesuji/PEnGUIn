@@ -24,8 +24,8 @@ const double NeptuneMass = 0.00005;
 const double SaturnMass = 0.0002857;
 const double JupiterMass = 0.0009543;
 const double MMSN_1AU = 0.00019126835;
-const double smallp = 1.0e-10;
-const double smallr = 1.0e-10;
+const double smallp = 1.0e-12;
+const double smallr = 1.0e-12;
 
 //=======================================================================
 // Geometric parameters
@@ -49,8 +49,8 @@ const int zpad = npad;
 const int zpad = 0;
 #endif
 
-const int xres = 576;
-const int yres = 1008;
+const int xres = 576;//864;//
+const int yres = 1008;//1536;//
 const int zres = 1;
 
 const int xarr = xres + 2*xpad;
@@ -155,11 +155,11 @@ const double beta_cool = 10.0;                          // in units of dynamical
 //=======================================================================
 
 const int n_planet = 1;
-const double planet_mass = 0.001/4.0;//20.0*EarthMass;
+const double planet_mass = 0.001/2.0;//20.0*EarthMass;
 const double planet_radius = 1.0;
 const double planet_ecc = 0.0;
 
-const double ramp_time = 10.0*twopi/frame_omega;
+const double ramp_time = 20.0*twopi/frame_omega;
 
 //=======================================================================
 // Grid parameters

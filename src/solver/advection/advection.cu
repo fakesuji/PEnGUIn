@@ -238,6 +238,16 @@ __global__ void advect_update(Grid G, double dt)
 		Q.p /= vol;
 		Q.r /= vol;
 
+		if (Q.r<=0.0)
+		{
+			Q.r = smallr;
+		}
+
+		if (Q.p<=0.0)
+		{
+			Q.p = smallp;
+		}
+
 		#if EOS_flag == 0
 		Q.p = get_cs2(G.get_xc(i),G.get_yc(j),G.get_zc(k))*Q.r;
 		#endif

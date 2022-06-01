@@ -113,7 +113,7 @@ __device__ double get_PEM_aveR(int geom, double rL, double r0, double rR, double
 	double eta = par[3];
 	double val;
 
-	if (r0==rR) return (aM+sR)/get_dv_dr_dev(geom, rR, 0.0);
+	if (r0==rR) return par[2]/get_dv_dr_dev(geom, rR, 0.0);
 
 	if (eta>=1.0) val = get_PEM_1(rL, r0, rR, aM, sR, eta);
 	else          val = get_PEM_0(rR, r0, rL, sR, aM, 1.0/eta);
@@ -128,7 +128,7 @@ __device__ double get_PEM_aveL(int geom, double rL, double r0, double rR, double
 	double eta = par[3];
 	double val;
 
-	if (r0==rL) return (aM-sL)/get_dv_dr_dev(geom, rL, 0.0);
+	if (r0==rL) return par[0]/get_dv_dr_dev(geom, rL, 0.0);
 
 	if (eta>=1.0) val = get_PEM_0(rL, r0, rR, -sL, aM, eta);
 	else          val = get_PEM_1(rR, r0, rL, aM, -sL, 1.0/eta);
