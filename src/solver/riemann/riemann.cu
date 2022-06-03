@@ -45,7 +45,7 @@ __device__ void check_flux(Cell &flux, int geom, double* r, double* xa, double* 
 	{
 		if (flux.r>0.0)
 		{
-			vol = 0.99*get_volume_dev(geom, xa[i-1], dx[i-1]);
+			vol = 0.9*get_volume_dev(geom, xa[i-1], dx[i-1]);
 			if (flux.r*dt>r[i-1]*vol)
 			{
 				flux.r = r[i-1]*vol/dt;
@@ -56,9 +56,9 @@ __device__ void check_flux(Cell &flux, int geom, double* r, double* xa, double* 
 				printf("Error: flux too high; consider lowering the Courant number.\n");
 			}
 		}
-		else 
+		else if (flux.r<0.0) 
 		{
-			vol = 0.99*get_volume_dev(geom, xa[i], dx[i]);
+			vol = 0.9*get_volume_dev(geom, xa[i], dx[i]);
 			if (-flux.r*dt>r[i]*vol)
 			{
 				flux.r = -r[i]*vol/dt;
@@ -153,6 +153,7 @@ __device__ Cell riemann(int geom, double* xa, double* dx, double* dv, double rad
 //if (xa[i]<2.0 && xa[i]>1.993) printf("%f:\n %.10e, %.10e, %.10e, %.10e\n %.10e, %.10e, %.10e, %.10e\n %.10e, %.10e, %.10e\n", rad, S.rl, S.pl, S.ul, S.vl, S.rr, S.pr, S.ur, S.vr, sl, sm, sr);
 
 		HLLC_fluxes(S, pm, sl, sm, sr, flux, pres, uprs);
+		if (!isnan(u[i]) && !isnan(u[i-1]) && !isnan(u[i+1]) && isnan(flux.r)) printf("Error: flux nan, %e, %e, %e, %e, %e, %e\n",pm,sl,S.ul,sm,S.ur,sr);
 	}
 
 	net_source(flux, geom, r, xa, dx, pres, uprs, dt);

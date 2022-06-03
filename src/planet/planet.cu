@@ -80,7 +80,7 @@ void init_planet(Grid* G, double time)
 			G[i].planets[n].vy = sqrt((1.0+e)/(1.0-e)/planet_radius)*G[i].planets[n].x;
 			G[i].planets[n].vz = 0.0;
 			#if ndim==2
-			G[i].planets[n].rs = fmax(sc_h/2.0,pow(planet_mass,1.0/3.0)/4.0)*planet_radius;
+			G[i].planets[n].rs = fmax(sc_h/2.0,pow(planet_mass/3.0,1.0/3.0)/4.0)*planet_radius;
 			#else
 			G[i].planets[n].rs = (pow(planet_mass,1.0/3.0)/3.0)*planet_radius;
 			#endif

@@ -17,10 +17,6 @@ __device__ void set_L_state(int i, int geom, double* xa, double* dx, double* dv,
 		tmp = xl;
 	}
 
-	if (isnan(u[i])) {printf("Error: (%f, %f, %f)\n", u[i-1], u[i], u[i+1]);}
-	if (isnan(u[i-1])) {printf("Error: (%f, %f, %f)\n", u[i-1], u[i], u[i+1]);}
-	if (isnan(u[i+1])) {printf("Error: (%f, %f, %f)\n", u[i-1], u[i], u[i+1]);}
-
 	double rl = get_CON_aveR(geom, xl, tmp, xr, r_par);
 	double pl = get_CON_aveR(geom, xl, tmp, xr, p_par);
 	double ul = get_PRM_aveR(geom, xl, tmp, xr, u_par);
@@ -67,6 +63,9 @@ __device__ void set_L_state(int i, int geom, double* xa, double* dx, double* dv,
 	S.ul = ul + (Bp - Bm)*C;
 	S.rl = 1.0/( 1.0/rl - (B0 + Bp + Bm) );
 
+	S.pl = fmax(smallp*p[i],S.pl);
+	S.rl = fmax(smallr*r[i],S.rl);
+
 	return;
 }
 
@@ -83,7 +82,11 @@ __device__ void set_R_state(int i, int geom, double* xa, double* dx, double* dv,
 	double cr = sqrt(gam*p[i]/r[i]);
 	double tmp = xl + fmax(cr, -u[i]+cr)*dt;
 
-	if (tmp>xr) {printf("Error: reconstruction out of bound at R_state step 1 %f, %f, %f\n", xl, tmp, xr); tmp = xr;}
+	if (tmp>xr) 
+	{
+		//printf("Error: reconstruction out of bound at R_state step 1 %f, %f, %f\n", xl, tmp, xr); 
+		tmp = xr;
+	}
 
 	double rr = get_CON_aveL(geom, xl, tmp, xr, r_par);
 	double pr = get_CON_aveL(geom, xl, tmp, xr, p_par);
@@ -130,6 +133,9 @@ __device__ void set_R_state(int i, int geom, double* xa, double* dx, double* dv,
 	S.pr = pr + (Bp + Bm)*C*C;
 	S.ur = ur + (Bp - Bm)*C;
 	S.rr = 1.0/( 1.0/rr - (B0 + Bp + Bm) );
+
+	S.pr = fmax(smallp*p[i],S.pr);
+	S.rr = fmax(smallr*r[i],S.rr);
 
 	return;
 }

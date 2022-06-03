@@ -90,15 +90,24 @@ __global__ void viscous_tensor(Grid G, Cell* C)
 
 	double nr = get_nu(r,G.get_yc(j),G.get_zc(k))*rho;
 
-	G.vis_tensor[s*ind+0] = 2.0*nr*(dudx);
+	G.vis_tensor[s*ind+0] = nr*(dudx);
+
 	#if ndim>1
-	G.vis_tensor[s*ind+1] =     nr*(dudy + dvdx - v/r);
-	G.vis_tensor[s*ind+2] = 2.0*nr*(dvdy + u/r);
+	G.vis_tensor[s*ind+1] = nr*(dudy + dvdx - v/r);
+	G.vis_tensor[s*ind+2] = nr*(dvdy + u/r);
+	#else
+	G.vis_tensor[s*ind+1] = 0.0;
+	G.vis_tensor[s*ind+2] = 0.0;
 	#endif
+
 	#if ndim>2
-	G.vis_tensor[s*ind+3] =     nr*(dudz + dwdx);
-	G.vis_tensor[s*ind+4] =     nr*(dvdz + dwdy);
-	G.vis_tensor[s*ind+5] = 2.0*nr*(dwdz);
+	G.vis_tensor[s*ind+3] = nr*(dudz + dwdx);
+	G.vis_tensor[s*ind+4] = nr*(dvdz + dwdy);
+	G.vis_tensor[s*ind+5] = nr*(dwdz);
+	#else
+	G.vis_tensor[s*ind+3] = 0.0;
+	G.vis_tensor[s*ind+4] = 0.0;
+	G.vis_tensor[s*ind+5] = 0.0;
 	#endif
 
 	//printf("%f,%e,%e\n",r,nr,dudx);
@@ -146,11 +155,11 @@ __device__ double viscous_fx(Grid G, Cell* C, int i, int j, int k)
 
 	double r = G.get_xc(i);
 	double dr   = G.get_xc(i+1)-G.get_xc(i-1);
-	fx = t0[0]/r + (tf[0]-tb[0])/dr;
+	fx = 2.0*t0[0]/r + 2.0*(tf[0]-tb[0])/dr;
 
 	#if ndim>1
 	double dphi = G.get_yc(j+1)-G.get_yc(j-1);
-	fx += (tr[1]-tl[1])/dphi - t0[2]/r;
+	fx += (tr[1]-tl[1])/dphi - 2.0*t0[2]/r;
 	#endif
 
 	#if ndim>2
@@ -202,14 +211,12 @@ __device__ double viscous_fy(Grid G, Cell* C, int i, int j, int k)
 	double dr   = G.get_xc(i+1)-G.get_xc(i-1);
 	double dphi = G.get_yc(j+1)-G.get_yc(j-1);
 
-	fy = 2.0*t0[1]/r + (tf[1]-tb[1])/dr + (tr[2]-tl[2])/dphi;
+	fy = 2.0*t0[1]/r + (tf[1]-tb[1])/dr + 2.0*(tr[2]-tl[2])/dphi;
 
 	#if ndim>2
 	double dz   = G.get_zc(k+1)-G.get_zc(k-1);
 	fy += (tt[4]-td[4])/dz;
 	#endif
-
-	//if (i==3 || i==180) printf("%i %f %f %f %f %f %f %e\n",i,fy/C[ind].r,-0.75*get_nu(r,0.0,0.0)*pow(r,-1.5)/r, t0[1]/r, -1.5*get_nu(r,0.0,0.0)*C[ind].r*pow(r,-2.5), (tf[1]-tb[1])/dr, 1.5*1.5*get_nu(r,0.0,0.0)*C[ind].r*pow(r,-2.5), get_nu(r,0.0,0.0)*C[ind].r);
 
 	return fy;
 }
@@ -254,9 +261,35 @@ __device__ double viscous_fz(Grid G, Cell* C, int i, int j, int k)
 	double dphi = G.get_yc(j+1)-G.get_yc(j-1);
 	double dz   = G.get_zc(k+1)-G.get_zc(k-1);
 
-	fz = t0[3]/r + (tf[3]-tb[3])/dr + (tr[4]-tl[4])/dphi + (tt[5]-td[5])/dz;
+	fz = t0[3]/r + (tf[3]-tb[3])/dr + (tr[4]-tl[4])/dphi + 2.0*(tt[5]-td[5])/dz;
 
 	return fz;
+}
+
+__device__ double viscous_heat(Grid G, Cell* C, int i, int j, int k)
+{
+	int s;
+	#if ndim==1
+	s = 1;
+	#elif ndim==2
+	s = 3;
+	#elif ndim==3
+	s = 6;
+	#endif
+
+	int ind;
+	double H;
+
+	ind = G.get_ind(i, j, k);
+	double* T = &G.vis_tensor[s*ind];
+
+	double rho = C[ind].r;
+	double nr = get_nu(G.get_xc(i),G.get_yc(j),G.get_zc(k))*rho;
+
+	H = 2.0*T[0]*T[0] + 2.0*T[2]*T[2] + 2.0*T[5]*T[5] + T[1]*T[1] + T[3]*T[3] + T[4]*T[4];
+	H /= nr;
+
+	return H;
 }
 
 void viscosity_tensor_evaluation1(Grid* dev)

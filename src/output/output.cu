@@ -31,8 +31,10 @@ string create_label()
 		}
 	}
 
-	#ifdef visc_flag
+	#if visc_flag == 1
 	label += "_a"+int_to_string(log10(ss_alpha));
+	#elif visc_flag == 2
+	label += "_ah"+int_to_string(log10(ss_alpha));
 	#endif
 
 	#ifdef cool_flag

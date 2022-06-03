@@ -208,7 +208,7 @@ __global__ void advect_update(Grid G, double dt)
 	int i = threadIdx.x + blockIdx.x*blockDim.x + xpad;
 	int j = threadIdx.y + blockIdx.y*blockDim.y + ypad;
 	int k = threadIdx.z + blockIdx.z*blockDim.z + zpad;
-	double vol;
+	double vol, old_r, old_p;
 	Cell Q;
 	Cell D;
 	int ind;
@@ -223,6 +223,9 @@ __global__ void advect_update(Grid G, double dt)
 		Q.copy(G.C[ind]);
 		D.copy(G.F[ind]);		
 		D.multiply(dt);
+
+		old_r = Q.r;
+		old_p = Q.p;
 
 		Q.r *= vol;
 		Q.p *= vol;
@@ -240,12 +243,12 @@ __global__ void advect_update(Grid G, double dt)
 
 		if (Q.r<=0.0)
 		{
-			Q.r = smallr;
+			Q.r = old_r*smallr;
 		}
 
 		if (Q.p<=0.0)
 		{
-			Q.p = smallp;
+			Q.p = old_p*smallp;
 		}
 
 		#if EOS_flag == 0

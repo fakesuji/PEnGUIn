@@ -295,7 +295,7 @@ __global__ void update(Grid G, Cell* in, Cell* out, double dt, double div=1.0)
 	int i = threadIdx.x + blockIdx.x*blockDim.x + xpad;
 	int j = threadIdx.y + blockIdx.y*blockDim.y + ypad;
 	int k = threadIdx.z + blockIdx.z*blockDim.z + zpad;
-	double vol;
+	double vol, old_r, old_p;
 	Cell Q;
 	Cell D;
 	int ind;
@@ -319,7 +319,10 @@ __global__ void update(Grid G, Cell* in, Cell* out, double dt, double div=1.0)
 		D.copy(G.F[ind]);
 		D.multiply(div*dt);
 
-		if (isnan(D.r)) printf("Error: update, %f, %f\n %e, %e, %e, %e, %e\n %e, %e, %e, %e, %e\n",G.get_xc(i),G.get_yc(j),Q.r,Q.p,Q.u,Q.v,Q.w,D.r,D.p,D.u,D.v,D.w);
+		old_r = Q.r;
+		old_p = Q.p;
+
+		//if (!isnan(Q.r) && isnan(D.r)) printf("Error: update, %f, %f\n %e, %e, %e, %e, %e\n %e, %e, %e, %e, %e\n",G.get_xc(i),G.get_yc(j),Q.r,Q.p,Q.u,Q.v,Q.w,D.r,D.p,D.u,D.v,D.w);
 
 		Q.p = get_energy(Q.r,Q.p,Q.u,Q.v,Q.w);
 		Q.r *= vol;
@@ -356,7 +359,7 @@ __global__ void update(Grid G, Cell* in, Cell* out, double dt, double div=1.0)
 
 		if (Q.r<=0.0)
 		{
-			Q.r = smallr;
+			Q.r = old_r*smallr;
 			Q.p = get_cs2(G.get_xc(i),G.get_yc(j),G.get_zc(k))*Q.r;
 			Q.u = in[ind].u;
 			Q.v = in[ind].v;
@@ -365,16 +368,16 @@ __global__ void update(Grid G, Cell* in, Cell* out, double dt, double div=1.0)
 		}
 		else if (Q.p<=0.0)
 		{
-			Q.p = get_cs2(G.get_xc(i),G.get_yc(j),G.get_zc(k))*Q.r;
-			printf("Error: negative pressure at %f %f %f\n",G.get_xc(i),G.get_yc(j),G.get_zc(k));
+			Q.p = old_p*smallp;//get_cs2(G.get_xc(i),G.get_yc(j),G.get_zc(k))*Q.r;
+			//printf("Error: negative pressure at %f %f %f\n",G.get_xc(i),G.get_yc(j),G.get_zc(k));
 		}
 		else
 		{
 			#if EOS_flag == 2
 			#if internal_e_flag==0
-			Q.p = fmax(Q.p*gamm/vol - gamm*Q.r*(Q.u*Q.u+Q.v*Q.v+Q.w*Q.w)/2.0,smallp);
+			Q.p = fmax(Q.p*gamm/vol - gamm*Q.r*(Q.u*Q.u+Q.v*Q.v+Q.w*Q.w)/2.0,0.0);
 			#else
-			Q.p = fmax(Q.p*gamm/vol,smallp);
+			Q.p = fmax(Q.p*gamm/vol,0.0);
 			#endif
 			#elif EOS_flag == 0
 			Q.p = get_cs2(G.get_xc(i),G.get_yc(j),G.get_zc(k))*Q.r;
@@ -387,20 +390,13 @@ __global__ void update(Grid G, Cell* in, Cell* out, double dt, double div=1.0)
 	return;
 }
 
-__global__ void apply_viscosity(Grid G, Cell* C, double dt)
+__global__ void apply_viscous_heat(Grid G, Cell* C, double dt)
 {
 	int i = threadIdx.x + blockIdx.x*blockDim.x + xpad;
 	int j = threadIdx.y + blockIdx.y*blockDim.y + ypad;
 	int k = threadIdx.z + blockIdx.z*blockDim.z + zpad;
 
-	Cell T;
-	double fx;
-	#if ndim > 1
-	double fy;
-	#endif
-	#if ndim > 2
-	double fz;
-	#endif
+	double H;
 	int ind;
 
 	if (i>=xpad && i<G.xarr-xpad)
@@ -408,20 +404,9 @@ __global__ void apply_viscosity(Grid G, Cell* C, double dt)
 	if (k>=zpad && k<G.zarr-zpad)
 	{		
 		ind = G.get_ind(i,j,k);
-		T.copy(C[ind]);
 
-		fx = viscous_fx(G, C, i, j, k)/T.r;
-		T.u += fx*dt;
-		#if ndim > 1
-		fy = viscous_fy(G, C, i, j, k)/T.r;
-		T.v += fy*dt;
-		#endif
-		#if ndim > 2
-		fz = viscous_fz(G, C, i, j, k)/T.r;
-		T.w += fz*dt;
-		#endif
-
-		C[ind].copy(T);
+		H = viscous_heat(G, C, i, j, k);
+		C[ind].p += H*gamm*dt;
 	}
 
 	return;
@@ -568,6 +553,19 @@ void DS(Grid* dev, double time, double dt)
 	viscosity_tensor_evaluation1(dev);
 	#endif
 
+	#if visc_flag == 2
+	for (int n=0; n<ndev; n++)
+	{
+		cudaSetDevice(n);
+
+		nx = dev[n].xres;
+		ny = dev[n].yres;
+		nz = dev[n].zres;
+
+		apply_viscous_heat<<< dim3(nx/x_xdiv,ny,nz), x_xthd, 0, dev[n].stream >>> (dev[n], dev[n].C, 0.5*dt);
+	}
+	#endif
+
 	for (int n=0; n<ndev; n++)
 	{
 		cudaSetDevice(n);
@@ -666,6 +664,21 @@ void DS(Grid* dev, double time, double dt)
 
 		update<<< dim3(nx/x_xdiv,ny,nz), x_xthd, 0, dev[n].stream >>> (dev[n], dev[n].C, dev[n].C, dt);
 	}
+
+	//////////////////////////////////////////////////////////////
+
+	#if visc_flag == 2
+	for (int n=0; n<ndev; n++)
+	{
+		cudaSetDevice(n);
+
+		nx = dev[n].xres;
+		ny = dev[n].yres;
+		nz = dev[n].zres;
+
+		apply_viscous_heat<<< dim3(nx/x_xdiv,ny,nz), x_xthd, 0, dev[n].stream >>> (dev[n], dev[n].C, 0.5*dt);
+	}
+	#endif
 
 	//////////////////////////////////////////////////////////////
 
