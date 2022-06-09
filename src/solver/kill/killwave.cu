@@ -111,7 +111,7 @@ void killwave(Grid* dev, double dt)
 		ny = dev[n].yres;
 		nz = dev[n].zres;
 
-		killwave<<< dim3(nx/x_xdiv,ny/x_ydiv,nz/x_zdiv), dim3(x_xthd,x_ydiv,x_zdiv), 0, dev[n].stream >>> (dev[n],dev[n].C,dt);
+		killwave<<< dim3(nx/x_xdiv,ny/x_ydiv,nz/x_zdiv), dim3(x_xdiv,x_ydiv,x_zdiv), 0, dev[n].stream >>> (dev[n],dev[n].C,dt);
 	}
 	return;
 }
@@ -127,7 +127,7 @@ void killwave2(Grid* dev, double dt)
 		ny = dev[n].yres;
 		nz = dev[n].zres;
 
-		killwave<<< dim3(nx/x_xdiv,ny/x_ydiv,nz/x_zdiv), dim3(x_xthd,x_ydiv,x_zdiv), 0, dev[n].stream >>> (dev[n],dev[n].T,dt);
+		killwave<<< dim3(nx/x_xdiv,ny/x_ydiv,nz/x_zdiv), dim3(x_xdiv,x_ydiv,x_zdiv), 0, dev[n].stream >>> (dev[n],dev[n].T,dt);
 	}
 	return;
 }

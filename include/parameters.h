@@ -31,11 +31,17 @@ const double smallr = 1.0e-10;
 // Geometric parameters
 //=======================================================================
 
+#define recon_flag 2
+
 const int std_thd = 1024;
 
 #define ndim 2
 
-const int npad = 2;
+#if recon_flag==2
+const int npad = 3;
+#else
+const int npad = 3;
+#endif
 
 const int xpad = npad;
 #if ndim > 1
@@ -57,8 +63,8 @@ const int xarr = xres + 2*xpad;
 const int yarr = yres + 2*ypad;
 const int zarr = zres + 2*zpad;
 
-const int x_xdiv = 48;
-const int x_ydiv = 8;
+const int x_xdiv = 240;
+const int x_ydiv = 1;
 const int x_zdiv = 1;
 
 const int x_xthd = x_xdiv + 2*xpad;
@@ -71,7 +77,7 @@ const int y_ythd = y_ydiv + 2*ypad;
 
 const int z_xdiv = 16;
 const int z_ydiv = 1;
-const int z_zdiv = 16;
+const int z_zdiv = 24;
 
 const int z_zthd = z_zdiv + 2*zpad;
 
@@ -96,8 +102,6 @@ const int max_step = 1000000000;
 //=======================================================================
 // Hydro parameters
 //=======================================================================
-
-#define recon_flag 1
 
 #define EOS_flag 2
 #define internal_e_flag 1
@@ -138,7 +142,7 @@ const double p_alpha = 2.24 - 0.5*p_beta + 1.5;          // midplane density ~ r
 #else 
 const double p_alpha = 2.24;                             // surface density ~ r^-p_alpha
 #endif 
-const double ss_alpha = 0.01;                            // alpha-viscosity
+const double ss_alpha = 0.1;                            // alpha-viscosity
 const double sc_h = 0.025;                              // scale height at r=1, normalized to that at r = 100
 
 #if ndim==3

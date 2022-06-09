@@ -95,19 +95,12 @@ __global__ void viscous_tensor(Grid G, Cell* C)
 	#if ndim>1
 	G.vis_tensor[s*ind+1] = nr*(dudy + dvdx - v/r);
 	G.vis_tensor[s*ind+2] = nr*(dvdy + u/r);
-	#else
-	G.vis_tensor[s*ind+1] = 0.0;
-	G.vis_tensor[s*ind+2] = 0.0;
 	#endif
 
 	#if ndim>2
 	G.vis_tensor[s*ind+3] = nr*(dudz + dwdx);
 	G.vis_tensor[s*ind+4] = nr*(dvdz + dwdy);
 	G.vis_tensor[s*ind+5] = nr*(dwdz);
-	#else
-	G.vis_tensor[s*ind+3] = 0.0;
-	G.vis_tensor[s*ind+4] = 0.0;
-	G.vis_tensor[s*ind+5] = 0.0;
 	#endif
 
 	//printf("%f,%e,%e\n",r,nr,dudx);

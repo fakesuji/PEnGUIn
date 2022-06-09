@@ -47,6 +47,8 @@ string create_label()
 
 	#if recon_flag == 1
 	label += "_PLM";
+	#elif recon_flag == 2
+	label += "_PPM";
 	#endif
 
 	printf("label %s assigned. \n\n", label.c_str());

@@ -412,7 +412,7 @@ __global__ void apply_viscous_heat(Grid G, Cell* C, double dt)
 	return;
 }
 
-__global__ void compute_forces(Grid G, Cell* C, double dt, double x_dt, bool ave=false)
+__global__ void compute_forces(Grid G, Cell* C, double x_dt, bool ave=false)
 {
 	int i = threadIdx.x + blockIdx.x*blockDim.x;
 	int j = threadIdx.y + blockIdx.y*blockDim.y;
@@ -454,7 +454,7 @@ __global__ void compute_forces(Grid G, Cell* C, double dt, double x_dt, bool ave
 		#endif
 
 		#if ndim > 2
-		fz = get_fz(xc,yc,zc,T.u,T.v+0.5*dt*fy,T.w,G.planets);
+		fz = get_fz(xc,yc,zc,T.u,T.v,T.w,G.planets);
 		#ifdef visc_flag
 		fz += viscous_fz(G, C, i, j, k)/T.r;
 		#endif
@@ -462,7 +462,7 @@ __global__ void compute_forces(Grid G, Cell* C, double dt, double x_dt, bool ave
 		else     G.fz[ind] = fy;
 		#endif
 
-		fx = get_fx(xc,yc,zc,T.u,T.v+0.5*dt*fy,T.w+0.5*dt*fz,G.planets);
+		fx = get_fx(xc,yc,zc,T.u,T.v,T.w,G.planets);
 		#ifdef visc_flag
 		fx += viscous_fx(G, C, i, j, k)/T.r;
 		#endif
@@ -562,7 +562,7 @@ void DS(Grid* dev, double time, double dt)
 		ny = dev[n].yres;
 		nz = dev[n].zres;
 
-		apply_viscous_heat<<< dim3(nx/x_xdiv,ny,nz), x_xthd, 0, dev[n].stream >>> (dev[n], dev[n].C, 0.5*dt);
+		apply_viscous_heat<<< dim3(nx/x_xdiv,ny,nz), x_xdiv, 0, dev[n].stream >>> (dev[n], dev[n].C, 0.5*dt);
 	}
 	#endif
 
@@ -574,7 +574,7 @@ void DS(Grid* dev, double time, double dt)
 		my = dev[n].yarr;
 		mz = dev[n].zarr;
 
-		compute_forces<<< dim3((mx+bsz-1)/bsz,my,mz), bsz, 0, dev[n].stream >>> (dev[n], dev[n].C, 0.0, 0.0);
+		compute_forces<<< dim3((mx+bsz-1)/bsz,my,mz), bsz, 0, dev[n].stream >>> (dev[n], dev[n].C, 0.0);
 	}
 
 	//////////////////////////////////////////////////////////////
@@ -627,7 +627,7 @@ void DS(Grid* dev, double time, double dt)
 		ny = dev[n].yres;
 		nz = dev[n].zres;
 
-		update<<< dim3(nx/x_xdiv,ny,nz), x_xthd, 0, dev[n].stream >>> (dev[n], dev[n].C, dev[n].T, dt);
+		update<<< dim3(nx/x_xdiv,ny,nz), x_xdiv, 0, dev[n].stream >>> (dev[n], dev[n].C, dev[n].T, dt);
 	}
 
 	//////////////////////////////////////////////////////////////
@@ -649,7 +649,7 @@ void DS(Grid* dev, double time, double dt)
 		my = dev[n].yarr;
 		mz = dev[n].zarr;
 
-		compute_forces<<< dim3((mx+bsz-1)/bsz,my,mz), bsz, 0, dev[n].stream >>> (dev[n], dev[n].T, 0.0, dt, true);
+		compute_forces<<< dim3((mx+bsz-1)/bsz,my,mz), bsz, 0, dev[n].stream >>> (dev[n], dev[n].T, dt, true);
 	}
 
 	//////////////////////////////////////////////////////////////
@@ -662,7 +662,7 @@ void DS(Grid* dev, double time, double dt)
 		ny = dev[n].yres;
 		nz = dev[n].zres;
 
-		update<<< dim3(nx/x_xdiv,ny,nz), x_xthd, 0, dev[n].stream >>> (dev[n], dev[n].C, dev[n].C, dt);
+		update<<< dim3(nx/x_xdiv,ny,nz), x_xdiv, 0, dev[n].stream >>> (dev[n], dev[n].C, dev[n].C, dt);
 	}
 
 	//////////////////////////////////////////////////////////////
@@ -676,7 +676,7 @@ void DS(Grid* dev, double time, double dt)
 		ny = dev[n].yres;
 		nz = dev[n].zres;
 
-		apply_viscous_heat<<< dim3(nx/x_xdiv,ny,nz), x_xthd, 0, dev[n].stream >>> (dev[n], dev[n].C, 0.5*dt);
+		apply_viscous_heat<<< dim3(nx/x_xdiv,ny,nz), x_xdiv, 0, dev[n].stream >>> (dev[n], dev[n].C, 0.5*dt);
 	}
 	#endif
 

@@ -8,6 +8,13 @@ __device__ Cell advection(int geom, double* xa, double* dx, double* dv, int npad
 	double xl, xr, tmp;
 	double par[4];
 
+	#if recon_flag==2
+	extern __shared__ double share[];
+	double* flat = &share[0];
+	int is = i + imax*threadIdx.y;
+	flat[is] = 0.0;
+	#endif
+
 	if (i>=npad && i<imax+1-npad)
 	{
 		if (speed>0.0)
