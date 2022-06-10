@@ -1,4 +1,3 @@
-
 __device__ double get_g_apprx(double x, double k)
 {
 /*
@@ -58,9 +57,9 @@ __device__ void get_PEM_parameters(int i, int geom, double* x, double* dx, doubl
 
 	if (sR*sL<=0.0)
 	{
-		par[0] = aL;
+		par[0] = a2;
 		par[1] = a2;
-		par[2] = aR;
+		par[2] = a2;
 		par[3] = 1.0;
 	}
 	else

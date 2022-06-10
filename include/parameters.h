@@ -40,7 +40,7 @@ const int std_thd = 1024;
 #if recon_flag==2
 const int npad = 3;
 #else
-const int npad = 3;
+const int npad = 2;
 #endif
 
 const int xpad = npad;
@@ -69,7 +69,7 @@ const int x_zdiv = 1;
 
 const int x_xthd = x_xdiv + 2*xpad;
 
-const int y_xdiv = 16;
+const int y_xdiv = 12;
 const int y_ydiv = 24;
 const int y_zdiv = 1;
 

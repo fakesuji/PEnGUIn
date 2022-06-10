@@ -13,6 +13,7 @@ __device__ Cell advection(int geom, double* xa, double* dx, double* dv, int npad
 	double* flat = &share[0];
 	int is = i + imax*threadIdx.y;
 	flat[is] = 0.0;
+	__syncthreads();
 	#endif
 
 	if (i>=npad && i<imax+1-npad)
