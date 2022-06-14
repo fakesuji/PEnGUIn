@@ -31,7 +31,7 @@ const double smallr = 1.0e-10;
 // Geometric parameters
 //=======================================================================
 
-#define recon_flag 2
+#define recon_flag 0
 
 const int std_thd = 1024;
 

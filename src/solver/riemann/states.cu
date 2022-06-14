@@ -1,3 +1,4 @@
+/*
 __device__ void set_L_state(int i, int geom, double* xa, double* dx, double* dv, double rad, 
                             double* r, double* p, double* u, double* v, double* w, double dt, double us, State &S)
 {
@@ -8,8 +9,11 @@ __device__ void set_L_state(int i, int geom, double* xa, double* dx, double* dv,
 
 	double xl = xa[i];
 	double xr = xa[i+1];
-	double cl = sqrt(gam*p[i]/r[i]);
-	double tmp = xr - fmax(cl, u[i]+cl)*dt;
+	//double cl = sqrt(gam*p[i]/r[i]);
+	//double tmp = xr - fmax(cl, u[i]+cl)*dt;
+	double cl;
+	double tmp = fmax(u[i],0.0);
+	tmp = xr - sqrt(gam*p[i]/r[i] + tmp*tmp)*dt;
 
 	if (tmp<xl) 
 	{
@@ -79,8 +83,11 @@ __device__ void set_R_state(int i, int geom, double* xa, double* dx, double* dv,
 
 	double xl = xa[i];
 	double xr = xa[i+1];
-	double cr = sqrt(gam*p[i]/r[i]);
-	double tmp = xl + fmax(cr, -u[i]+cr)*dt;
+	//double cr = sqrt(gam*p[i]/r[i]);
+	//double tmp = xl + fmax(cr, -u[i]+cr)*dt;
+	double cr;
+	double tmp = fmax(-u[i],0.0);
+	tmp = xl + sqrt(gam*p[i]/r[i] + tmp*tmp)*dt;
 
 	if (tmp>xr) 
 	{
@@ -134,6 +141,167 @@ __device__ void set_R_state(int i, int geom, double* xa, double* dx, double* dv,
 	S.ur = ur + (Bp - Bm)*C;
 	S.rr = 1.0/( 1.0/rr - (B0 + Bp + Bm) );
 
+	S.pr = fmax(smallp*p[i],S.pr);
+	S.rr = fmax(smallr*r[i],S.rr);
+
+	return;
+}
+*/
+__device__ void set_state(int i, int geom, double* xa, double* dx, double* dv, double rad, 
+                          double* r, double* p, double* u, double* v, double* w, double dt, double us, State &S)
+{
+	double rl_par[4], pl_par[4], ul_par[4];
+	double rr_par[4], pr_par[4], ur_par[4];
+
+	double rl, pl, ul, cl;
+	double rr, pr, ur, cr;
+	double xl, xr, tmp, C;
+	double r_, p_, u_;
+	double Bp, Bm, B0;
+
+	get_CON_parameters(i-1, geom, xa, dx, dv, r, rl_par);
+	get_CON_parameters(i-1, geom, xa, dx, dv, p, pl_par);
+	get_PRM_parameters(i-1, geom, xa, dx, dv, u, ul_par);
+
+	get_CON_parameters(i, geom, xa, dx, dv, r, rr_par);
+	get_CON_parameters(i, geom, xa, dx, dv, p, pr_par);
+	get_PRM_parameters(i, geom, xa, dx, dv, u, ur_par);
+
+	#if recon_flag==0
+	if ( rl_par[2]!=rl_par[1] && rr_par[0]!=rr_par[1] )
+	{
+		tmp = 0.5*(rl_par[2]+rr_par[0]);
+		rl_par[2] = tmp;
+		rr_par[0] = tmp;
+	}
+	if ( pl_par[2]!=pl_par[1] && pr_par[0]!=pr_par[1] )
+	{
+		tmp = 0.5*(pl_par[2]+pr_par[0]);
+		pl_par[2] = tmp;
+		pr_par[0] = tmp;
+	}
+	#endif
+
+	/////////////////////////////////////////////////////////
+
+	xl = xa[i-1];
+	xr = xa[i];
+
+	tmp = fmax(u[i-1],0.0);
+	tmp = xr - (sqrt(gam*p[i-1]/r[i-1]) + tmp)*dt;
+
+	if (tmp<xl) 
+	{
+		tmp = xl;
+	}
+
+	rl = get_CON_aveR(geom, xl, tmp, xr, rl_par);
+	pl = get_CON_aveR(geom, xl, tmp, xr, pl_par);
+	ul = get_PRM_aveR(geom, xl, tmp, xr, ul_par);
+	cl = sqrt(gam*pl/rl);
+	C = cl*rl;
+
+	Bp = 0.0;
+	Bm = 0.0;
+	B0 = 0.0;
+
+	if (ul>-cl)
+	{
+		tmp = xr - (ul+cl)*dt;
+
+		//r_ = get_CON_aveR(geom, xl, tmp, xr, rl_par);
+		p_ = get_CON_aveR(geom, xl, tmp, xr, pl_par);
+		u_ = get_PRM_aveR(geom, xl, tmp, xr, ul_par);
+
+		Bp = -( (ul-u_) + (pl-p_)/C - us)/2.0;
+	}
+
+	if (ul>0.0)
+	{
+		tmp = xr - ul*dt;
+
+		r_ = get_CON_aveR(geom, xl, tmp, xr, rl_par);
+		p_ = get_CON_aveR(geom, xl, tmp, xr, pl_par);
+
+		B0 = (pl-p_)/C/C + 1.0/rl - 1.0/r_;
+	}
+
+	if (ul>cl)
+	{
+		tmp = xr - (ul-cl)*dt;
+
+		//r_ = get_CON_aveR(geom, xl, tmp, xr, rl_par);
+		p_ = get_CON_aveR(geom, xl, tmp, xr, pl_par);
+		u_ = get_PRM_aveR(geom, xl, tmp, xr, ul_par);
+
+		Bm =  ( (ul-u_) - (pl-p_)/C - us)/2.0;
+	}
+
+	S.rl = 1.0/( 1.0/rl - (B0 + Bp/C + Bm/C) );
+	S.pl = pl + (Bp + Bm)*C;
+	S.ul = ul + Bp - Bm;
+
+	/////////////////////////////////////////////////////////
+
+	xl = xa[i];
+	xr = xa[i+1];
+
+	tmp = fmax(-u[i],0.0);
+	tmp = xl + (sqrt(gam*p[i]/r[i]) + tmp)*dt;
+
+	if (tmp>xr) 
+	{
+		tmp = xr;
+	}
+
+	rr = get_CON_aveL(geom, xl, tmp, xr, rr_par);
+	pr = get_CON_aveL(geom, xl, tmp, xr, pr_par);
+	ur = get_PRM_aveL(geom, xl, tmp, xr, ur_par);
+	cr = sqrt(gam*pr/rr);
+	C = cr*rr;
+
+	Bp = 0.0;
+	Bm = 0.0;
+	B0 = 0.0;
+
+	if (ur<-cr)
+	{
+		tmp = xl - (ur+cr)*dt;
+
+		//r_ = get_CON_aveL(geom, xl, tmp, xr, rr_par);
+		p_ = get_CON_aveL(geom, xl, tmp, xr, pr_par);
+		u_ = get_PRM_aveL(geom, xl, tmp, xr, ur_par);
+
+		Bp = -( (ur-u_) + (pr-p_)/C - us)/2.0;
+	}
+
+	if (ur<0.0)
+	{
+		tmp = xl - ur*dt;
+
+		r_ = get_CON_aveL(geom, xl, tmp, xr, rr_par);
+		p_ = get_CON_aveL(geom, xl, tmp, xr, pr_par);
+
+		B0 = (pr-p_)/C/C + 1.0/rr - 1.0/r_;
+	}
+
+	if (ur<cr)
+	{
+		tmp = xl - (ur-cr)*dt;
+
+		//r_ = get_CON_aveL(geom, xl, tmp, xr, rr_par);
+		p_ = get_CON_aveL(geom, xl, tmp, xr, pr_par);
+		u_ = get_PRM_aveL(geom, xl, tmp, xr, ur_par);
+
+		Bm =  ( (ur-u_) - (pr-p_)/C - us)/2.0;
+	}
+
+	S.rr = 1.0/( 1.0/rr - (B0 + Bp/C + Bm/C) );
+	S.pr = pr + (Bp + Bm)*C;
+	S.ur = ur + Bp - Bm;
+
+	S.pl = fmax(smallp*p[i-1],S.pl);
+	S.rl = fmax(smallr*r[i-1],S.rl);
 	S.pr = fmax(smallp*p[i],S.pr);
 	S.rr = fmax(smallr*r[i],S.rr);
 

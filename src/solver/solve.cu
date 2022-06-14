@@ -544,26 +544,13 @@ void DS(Grid* dev, double time, double dt)
 {
 	int nx, ny, nz;
 	int mx, my, mz;
-	int bsz = 64;
+	int bsz = 32;
 
 	//////////////////////////////////////////////////////////////
 
 	#ifdef visc_flag
 	syncallstreams(dev);
 	viscosity_tensor_evaluation1(dev);
-	#endif
-
-	#if visc_flag == 2
-	for (int n=0; n<ndev; n++)
-	{
-		cudaSetDevice(n);
-
-		nx = dev[n].xres;
-		ny = dev[n].yres;
-		nz = dev[n].zres;
-
-		apply_viscous_heat<<< dim3(nx/x_xdiv,ny,nz), x_xdiv, 0, dev[n].stream >>> (dev[n], dev[n].C, 0.5*dt);
-	}
 	#endif
 
 	for (int n=0; n<ndev; n++)
@@ -664,21 +651,6 @@ void DS(Grid* dev, double time, double dt)
 
 		update<<< dim3(nx/x_xdiv,ny,nz), x_xdiv, 0, dev[n].stream >>> (dev[n], dev[n].C, dev[n].C, dt);
 	}
-
-	//////////////////////////////////////////////////////////////
-
-	#if visc_flag == 2
-	for (int n=0; n<ndev; n++)
-	{
-		cudaSetDevice(n);
-
-		nx = dev[n].xres;
-		ny = dev[n].yres;
-		nz = dev[n].zres;
-
-		apply_viscous_heat<<< dim3(nx/x_xdiv,ny,nz), x_xdiv, 0, dev[n].stream >>> (dev[n], dev[n].C, 0.5*dt);
-	}
-	#endif
 
 	//////////////////////////////////////////////////////////////
 

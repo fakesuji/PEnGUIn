@@ -50,24 +50,22 @@ __device__ void get_PEM_parameters(int i, int geom, double* x, double* dx, doubl
 	sL = copysign(fmin(fabs(aL),fabs(a2-a1)),a2-a1);
 	sR = copysign(fmin(fabs(aR),fabs(a3-a2)),a3-a2);
 
-	aL = a2 - sL;
-	aR = a2 + sR;
-
 	//===============================================================================
 
-	if (sR*sL<=0.0)
+	if (sR*sL<=0.0 || fabs(sR/a2)<1.0e-6 || fabs(sL/a2)<1.0e-6)
 	{
 		par[0] = a2;
 		par[1] = a2;
 		par[2] = a2;
-		par[3] = 1.0;
 	}
 	else
 	{
-		par[0] = aL;
+		if (sR/sL>10.0) sR = 10.0*sL;
+		if (sL/sR>10.0) sL = 10.0*sR;
+
+		par[0] = a2 - sL;
 		par[1] = a2;
-		par[2] = aR;
-		par[3] = sR/sL;
+		par[2] = a2 + sR;
     	}
 	return;
 }
@@ -109,13 +107,12 @@ __device__ double get_PEM_aveR(int geom, double rL, double r0, double rR, double
 {
 	double aM = par[1];
 	double sR = par[2] - aM;
-	double eta = par[3];
+	double sL = aM - par[0];
 	double val;
 
-	if (r0==rR) return par[2]/get_dv_dr_dev(geom, rR, 0.0);
-
-	if (eta>=1.0) val = get_PEM_1(rL, r0, rR, aM, sR, eta);
-	else          val = get_PEM_0(rR, r0, rL, sR, aM, 1.0/eta);
+	if (par[0] == par[2]) val = aM;
+	else if (sR/sL>=1.0)  val = get_PEM_1(rL, r0, rR, aM, sR, sR/sL);
+	else                  val = get_PEM_0(rR, r0, rL, sR, aM, sL/sR);
 
 	return val/get_dv_dr_dev(geom, r0, rR-r0);
 }
@@ -123,14 +120,13 @@ __device__ double get_PEM_aveR(int geom, double rL, double r0, double rR, double
 __device__ double get_PEM_aveL(int geom, double rL, double r0, double rR, double* par)
 {
 	double aM = par[1];
+	double sR = par[2] - aM;
 	double sL = aM - par[0];
-	double eta = par[3];
 	double val;
 
-	if (r0==rL) return par[0]/get_dv_dr_dev(geom, rL, 0.0);
-
-	if (eta>=1.0) val = get_PEM_0(rL, r0, rR, -sL, aM, eta);
-	else          val = get_PEM_1(rR, r0, rL, aM, -sL, 1.0/eta);
+	if (par[0] == par[2]) val = aM;
+	else if (sR/sL>=1.0)  val = get_PEM_0(rL, r0, rR, -sL, aM, sR/sL);
+	else                  val = get_PEM_1(rR, r0, rL, aM, -sL, sL/sR);
 
 	return val/get_dv_dr_dev(geom, rL, r0-rL);
 }

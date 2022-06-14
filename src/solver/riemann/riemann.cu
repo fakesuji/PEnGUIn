@@ -139,17 +139,19 @@ __device__ Cell riemann(int geom, double* xa, double* dx, double* dv, double rad
 	double pres, uprs;
 
 	#if recon_flag==2
-	flatten(p, u);
+	flatten(r, p, u);
 	__syncthreads();
 	#endif
+
+//	p[i] /= r[i];
+//	__syncthreads();
 
 	if (i>=npad && i<imax+1-npad)
 	{
 		us = dt*force;
 		if (geom>2) dt /= rad;
 
-		set_L_state(i-1, geom, xa, dx, dv, rad, r, p, u, v, w, dt, us, S);
-		set_R_state(  i, geom, xa, dx, dv, rad, r, p, u, v, w, dt, us, S);
+		set_state(i, geom, xa, dx, dv, rad, r, p, u, v, w, dt, us, S);
 
 		wave_speeds(S, pm, sl, sm, sr);
 		set_L_state_passive(i-1, geom, xa, dx, dv, rad, sl, sm, u, v, w, dt, S);
