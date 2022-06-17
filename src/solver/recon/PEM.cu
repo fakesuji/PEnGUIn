@@ -106,7 +106,8 @@ __device__ double get_PEM_0(double r0, double rx, double r1, double s0, double a
 	double x = (rx-r0)/dr;
 
 	double val;
-	val  = aM + s0*(1.0-exp(eta*log(x)));
+	if (x==0.0) val = aM + s0;
+	else        val = aM + s0*(1.0-exp(eta*log(x)));
 
 	return val;
 }
@@ -118,8 +119,9 @@ __device__ double get_PEM_1(double r0, double rx, double r1, double aM, double s
 	double y = (r1-rx)/dr;
 
 	double val;
-	if (eta*y>1e-4) val = aM + s1*lim01(x*(1.0-exp(eta*log(x)))/(y*eta));
-	else            val = aM + s1*get_g_apprx(x, eta);
+	if (eta*y>1e-4)  val = aM + s1*lim01(x*(1.0-exp(eta*log(x)))/(y*eta));
+	else if (x==0.0) val = aM;
+	else             val = aM + s1*get_g_apprx(x, eta);
 
 	return val;
 }

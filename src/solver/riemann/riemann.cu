@@ -38,7 +38,7 @@ __device__ void check_flux(Cell &flux, int geom, double* r, double* xa, double* 
 	flux.v *= gfac;
 	flux.w *= gfac;
 
-	double old_flux = flux.r;
+	//double old_flux = flux.r;
 	double vol;
 
 	if (i>=npad && i<imax-npad+1)
