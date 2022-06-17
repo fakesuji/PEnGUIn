@@ -1,3 +1,20 @@
+__device__ double PLM_div(double x1, double x2, double x3, double a1, double a2, double a3)
+{
+	double tmp;
+
+	tmp = (a3-a1)*x2/(x1+x3+2.0*x2);
+  	tmp = copysign( fmin(fmin(fabs(a2-a1),fabs(a3-a2)),fabs(tmp)) , tmp );
+
+	if ((a3-a2)*(a2-a1)<=0.0)
+	{
+		return 0.0;
+	}
+	else
+	{
+		return 2.0*tmp;
+    	}
+}
+
 //=======================================================================================
 
 __device__ void get_PLM_parameters(int i, int geom, double* r, double* dr, double* dv, double* a, double* par)
@@ -23,10 +40,10 @@ __device__ void get_PLM_parameters(int i, int geom, double* r, double* dr, doubl
 
 	//===============================================================================
 
-	tmp = (a3-a1)*x2/(x1+x3+2.0*x2);
-  	tmp = copysign( fmin(fmin(fabs(a2-a1),fabs(a3-a2)),fabs(tmp)) , tmp );
-	//tmp = (a3-a2)*(a2-a1)/(a3-a1);
-	//tmp*= x2*(x1+x3+2.0*x2)/(x3+x2)/(x2+x1);
+	//tmp = (a3-a1)*x2/(x1+x3+2.0*x2);
+  	//tmp = copysign( fmin(fmin(fabs(a2-a1),fabs(a3-a2)),fabs(tmp)) , tmp );
+	tmp = (a3-a2)*(a2-a1)/(a3-a1);
+	tmp*= x2*(x1+x3+2.0*x2)/(x3+x2)/(x2+x1);
 
 	if (tmp==a2-a1)
 		par[0] = a1;

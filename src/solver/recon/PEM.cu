@@ -19,10 +19,33 @@ __device__ double get_g_apprx(double x, double k)
 	tmp += y*(k+1.0)/2.0;
 	tmp += y*y*(k+1.0)*(k-1.0)/6.0;
 	tmp += y*y*y*(k+1.0)*(k-1.0)*(k-2.0)/24.0;
-	tmp += y*y*y*y*(k+1.0)*(k-1.0)*(k-2.0)*(k-3.0)/120.0;
-	tmp += y*y*y*y*y*(k+1.0)*(k-1.0)*(k-2.0)*(k-3.0)*(k-4.0)/720.0;
+	//tmp += y*y*y*y*(k+1.0)*(k-1.0)*(k-2.0)*(k-3.0)/120.0;
+	//tmp += y*y*y*y*y*(k+1.0)*(k-1.0)*(k-2.0)*(k-3.0)*(k-4.0)/720.0;
 
 	return tmp;
+}
+
+__device__ double PEM_div(double x1, double x2, double x3, double a1, double a2, double a3)
+{
+	double sL, sR, aL, aR;
+
+	sL = (a2-a1)/(x2+x1);
+	sR = (a3-a2)/(x3+x2);
+    
+	aL = x2* ((x3+x2)*sL + x1*sR) / (x1+x2+x3);
+	aR = x2* ((x1+x2)*sR + x3*sL) / (x1+x2+x3);
+
+	sL = copysign(fmin(fabs(aL),fabs(a2-a1)),a2-a1);
+	sR = copysign(fmin(fabs(aR),fabs(a3-a2)),a3-a2);
+
+	if (sR*sL<=0.0)
+	{
+		return 0.0;
+	}
+	else
+	{
+		return sR-sL;
+    	}
 }
 
 //=======================================================================================
@@ -52,7 +75,7 @@ __device__ void get_PEM_parameters(int i, int geom, double* x, double* dx, doubl
 
 	//===============================================================================
 
-	if (sR*sL<=0.0 || fabs(sR/a2)<1.0e-6 || fabs(sL/a2)<1.0e-6)
+	if (sR*sL<=0.0 || fabs(sR/a2)<1.0e-9 || fabs(sL/a2)<1.0e-9)
 	{
 		par[0] = a2;
 		par[1] = a2;
@@ -95,7 +118,7 @@ __device__ double get_PEM_1(double r0, double rx, double r1, double aM, double s
 	double y = (r1-rx)/dr;
 
 	double val;
-	if (eta*y>1e-3) val = aM + s1*lim01(x*(1.0-exp(eta*log(x)))/(y*eta));
+	if (eta*y>1e-4) val = aM + s1*lim01(x*(1.0-exp(eta*log(x)))/(y*eta));
 	else            val = aM + s1*get_g_apprx(x, eta);
 
 	return val;

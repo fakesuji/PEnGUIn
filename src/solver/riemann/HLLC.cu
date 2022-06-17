@@ -39,28 +39,30 @@ __device__ void HLLC_fluxes(State S, double pm, double sl, double sm, double sr,
 
 	/////////////////////////////////////////////////////////
 
-	fl  = S.pl;
-	f_l = (sl*pm-sm*S.pl)/(sl-sm);
-	f_r = (sr*pm-sm*S.pr)/(sr-sm);
-	fr  = S.pr;
-	pres = get_flux(fl, f_l, f_r, fr, sl, sm, sr);
+	//fl  = S.pl;
+	//f_l = (sl*pm-sm*S.pl)/(sl-sm);
+	//f_r = (sr*pm-sm*S.pr)/(sr-sm);
+	//fr  = S.pr;
+	pres = pm;//get_flux(fl, f_l, f_r, fr, sl, sm, sr);
 
 
 	#if EOS_flag==2
 
 	#if internal_e_flag==0
-	fl  = S.ul*S.pl;
-	f_l = sm*(sl*pm-S.ul*S.pl)/(sl-sm);
-	f_r = sm*(sr*pm-S.ur*S.pr)/(sr-sm);
-	fr  = S.ur*S.pr;
+	//fl  = S.ul*S.pl;
+	//f_l = sm*(sl*pm-S.ul*S.pl)/(sl-sm);
+	//f_r = sm*(sr*pm-S.ur*S.pr)/(sr-sm);
+	//fr  = S.ur*S.pr;
+	uprs = sm*pm;
 	#elif internal_e_flag==1
-	fl  = S.ul;
-	f_l = sm*(sl-S.ul)/(sl-sm);
-	f_r = sm*(sr-S.ur)/(sr-sm);
-	fr  = S.ur;
+	//fl  = S.ul;
+	//f_l = sm*(sl-S.ul)/(sl-sm);
+	//f_r = sm*(sr-S.ur)/(sr-sm);
+	//fr  = S.ur;
+	uprs = sm;
 	#endif
 
-	uprs = get_flux(fl, f_l, f_r, fr, sl, sm, sr);
+	//uprs = get_flux(fl, f_l, f_r, fr, sl, sm, sr);
 
 	#else
 

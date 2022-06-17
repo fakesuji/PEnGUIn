@@ -98,14 +98,17 @@ void mem_allocation(Grid* hst, Grid* dev)
 		cudaMalloc( (void**)&dev[n].fx, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(double) );
 		cudaMalloc( (void**)&dev[n].fy, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(double) );
 		cudaMalloc( (void**)&dev[n].fz, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(double) );
+		#if EOS_flag > 0
+		cudaMalloc( (void**)&dev[n].De, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(double) );
+		#endif
 
 		#ifdef visc_flag
 		#if ndim==1
-		cudaMalloc( (void**)&dev[n].vis_tensor, 1*dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(double) );
+		cudaMalloc( (void**)&dev[n].vis_tensor, ndim*dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(double) );
 		#elif ndim==2
-		cudaMalloc( (void**)&dev[n].vis_tensor, 3*dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(double) );
+		cudaMalloc( (void**)&dev[n].vis_tensor, ndim*dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(double) );
 		#elif ndim==3
-		cudaMalloc( (void**)&dev[n].vis_tensor, 6*dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(double) );
+		cudaMalloc( (void**)&dev[n].vis_tensor, ndim*dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(double) );
 		#endif
 		#endif
 

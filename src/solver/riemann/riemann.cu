@@ -45,27 +45,37 @@ __device__ void check_flux(Cell &flux, int geom, double* r, double* xa, double* 
 	{
 		if (flux.r>0.0)
 		{
-			vol = 0.9*get_volume_dev(geom, xa[i-1], dx[i-1]);
+			vol = 0.95*get_volume_dev(geom, xa[i-1], dx[i-1]);
 			if (flux.r*dt>r[i-1]*vol)
 			{
-				flux.r = r[i-1]*vol/dt;
-				flux.p *= flux.r/old_flux;
-				flux.u *= flux.r/old_flux;
-				flux.v *= flux.r/old_flux;
-				flux.w *= flux.r/old_flux;
+				//flux.r = r[i-1]*vol/dt;
+				//flux.p *= flux.r/old_flux;
+				//flux.u *= flux.r/old_flux;
+				//flux.v *= flux.r/old_flux;
+				//flux.w *= flux.r/old_flux;
+				flux.r = 0.0;
+				flux.p = 0.0;
+				flux.u = 0.0;
+				flux.v = 0.0;
+				flux.w = 0.0;
 				printf("Error: flux too high; consider lowering the Courant number.\n");
 			}
 		}
 		else if (flux.r<0.0) 
 		{
-			vol = 0.9*get_volume_dev(geom, xa[i], dx[i]);
+			vol = 0.95*get_volume_dev(geom, xa[i], dx[i]);
 			if (-flux.r*dt>r[i]*vol)
 			{
-				flux.r = -r[i]*vol/dt;
-				flux.p *= flux.r/old_flux;
-				flux.u *= flux.r/old_flux;
-				flux.v *= flux.r/old_flux;
-				flux.w *= flux.r/old_flux;
+				//flux.r = -r[i]*vol/dt;
+				//flux.p *= flux.r/old_flux;
+				//flux.u *= flux.r/old_flux;
+				//flux.v *= flux.r/old_flux;
+				//flux.w *= flux.r/old_flux;
+				flux.r = 0.0;
+				flux.p = 0.0;
+				flux.u = 0.0;
+				flux.v = 0.0;
+				flux.w = 0.0;
 				printf("Error: flux too high; consider lowering the Courant number.\n");
 			}
 		}
@@ -143,17 +153,19 @@ __device__ Cell riemann(int geom, double* xa, double* dx, double* dv, double rad
 	__syncthreads();
 	#endif
 
-//	p[i] /= r[i];
-//	__syncthreads();
+	//p[i] = p[i]/r[i];
+	//__syncthreads();
 
 	if (i>=npad && i<imax+1-npad)
 	{
 		us = dt*force;
 		if (geom>2) dt /= rad;
 
-		set_state(i, geom, xa, dx, dv, rad, r, p, u, v, w, dt, us, S);
+		set_state(i, geom, xa, dx, dv, rad, r, p, u, v, w, dt, 0.0, S);
 
 		wave_speeds(S, pm, sl, sm, sr);
+		sm += 0.5*us;
+
 		set_L_state_passive(i-1, geom, xa, dx, dv, rad, sl, sm, u, v, w, dt, S);
 		set_R_state_passive(  i, geom, xa, dx, dv, rad, sr, sm, u, v, w, dt, S);
 //if (xa[i]<2.0 && xa[i]>1.993) printf("%f:\n %.10e, %.10e, %.10e, %.10e\n %.10e, %.10e, %.10e, %.10e\n %.10e, %.10e, %.10e\n", rad, S.rl, S.pl, S.ul, S.vl, S.rr, S.pr, S.ur, S.vr, sl, sm, sr);

@@ -290,6 +290,27 @@ __global__ void sweepz(Grid G, Cell* C, double dt)
 	return;
 }
 
+__device__ void get_Du(Grid G, Cell* C, int i, int j, int k)
+{
+	double p1 = C[G.get_ind(i-1,j,k)].p;
+	double p2 = C[G.get_ind(  i,j,k)].p;
+	double p3 = C[G.get_ind(i+1,j,k)].p;
+
+	double x1 = G.get_xa(i)  -G.get_xa(i-1);
+	double x2 = G.get_xa(i+1)-G.get_xa(i);
+	double x3 = G.get_xa(i+2)-G.get_xa(i+1);
+
+	double dP = PEM_div(x1, x2, x3, p1, p2, p3);
+	#if geomx==1
+	dP *= G.get_xc(i);
+	#elif geomx==2
+	dP *= G.get_xc(i)*G.get_xc(i);
+	#endif
+	dP *= G.get_yv(j)*G.get_zv(k);
+
+	return;
+}
+
 __global__ void update(Grid G, Cell* in, Cell* out, double dt, double div=1.0)
 {
 	int i = threadIdx.x + blockIdx.x*blockDim.x + xpad;
@@ -312,7 +333,7 @@ __global__ void update(Grid G, Cell* in, Cell* out, double dt, double div=1.0)
 	if (j>=ypad && j<G.yarr-ypad)
 	if (k>=zpad && k<G.zarr-zpad)
 	{
-		ind = i + G.xarr*j + G.xarr*G.yarr*k;
+		ind = G.get_ind(i,j,k);
 		vol = G.get_xv(i)*G.get_yv(j)*G.get_zv(k);
 
 		Q.copy(in[ind]);
@@ -545,6 +566,7 @@ void DS(Grid* dev, double time, double dt)
 	int nx, ny, nz;
 	int mx, my, mz;
 	int bsz = 32;
+	double hdt = 0.5*dt;
 
 	//////////////////////////////////////////////////////////////
 
@@ -566,6 +588,7 @@ void DS(Grid* dev, double time, double dt)
 
 	//////////////////////////////////////////////////////////////
 
+	#ifndef visc_flag
 	syncallstreams(dev);
 
 	boundx(dev);
@@ -574,6 +597,7 @@ void DS(Grid* dev, double time, double dt)
 	#endif
 	#if ndim>2
 	boundz(dev);
+	#endif
 	#endif
 
 	for (int n=0; n<ndev; n++)
@@ -614,12 +638,12 @@ void DS(Grid* dev, double time, double dt)
 		ny = dev[n].yres;
 		nz = dev[n].zres;
 
-		update<<< dim3(nx/x_xdiv,ny,nz), x_xdiv, 0, dev[n].stream >>> (dev[n], dev[n].C, dev[n].T, dt);
+		update<<< dim3(nx/x_xdiv,ny,nz), x_xdiv, 0, dev[n].stream >>> (dev[n], dev[n].C, dev[n].T, hdt);
 	}
 
 	//////////////////////////////////////////////////////////////
 
-	evolve_planet(dev,time+dt,dt);
+	evolve_planet(dev,time+hdt,hdt);
 
 	//////////////////////////////////////////////////////////////
 
@@ -636,7 +660,7 @@ void DS(Grid* dev, double time, double dt)
 		my = dev[n].yarr;
 		mz = dev[n].zarr;
 
-		compute_forces<<< dim3((mx+bsz-1)/bsz,my,mz), bsz, 0, dev[n].stream >>> (dev[n], dev[n].T, dt, true);
+		compute_forces<<< dim3((mx+bsz-1)/bsz,my,mz), bsz, 0, dev[n].stream >>> (dev[n], dev[n].T, hdt);
 	}
 
 	//////////////////////////////////////////////////////////////
@@ -651,6 +675,10 @@ void DS(Grid* dev, double time, double dt)
 
 		update<<< dim3(nx/x_xdiv,ny,nz), x_xdiv, 0, dev[n].stream >>> (dev[n], dev[n].C, dev[n].C, dt);
 	}
+
+	//////////////////////////////////////////////////////////////
+
+	evolve_planet(dev,time+dt,hdt);
 
 	//////////////////////////////////////////////////////////////
 

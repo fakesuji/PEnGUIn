@@ -242,9 +242,9 @@ __device__ void get_lr_speeds_iso(State S, double pm, double &sl, double &sr, do
 
 //=================================================================================
 
-__device__ void get_lr_speeds_direct(State S, double &sl, double &sr)
+__device__ void get_lr_speeds_direct(State S, double &sl, double &sr, double &cl, double &cr)
 {
-	double cl, cr, r_, c_, pm;
+	double r_, c_, pm;
 
 	cl = sqrt(gam*S.pl/S.rl);
 	cr = sqrt(gam*S.pr/S.rr);
@@ -289,10 +289,8 @@ __device__ void get_lr_speeds_Davis(State S, double &sl, double &sr)
 
 //=================================================================================
 
-__device__ void get_lr_speeds_Einfeldt(State S, double &sl, double &sr)
+__device__ void get_lr_speeds_Einfeldt(State S, double &sl, double &sr, double &cl, double &cr)
 {
-	double cl, cr;
-
 	cl = sqrt(gam*S.pl/S.rl);
 	cr = sqrt(gam*S.pr/S.rr);
 
@@ -327,8 +325,11 @@ __device__ double get_sm(State S, double cl, double cr)
 __device__ void wave_speeds(State S, double &pm, double &sl, double &sm, double &sr)
 {
 	#if EOS_flag>0
-	get_pm_um_iterative(S, pm, sm);
-	get_lr_speeds_Davis(S, sl, sr);
+	//get_pm_um_iterative(S, pm, sm);
+	double cl, cr;
+	pm = get_pm_rare(S);
+	get_lr_speeds_Einfeldt(S, sl, sr, cl, cr);
+	sm = get_sm(S, cl, cr);
 	#else
 	double cl, cr;
 	pm = get_pm_simple(S);
