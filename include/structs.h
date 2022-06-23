@@ -135,6 +135,10 @@ struct Grid
 	double* fx;
 	double* fy;
 	double* fz;
+
+	double* Du;
+	double* Dv;
+	double* Dw;
 	double* De;
 
 	double* ext;

@@ -161,7 +161,7 @@ __device__ Cell riemann(int geom, double* xa, double* dx, double* dv, double rad
 		us = dt*force;
 		if (geom>2) dt /= rad;
 
-		set_state(i, geom, xa, dx, dv, rad, r, p, u, v, w, dt, 0.0, S);
+		set_state(i, geom, xa, dx, dv, rad, r, p, u, v, w, dt, us, S);
 
 		wave_speeds(S, pm, sl, sm, sr);
 		sm += 0.5*us;

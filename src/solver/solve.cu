@@ -290,27 +290,6 @@ __global__ void sweepz(Grid G, Cell* C, double dt)
 	return;
 }
 
-__device__ void get_Du(Grid G, Cell* C, int i, int j, int k)
-{
-	double p1 = C[G.get_ind(i-1,j,k)].p;
-	double p2 = C[G.get_ind(  i,j,k)].p;
-	double p3 = C[G.get_ind(i+1,j,k)].p;
-
-	double x1 = G.get_xa(i)  -G.get_xa(i-1);
-	double x2 = G.get_xa(i+1)-G.get_xa(i);
-	double x3 = G.get_xa(i+2)-G.get_xa(i+1);
-
-	double dP = PEM_div(x1, x2, x3, p1, p2, p3);
-	#if geomx==1
-	dP *= G.get_xc(i);
-	#elif geomx==2
-	dP *= G.get_xc(i)*G.get_xc(i);
-	#endif
-	dP *= G.get_yv(j)*G.get_zv(k);
-
-	return;
-}
-
 __global__ void update(Grid G, Cell* in, Cell* out, double dt, double div=1.0)
 {
 	int i = threadIdx.x + blockIdx.x*blockDim.x + xpad;
@@ -345,38 +324,38 @@ __global__ void update(Grid G, Cell* in, Cell* out, double dt, double div=1.0)
 
 		//if (!isnan(Q.r) && isnan(D.r)) printf("Error: update, %f, %f\n %e, %e, %e, %e, %e\n %e, %e, %e, %e, %e\n",G.get_xc(i),G.get_yc(j),Q.r,Q.p,Q.u,Q.v,Q.w,D.r,D.p,D.u,D.v,D.w);
 
+		fx = G.fx[ind];
+		Q.u += 0.5*fx*dt;
+		#if ndim>1
+		fy = G.fy[ind];
+		Q.v += 0.5*fy*dt;
+		#endif
+		#if ndim>2
+		fz = G.fz[ind];
+		Q.w += 0.5*fz*dt;
+		#endif
+
 		Q.p = get_energy(Q.r,Q.p,Q.u,Q.v,Q.w);
 		Q.r *= vol;
 		Q.p *= Q.r;
 		Q.u *= Q.r;
 		Q.v *= Q.r;
 		Q.w *= Q.r;
-		
-		fx = G.fx[ind];
-		Q.u += 0.5*Q.r*fx*dt;
-		#if ndim>1
-		fy = G.fy[ind];
-		Q.v += 0.5*Q.r*fy*dt;
-		#endif
-		#if ndim>2
-		fz = G.fz[ind];
-		Q.w += 0.5*Q.r*fz*dt;
-		#endif
 
 		Q.add(D);
-
-		Q.u += 0.5*Q.r*fx*dt;
-		#if ndim>1
-		Q.v += 0.5*Q.r*fy*dt;
-		#endif
-		#if ndim>2
-		Q.w += 0.5*Q.r*fz*dt;
-		#endif
 
 		Q.u /= Q.r;
 		Q.v /= Q.r;
 		Q.w /= Q.r;
 		Q.r /= vol;
+
+		Q.u += 0.5*fx*dt;
+		#if ndim>1
+		Q.v += 0.5*fy*dt;
+		#endif
+		#if ndim>2
+		Q.w += 0.5*fz*dt;
+		#endif
 
 		if (Q.r<=0.0)
 		{
@@ -467,6 +446,7 @@ __global__ void compute_forces(Grid G, Cell* C, double x_dt, bool ave=false)
 
 		#if ndim > 1
 		fy = get_fy(xc,yc,zc,T.u,T.v,T.w,G.planets);
+		//G.Dv[ind] = -div_3rd(geomy, G.get_ya(j-1), G.get_ya(j), G.get_ya(j+1), G.get_ya(j+2), C[G.get_ind(i,j-1,k)].p, T.p, C[G.get_ind(i,j+1,k)].p)/T.r;
 		#ifdef visc_flag
 		fy += viscous_fy(G, C, i, j, k)/T.r;
 		#endif
@@ -476,6 +456,7 @@ __global__ void compute_forces(Grid G, Cell* C, double x_dt, bool ave=false)
 
 		#if ndim > 2
 		fz = get_fz(xc,yc,zc,T.u,T.v,T.w,G.planets);
+		//G.Dw[ind] = -div_3rd(geomz, G.get_za(k-1), G.get_za(k), G.get_za(k+1), G.get_za(k+2), C[G.get_ind(i,j,k-1)].p, T.p, C[G.get_ind(i,j,k+1)].p)/T.r;
 		#ifdef visc_flag
 		fz += viscous_fz(G, C, i, j, k)/T.r;
 		#endif
@@ -489,7 +470,7 @@ __global__ void compute_forces(Grid G, Cell* C, double x_dt, bool ave=false)
 		#endif
 		if (ave) G.fx[ind] = (G.fx[ind] + fx)/2.0;
 		else     G.fx[ind] = fx;
-
+		//G.Du[ind] = -div_3rd(geomx, G.get_xa(i-1), G.get_xa(i), G.get_xa(i+1), G.get_xa(i+2), C[G.get_ind(i-1,j,k)].p, T.p, C[G.get_ind(i+1,j,k)].p);
 	}
 
 	return;

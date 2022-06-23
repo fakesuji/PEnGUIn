@@ -51,6 +51,10 @@ string create_label()
 	label += "_PPM";
 	#endif
 
+	#ifdef rev_flag
+	label += "_rev";
+	#endif
+
 	printf("label %s assigned. \n\n", label.c_str());
  
 	return label;

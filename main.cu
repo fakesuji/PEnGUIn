@@ -98,6 +98,11 @@ void mem_allocation(Grid* hst, Grid* dev)
 		cudaMalloc( (void**)&dev[n].fx, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(double) );
 		cudaMalloc( (void**)&dev[n].fy, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(double) );
 		cudaMalloc( (void**)&dev[n].fz, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(double) );
+
+		cudaMalloc( (void**)&dev[n].Du, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(double) );
+		cudaMalloc( (void**)&dev[n].Dv, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(double) );
+		cudaMalloc( (void**)&dev[n].Dw, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(double) );
+
 		#if EOS_flag > 0
 		cudaMalloc( (void**)&dev[n].De, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(double) );
 		#endif

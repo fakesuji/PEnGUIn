@@ -12,7 +12,9 @@ __device__ double get_pm_rare(State &S)
 	plz = pow(S.pl,z);
 	prz = pow(S.pr,z);
 
-	pm = pow( (cl + cr - gam*z*(S.ur-S.ul))/(cl/plz + cr/prz) , 1.0/z);
+	pm = (cl + cr - gam*z*(S.ur-S.ul))/(cl/plz + cr/prz);
+
+	pm = pow( fmax(pm,0.0) , 1.0/z );
 
 	return pm;
 }
@@ -59,7 +61,7 @@ __device__ double get_pm_iterative(State &S)
 
 	while (!converge)
 	{
-		if (counter>16) return get_pm_rare(S); 
+		if (counter>16) return get_pm_simple(S); 
 
 		t1   = (gampfac*pm + gammfac*pl) / pl;
 		t2   = (gampfac*pm + gammfac*pr) / pr;
@@ -78,14 +80,8 @@ __device__ double get_pm_iterative(State &S)
 
 		converge = (fabs(t1)/pm<1.0e-12);
 		counter++;
-
-		if (signbit(pm)!=0)
-		{
-			converge = false;
-			counter  = 100;
-		}
   	}
-	return pm;
+	return fmax(pm,0.0);
 }
 
 //=================================================================================
@@ -327,7 +323,7 @@ __device__ void wave_speeds(State S, double &pm, double &sl, double &sm, double 
 	#if EOS_flag>0
 	//get_pm_um_iterative(S, pm, sm);
 	double cl, cr;
-	pm = get_pm_rare(S);
+	pm = get_pm_simple(S);
 	get_lr_speeds_Einfeldt(S, sl, sr, cl, cr);
 	sm = get_sm(S, cl, cr);
 	#else

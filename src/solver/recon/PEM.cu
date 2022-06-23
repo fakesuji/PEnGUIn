@@ -25,42 +25,82 @@ __device__ double get_g_apprx(double x, double k)
 	return tmp;
 }
 
-__device__ double PEM_div(double x1, double x2, double x3, double a1, double a2, double a3)
+__device__ double div_3rd(int geom, double x0, double x1, double x2, double x3, double a1, double a2, double a3)
 {
-	double sL, sR, aL, aR;
+	double diff, sL, sR, c1, c2, c3, d1, d2, d3;
 
-	sL = (a2-a1)/(x2+x1);
-	sR = (a3-a2)/(x3+x2);
-    
-	aL = x2* ((x3+x2)*sL + x1*sR) / (x1+x2+x3);
-	aR = x2* ((x1+x2)*sR + x3*sL) / (x1+x2+x3);
+	d1 = x1-x0;
+	d2 = x2-x1;
+	d3 = x3-x2;
 
-	sL = copysign(fmin(fabs(aL),fabs(a2-a1)),a2-a1);
-	sR = copysign(fmin(fabs(aR),fabs(a3-a2)),a3-a2);
+	double d131, d120, d231, d220, d12, d22, deno;
+
+	if (geom==0)
+	{
+		d12 = (1.0/2.0)*(x1+x2);
+		d22 = (1.0/3.0)*(x1*x1 + x1*x2 + x2*x2);
+
+		d131 = (1.0/2.0)*(d2+d3);
+		d120 = (1.0/2.0)*(d1+d2);
+
+		d231 = (1.0/3.0)*(d2+d3)*(x1 + x2 + x3);
+		d220 = (1.0/3.0)*(d1+d2)*(x0 + x1 + x2);
+
+		deno = (1.0/6.0)*(d1+d2)*(d2+d3)*(-d1-d2-d3);
+	}
+	else if (geom==1)
+	{
+		d12 = (2.0/3.0)*(x1*x1 + x1*x2 + x2*x2)/(x1+x2);
+		d22 = (1.0/2.0)*(x1*x1 + x2*x2);
+
+		d131 = (2.0/3.0)*(d2+d3)*(x1*x2 + x2*x3 + x1*x3)/(x1+x2)/(x2+x3);
+		d120 = (2.0/3.0)*(d1+d2)*(x0*x1 + x1*x2 + x0*x2)/(x0+x1)/(x1+x2);
+
+		d231 = (1.0/2.0)*(d2+d3)*(x1 + x3);
+		d220 = (1.0/2.0)*(d1+d2)*(x0 + x2);
+		
+		deno = (1.0/3.0)*(d1+d2)*(d2+d3)*(-d1-d2-d3)*(x0*x1*x2 + x1*x2*x3 + x0*x2*x3 + x0*x1*x3)/(x0+x1)/(x1+x2)/(x2+x3);
+	}	
+
+	c3 = ((a2-a1)*d131 - (a3-a2)*d120)/deno;
+	c2 = ((a3-a2)*d220 - (a2-a1)*d231)/deno;
+	c1 = ((a2-a1)*(d231*d12-d131*d22) + (a3-a2)*(d120*d22-d220*d12))/deno;
+	
+	sL = -(c1 + x1*c2 + x1*x1*c3);
+	sR = (c1 + x2*c2 + x2*x2*c3);
+
+	sL = copysign(fmin(fabs(sL),fabs(a2-a1)),a2-a1);
+	sR = copysign(fmin(fabs(sR),fabs(a3-a2)),a3-a2);
 
 	if (sR*sL<=0.0)
 	{
-		return 0.0;
+		diff = 0.0;
 	}
 	else
 	{
-		return sR-sL;
+		if (sR/sL>2.0) sR = 2.0*sL;
+		if (sL/sR>2.0) sL = 2.0*sR;
+
+		diff = (sR+sL)/d2;
     	}
+
+	return diff;
 }
 
 //=======================================================================================
 
 __device__ void get_PEM_parameters(int i, int geom, double* x, double* dx, double* dv, double* a, double* par)
 {
+/*
 	double a1, a2, a3, x1, x2, x3, sL, sR, aL, aR;
 
 	x1 = dx[i-1];
 	x2 = dx[i];
 	x3 = dx[i+1];
 
-	a1 = a[i-1]*dv[i-1]/x1;
-	a2 = a[i]*dv[i]/x2;
-	a3 = a[i+1]*dv[i+1]/x3;
+	a1 = a[i-1];//*dv[i-1]/x1;
+	a2 = a[i];//*dv[i]/x2;
+	a3 = a[i+1];//*dv[i+1]/x3;
 
 	//===============================================================================
 
@@ -75,20 +115,92 @@ __device__ void get_PEM_parameters(int i, int geom, double* x, double* dx, doubl
 
 	//===============================================================================
 
-	if (sR*sL<=0.0 || fabs(sR/a2)<1.0e-9 || fabs(sL/a2)<1.0e-9)
+	if (sR*sL<=0.0)
 	{
-		par[0] = a2;
+		par[0] = 0.0;
 		par[1] = a2;
-		par[2] = a2;
+		par[2] = 0.0;
 	}
 	else
 	{
-		if (sR/sL>10.0) sR = 10.0*sL;
-		if (sL/sR>10.0) sL = 10.0*sR;
+		//if (sR/sL>4.0) sR = 4.0*sL;
+		//if (sL/sR>4.0) sL = 4.0*sR;
 
-		par[0] = a2 - sL;
+		par[0] = sL;
 		par[1] = a2;
-		par[2] = a2 + sR;
+		par[2] = sR;
+    	}
+	return;
+*/
+	double a1, a2, a3, sL, sR, c1, c2, c3, x0, x1, x2, x3, d1, d2, d3;
+
+	a1 = a[i-1];
+	a2 = a[i];
+	a3 = a[i+1];
+
+	x0 = x[i-1];
+	x1 = x[i];
+	x2 = x[i+1];
+	x3 = x[i+2];
+
+	d1 = dx[i-1];
+	d2 = dx[i];
+	d3 = dx[i+1];
+
+	double d131, d120, d231, d220, d12, d22, deno;
+
+	if (geom==0)
+	{
+		d12 = (1.0/2.0)*(x1+x2);
+		d22 = (1.0/3.0)*(x1*x1 + x1*x2 + x2*x2);
+
+		d131 = (1.0/2.0)*(d2+d3);
+		d120 = (1.0/2.0)*(d1+d2);
+
+		d231 = (1.0/3.0)*(d2+d3)*(x1 + x2 + x3);
+		d220 = (1.0/3.0)*(d1+d2)*(x0 + x1 + x2);
+
+		deno = (1.0/6.0)*(d1+d2)*(d2+d3)*(-d1-d2-d3);
+	}
+	else if (geom==1)
+	{
+		d12 = (2.0/3.0)*(x1*x1 + x1*x2 + x2*x2)/(x1+x2);
+		d22 = (1.0/2.0)*(x1*x1 + x2*x2);
+
+		d131 = (2.0/3.0)*(d2+d3)*(x1*x2 + x2*x3 + x1*x3)/(x1+x2)/(x2+x3);
+		d120 = (2.0/3.0)*(d1+d2)*(x0*x1 + x1*x2 + x0*x2)/(x0+x1)/(x1+x2);
+
+		d231 = (1.0/2.0)*(d2+d3)*(x1 + x3);
+		d220 = (1.0/2.0)*(d1+d2)*(x0 + x2);
+		
+		deno = (1.0/3.0)*(d1+d2)*(d2+d3)*(-d1-d2-d3)*(x0*x1*x2 + x1*x2*x3 + x0*x2*x3 + x0*x1*x3)/(x0+x1)/(x1+x2)/(x2+x3);
+	}	
+
+	c3 = ((a2-a1)*d131 - (a3-a2)*d120)/deno;
+	c2 = ((a3-a2)*d220 - (a2-a1)*d231)/deno;
+	c1 = ((a2-a1)*(d231*d12-d131*d22) + (a3-a2)*(d120*d22-d220*d12))/deno;
+	
+	sL = -(c1 + x1*c2 + x1*x1*c3);
+	sR = (c1 + x2*c2 + x2*x2*c3);
+
+	sL = copysign(fmin(fabs(sL),fabs(a2-a1)),a2-a1);
+	sR = copysign(fmin(fabs(sR),fabs(a3-a2)),a3-a2);
+
+	if (sR*sL<=0.0)
+	{
+		par[0] = 0.0;
+		par[1] = a2;
+		par[2] = 0.0;
+	}
+	else
+	{
+
+		if (sR/sL>2.0) sR = 2.0*sL;
+		if (sL/sR>2.0) sL = 2.0*sR;
+
+		par[0] = sL;
+		par[1] = a2;
+		par[2] = sR;
     	}
 	return;
 }
@@ -106,7 +218,7 @@ __device__ double get_PEM_0(double r0, double rx, double r1, double s0, double a
 	double x = (rx-r0)/dr;
 
 	double val;
-	if (x==0.0) val = aM + s0;
+	if (x<1.0e-10*fabs(r1-r0)) val = aM + s0;
 	else        val = aM + s0*(1.0-exp(eta*log(x)));
 
 	return val;
@@ -119,9 +231,9 @@ __device__ double get_PEM_1(double r0, double rx, double r1, double aM, double s
 	double y = (r1-rx)/dr;
 
 	double val;
-	if (eta*y>1e-4)  val = aM + s1*lim01(x*(1.0-exp(eta*log(x)))/(y*eta));
-	else if (x==0.0) val = aM;
-	else             val = aM + s1*get_g_apprx(x, eta);
+	if          (x<1.0e-10*fabs(r1-r0)) val = aM;
+	else if (eta*y>1e-4) val = aM + s1*lim01(x*(1.0-exp(eta*log(x)))/(y*eta));
+	else                 val = aM + s1*get_g_apprx(x, eta);
 
 	return val;
 }
@@ -130,42 +242,29 @@ __device__ double get_PEM_1(double r0, double rx, double r1, double aM, double s
 
 __device__ double get_PEM_aveR(int geom, double rL, double r0, double rR, double* par)
 {
+	double sL = par[0];
 	double aM = par[1];
-	double sR = par[2] - aM;
-	double sL = aM - par[0];
+	double sR = par[2];
 	double val;
 
-	if (par[0] == par[2]) val = aM;
-	else if (sR/sL>=1.0)  val = get_PEM_1(rL, r0, rR, aM, sR, sR/sL);
-	else                  val = get_PEM_0(rR, r0, rL, sR, aM, sL/sR);
+	if         (sR==0.0) val = aM;
+	else if (sR/sL>=1.0) val = get_PEM_1(rL, r0, rR, aM, sR, sR/sL);
+	else                 val = get_PEM_0(rR, r0, rL, sR, aM, sL/sR);
 
-	return val/get_dv_dr_dev(geom, r0, rR-r0);
+	return val;///get_dv_dr_dev(geom, r0, rR-r0);
 }
 
 __device__ double get_PEM_aveL(int geom, double rL, double r0, double rR, double* par)
 {
+	double sL = par[0];
 	double aM = par[1];
-	double sR = par[2] - aM;
-	double sL = aM - par[0];
+	double sR = par[2];
 	double val;
 
-	if (par[0] == par[2]) val = aM;
-	else if (sR/sL>=1.0)  val = get_PEM_0(rL, r0, rR, -sL, aM, sR/sL);
-	else                  val = get_PEM_1(rR, r0, rL, aM, -sL, sL/sR);
+	if         (sL==0.0) val = aM;
+	else if (sR/sL>=1.0) val = get_PEM_0(rL, r0, rR, -sL, aM, sR/sL);
+	else                 val = get_PEM_1(rR, r0, rL, aM, -sL, sL/sR);
 
-	return val/get_dv_dr_dev(geom, rL, r0-rL);
-}
-
-__device__ double get_PEM_ave(int i, int geom, double* r, double* dr, double* dv, double* a, double c, double dt)
-{
-	double par[4];
-	double rL, rR;
-
-	get_PEM_parameters(i,geom,r,dr,dv,a,par);
-	rL = r[i];
-	rR = r[i+1];
-
-	if (c*dt>0.0) return get_PEM_aveR(geom, rL, rR-c*dt, rR, par);
-	else          return get_PEM_aveL(geom, rL, rL-c*dt, rR, par);
+	return val;///get_dv_dr_dev(geom, rL, r0-rL);
 }
 
