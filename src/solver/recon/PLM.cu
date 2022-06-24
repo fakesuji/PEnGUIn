@@ -27,10 +27,9 @@ __device__ void get_MOC_parameters(int i, int geom, double* r, double* dr, doubl
 	
 	if ((a3-a2)*(a2-a1)<=0.0)
 	{
-		par[0] = a2;
+		par[0] = 0.0;
 		par[1] = a2;
-		par[2] = a2;
-		par[3] = 1.0;
+		par[2] = 0.0;
 		return;	
 	}
 
@@ -43,17 +42,9 @@ __device__ void get_MOC_parameters(int i, int geom, double* r, double* dr, doubl
 	tmp = (a3-a1)*x2/(x1+x3+2.0*x2);
   	tmp = copysign( fmin(fmin(fabs(a2-a1),fabs(a3-a2)),fabs(tmp)) , tmp );
 
-	if (tmp==a2-a1)
-		par[0] = a1;
-	else
-		par[0] = a2-tmp;
-
+	par[0] = tmp;
 	par[1] = a2;
-
-	if (tmp==a3-a2)
-		par[2] = a3;
-	else
-		par[2] = a2+tmp;
+	par[2] = tmp;
     
 	return;
 }
@@ -70,10 +61,9 @@ __device__ void get_VAN_parameters(int i, int geom, double* r, double* dr, doubl
 	
 	if ((a3-a2)*(a2-a1)<=0.0)
 	{
-		par[0] = a2;
+		par[0] = 0.0;
 		par[1] = a2;
-		par[2] = a2;
-		par[3] = 1.0;
+		par[2] = 0.0;
 		return;	
 	}
 
@@ -86,17 +76,9 @@ __device__ void get_VAN_parameters(int i, int geom, double* r, double* dr, doubl
 	tmp = (a3-a2)*(a2-a1)/(a3-a1);
 	tmp*= x2*(x1+x3+2.0*x2)/(x3+x2)/(x2+x1);
 
-	if (tmp==a2-a1)
-		par[0] = a1;
-	else
-		par[0] = a2-tmp;
-
+	par[0] = tmp;
 	par[1] = a2;
-
-	if (tmp==a3-a2)
-		par[2] = a3;
-	else
-		par[2] = a2+tmp;
+	par[2] = tmp;
     
 	return;
 }
@@ -106,24 +88,22 @@ __device__ void get_VAN_parameters(int i, int geom, double* r, double* dr, doubl
 
 __device__ double get_PLM_aveR(int geom, double rL, double r0, double rR, double* par)
 {
-	double aL = par[0];
-	double aR = par[2];
+	double sR = par[2];
 	double x = (r0-rL)/(rR-rL);
 	double val;
 
-	val = aL + 0.5*(aR-aL)*(1.0+x);
+	val = par[1] + sR*x;
 
 	return val;
 }
 
 __device__ double get_PLM_aveL(int geom, double rL, double r0, double rR, double* par)
 {
-	double aL = par[0];
-	double aR = par[2];
+	double sL = par[0];
 	double x = (r0-rL)/(rR-rL);
 	double val;
 
-	val = aL + 0.5*(aR-aL)*x;
+	val = par[1] - sL*(1.0-x);
 
 	return val;
 }

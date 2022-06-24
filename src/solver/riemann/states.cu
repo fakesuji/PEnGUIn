@@ -8,8 +8,8 @@ __device__ void set_state(int i, int geom, double* xa, double* dx, double* dv, d
 	double rl, pl, ul, cl;
 	double rr, pr, ur, cr;
 	double xl, xr, tmp, dis;
-	double r_, p_, u_;
-	double r0, p0, u0, c0;
+	double r0, p0, u0;
+	double p_, u_;
 	double pp, up;
 	double pm, um;
 
@@ -20,7 +20,23 @@ __device__ void set_state(int i, int geom, double* xa, double* dx, double* dv, d
 	get_CON_parameters(i, geom, xa, dx, dv, r, rr_par);
 	get_CON_parameters(i, geom, xa, dx, dv, p, pr_par);
 	get_PRM_parameters(i, geom, xa, dx, dv, u, ur_par);
+/*
+	#if recon_flag==0
+	if (rl_par[2]!=0.0 && rr_par[2]!=0.0)
+	{
+		tmp = rl_par[1]+rl_par[2]+rr_par[1]-rr_par[0];
+		rl_par[2] = 0.5*tmp - rl_par[1];
+		rr_par[0] = rr_par[1] - 0.5*tmp;
+	}
 
+	if (pl_par[2]!=0.0 && pr_par[2]!=0.0)
+	{
+		tmp = pl_par[1]+pl_par[2]+pr_par[1]-pr_par[0];
+		pl_par[2] = 0.5*tmp - pl_par[1];
+		pr_par[0] = pr_par[1] - 0.5*tmp;
+	}
+	#endif
+*/
 	/////////////////////////////////////////////////////////
 
 	xl = xa[i];
@@ -35,7 +51,7 @@ __device__ void set_state(int i, int geom, double* xa, double* dx, double* dv, d
 	ur = get_PRM_aveL(geom, xl, tmp, xr, ur_par);
 
 	dis = fmin(ur, 0.0)*dt;
-	cr = sqrt(gam*pr/rr);
+	cr = sqrt(gam*pr/rr); 
 
 	/////////////////////////////////////////////////////////
 
@@ -45,7 +61,6 @@ __device__ void set_state(int i, int geom, double* xa, double* dx, double* dv, d
 	r0 = get_CON_aveL(geom, xl, tmp, xr, rr_par);
 	p0 = get_CON_aveL(geom, xl, tmp, xr, pr_par);
 	u0 = get_PRM_aveL(geom, xl, tmp, xr, ur_par);
-	c0 = sqrt(gam*p0/r0);
 
 	tmp = xl - dis + cr*dt;
 	if (tmp>xr) tmp = xr;
@@ -61,16 +76,18 @@ __device__ void set_state(int i, int geom, double* xa, double* dx, double* dv, d
 		pp = get_CON_aveL(geom, xl, tmp, xr, pr_par);
 		up = get_PRM_aveL(geom, xl, tmp, xr, ur_par);
 
-		S.rr = r0 + 0.5*(up-um)*r0/c0;// - 0.5*(pp-pm)/c0/c0;
-		S.pr = p0 + 0.5*(up-um)*r0*c0;
-		S.ur = u0 + 0.5*(pp-pm)/r0/c0 + 0.5*us;
+		u_ = 0.5*(up-um)/cr;
+		p_ = 0.5*(pp-pm)/r0/cr;
 	}
 	else
 	{
-		S.rr = r0 + (u0-um)*r0/c0;// - (p0-pm)/c0/c0;
-		S.pr = p0 + (u0-um)*r0*c0;
-		S.ur = u0 + (p0-pm)/r0/c0 + 0.5*us;
+		u_ = (u0-um)/cr;
+		p_ = (p0-pm)/r0/cr;
 	}
+	
+	S.rr = r0*exp(u_);
+	S.pr = p0*exp(gam*u_);
+	S.ur = u0 + p_ + us;
 
 	/////////////////////////////////////////////////////////
 
@@ -84,6 +101,7 @@ __device__ void set_state(int i, int geom, double* xa, double* dx, double* dv, d
 	rl = get_CON_aveR(geom, xl, tmp, xr, rl_par);
 	pl = get_CON_aveR(geom, xl, tmp, xr, pl_par);
 	ul = get_PRM_aveR(geom, xl, tmp, xr, ul_par);
+
 	dis = fmax(ul,0.0)*dt;
 	cl = sqrt(gam*pl/rl);
 
@@ -95,7 +113,6 @@ __device__ void set_state(int i, int geom, double* xa, double* dx, double* dv, d
 	r0 = get_CON_aveR(geom, xl, tmp, xr, rl_par);
 	p0 = get_CON_aveR(geom, xl, tmp, xr, pl_par);
 	u0 = get_PRM_aveR(geom, xl, tmp, xr, ul_par);
-	c0 = sqrt(gam*p0/r0);
 
 	tmp = xr - dis - cl*dt;
 	if (tmp<xl) tmp = xl;
@@ -111,24 +128,18 @@ __device__ void set_state(int i, int geom, double* xa, double* dx, double* dv, d
 		pm = get_CON_aveR(geom, xl, tmp, xr, pl_par);
 		um = get_PRM_aveR(geom, xl, tmp, xr, ul_par);
 
-		S.rl = r0 + 0.5*(up-um)*r0/c0;// + 0.5*(pp-pm)/c0/c0;
-		S.pl = p0 + 0.5*(up-um)*r0*c0;
-		S.ul = u0 + 0.5*(pp-pm)/r0/c0 + 0.5*us;
+		u_ = 0.5*(up-um)/cl;
+		p_ = 0.5*(pp-pm)/r0/cl;
 	}
 	else
 	{
-		S.rl = r0 + (up-u0)*r0/c0;// + (pp-p0)/c0/c0;
-		S.pl = p0 + (up-u0)*r0*c0;
-		S.ul = u0 + (pp-p0)/r0/c0 + 0.5*us;
+		u_ = (up-u0)/cl;
+		p_ = (pp-p0)/r0/cl;
 	}
 
-	
-
-	S.pl = fmax(smallp*p[i-1],S.pl);
-	S.pr = fmax(smallp*p[i],S.pr);
-
-	S.rl = fmax(smallr*r[i-1],S.rl);
-	S.rr = fmax(smallr*r[i],S.rr);
+	S.rl = r0*exp(u_);
+	S.pl = p0*exp(gam*u_);
+	S.ul = u0 + p_ + us;
 
 	return;
 }

@@ -132,6 +132,7 @@ __device__ void get_PEM_parameters(int i, int geom, double* x, double* dx, doubl
     	}
 	return;
 */
+
 	double a1, a2, a3, sL, sR, c1, c2, c3, x0, x1, x2, x3, d1, d2, d3;
 
 	a1 = a[i-1];
@@ -186,23 +187,66 @@ __device__ void get_PEM_parameters(int i, int geom, double* x, double* dx, doubl
 	sL = copysign(fmin(fabs(sL),fabs(a2-a1)),a2-a1);
 	sR = copysign(fmin(fabs(sR),fabs(a3-a2)),a3-a2);
 
+	double S;
+	
 	if (sR*sL<=0.0)
 	{
 		par[0] = 0.0;
 		par[1] = a2;
 		par[2] = 0.0;
+		return;
 	}
-	else
+
+	if (sR/sL>1.0)
 	{
+		S = 0.5*sL*(sqrt(8.0*(a3-a2)/sL+1.0)-1.0);
+		if (sR/S>1.0) sR = S;
+	}
+	else if (sL/sR>1.0)
+	{
+		S = 0.5*sR*(sqrt(8.0*(a2-a1)/sR+1.0)-1.0);
+		if (sL/S>1.0) sL = S;
+	}
 
-		if (sR/sL>2.0) sR = 2.0*sL;
-		if (sL/sR>2.0) sL = 2.0*sR;
+	par[0] = sL;
+	par[1] = a2;
+	par[2] = sR;
 
-		par[0] = sL;
-		par[1] = a2;
-		par[2] = sR;
-    	}
 	return;
+
+/*
+	double a1, a2, a3, x1, x2, x3;
+
+	a1 = a[i-1];
+	a2 = a[i];
+	a3 = a[i+1];
+	
+	if ((a3-a2)*(a2-a1)<=0.0)
+	{
+		par[0] = 0.0;
+		par[1] = a2;
+		par[2] = 0.0;
+		return;	
+	}
+
+	x1 = dx[i-1];
+	x2 = dx[i];
+	x3 = dx[i+1];
+
+	//===============================================================================
+
+	double sL = 0.5*(a2-a1);
+	double sR = 0.5*(a3-a2);
+
+	if (sR/sL>6.0) sR = 6.0*sL;
+	if (sL/sR>6.0) sL = 6.0*sR;
+
+	par[0] = sL;;
+	par[1] = a2;
+	par[2] = sR;;
+
+	return;
+*/
 }
 
 //=======================================================================================

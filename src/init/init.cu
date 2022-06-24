@@ -108,8 +108,8 @@ __host__ __device__ double get_p(double x, double y, double z)
 	#ifdef rev_flag
 	x = 1.0-x;
 	#endif
-	if      (x<=0.1) return 100.0;
-	else if (x>=0.9) return 1000.0;
+	if      (x<=0.1) return 1000.0;
+	else if (x>=0.9) return 100.0;
 	else             return 0.01;
 
 	#elif init_flag == 2

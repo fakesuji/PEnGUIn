@@ -7,7 +7,7 @@
 //#define visc_flag 1
 //#define cool_flag
 //#define advec_flag
-//#define rev_flag
+#define rev_flag
 
 //=======================================================================
 // Constants
@@ -31,7 +31,7 @@ const double smallr = 1.0e-14;
 // Geometric parameters
 //=======================================================================
 
-#define recon_flag 1
+#define recon_flag 0
 
 const int std_thd = 1024;
 

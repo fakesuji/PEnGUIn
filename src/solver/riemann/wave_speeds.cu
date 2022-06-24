@@ -23,17 +23,15 @@ __device__ double get_pm_rare(State &S)
 
 __device__ double get_pm_simple(State &S)
 {
-	double cl, cr, r_, c_, pm;
+	double cl, cr, r_, c_, p_;
 
 	cl = sqrt(gam*S.pl/S.rl);
 	cr = sqrt(gam*S.pr/S.rr);
 
-	r_ = 0.5*(S.rr+S.rl);
 	c_ = 0.5*(cr+cl);
+	p_ = 0.5*(S.pr+S.pl);
 
-	pm = 0.5*(S.pr+S.pl) - 0.5*(S.ur-S.ul)*r_*c_;
-
-	return fmax(pm,0.0);
+	return p_*(1.0 + 0.5*gam*(S.ul-S.ur)/c_);
 }
 
 //=================================================================================
@@ -118,10 +116,10 @@ __device__ void get_pm_um_rare(State &S, double &pm, double &um)
 	plz = pow(S.pl,z);
 	prz = pow(S.pr,z);
 
-	pm = pow( (cl + cr - gam*z*(S.ur-S.ul))/(cl/plz + cr/prz) , 1.0/z);
+	pm = (cl + cr - gam*z*(S.ur-S.ul))/(cl/plz + cr/prz);
+
+	pm = pow( fmax(pm,0.0) , 1.0/z );
 	um = (plz*S.ul/cl + prz*S.ur/cr - (prz-plz)/z/gam) / (plz/cl + prz/cr);
-  
-	pm = fmax(pm, 0.0);
 
 	return;
 }
@@ -304,9 +302,12 @@ __device__ void get_lr_speeds_Einfeldt(State S, double &sl, double &sr, double &
 	return;
 }
 
-__device__ double get_sm(State S, double cl, double cr)
+__device__ double get_sm(State S, double cl, double cr, double us)
 {
-	double sm = (S.pl-S.pr + S.rl*S.ul*cl + S.rr*S.ur*cr)/(S.rl*cl + S.rr*cr);
+	double sm;
+	sm  = (S.rl*S.ul*cl + S.rr*S.ur*cr)/(S.rl*cl + S.rr*cr);
+	sm += (S.pl-S.pr)/(S.rl + S.rr)/(0.5*(cl+cr));
+	sm += us*(fmax(S.ul,0.0)+fmax(-S.ur,0.0))/(cl+cr);
 
 	if (isnan(sm) || isinf(sm))
 	{
@@ -318,19 +319,18 @@ __device__ double get_sm(State S, double cl, double cr)
 
 //=================================================================================
 
-__device__ void wave_speeds(State S, double &pm, double &sl, double &sm, double &sr)
+__device__ void wave_speeds(State S, double &pm, double &sl, double &sm, double &sr, double us)
 {
 	#if EOS_flag>0
-	//get_pm_um_iterative(S, pm, sm);
 	double cl, cr;
 	pm = get_pm_simple(S);
 	get_lr_speeds_Einfeldt(S, sl, sr, cl, cr);
-	sm = get_sm(S, cl, cr);
+	sm = get_sm(S, cl, cr, us);
 	#else
 	double cl, cr;
 	pm = get_pm_simple(S);
 	get_lr_speeds_iso(S, pm, sl, sr, cl, cr);
-	sm = get_sm(S, cl, cr);
+	sm = get_sm(S, cl, cr, us);
 	#endif
 	return;
 }

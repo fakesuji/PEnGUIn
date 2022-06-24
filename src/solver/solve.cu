@@ -446,7 +446,6 @@ __global__ void compute_forces(Grid G, Cell* C, double x_dt, bool ave=false)
 
 		#if ndim > 1
 		fy = get_fy(xc,yc,zc,T.u,T.v,T.w,G.planets);
-		//G.Dv[ind] = -div_3rd(geomy, G.get_ya(j-1), G.get_ya(j), G.get_ya(j+1), G.get_ya(j+2), C[G.get_ind(i,j-1,k)].p, T.p, C[G.get_ind(i,j+1,k)].p)/T.r;
 		#ifdef visc_flag
 		fy += viscous_fy(G, C, i, j, k)/T.r;
 		#endif
@@ -456,7 +455,6 @@ __global__ void compute_forces(Grid G, Cell* C, double x_dt, bool ave=false)
 
 		#if ndim > 2
 		fz = get_fz(xc,yc,zc,T.u,T.v,T.w,G.planets);
-		//G.Dw[ind] = -div_3rd(geomz, G.get_za(k-1), G.get_za(k), G.get_za(k+1), G.get_za(k+2), C[G.get_ind(i,j,k-1)].p, T.p, C[G.get_ind(i,j,k+1)].p)/T.r;
 		#ifdef visc_flag
 		fz += viscous_fz(G, C, i, j, k)/T.r;
 		#endif
@@ -470,7 +468,6 @@ __global__ void compute_forces(Grid G, Cell* C, double x_dt, bool ave=false)
 		#endif
 		if (ave) G.fx[ind] = (G.fx[ind] + fx)/2.0;
 		else     G.fx[ind] = fx;
-		//G.Du[ind] = -div_3rd(geomx, G.get_xa(i-1), G.get_xa(i), G.get_xa(i+1), G.get_xa(i+2), C[G.get_ind(i-1,j,k)].p, T.p, C[G.get_ind(i+1,j,k)].p);
 	}
 
 	return;
