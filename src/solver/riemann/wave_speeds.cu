@@ -23,7 +23,7 @@ __device__ double get_pm_rare(State &S)
 
 __device__ double get_pm_simple(State &S)
 {
-	double cl, cr, r_, c_, p_;
+	double cl, cr, c_, p_;
 
 	cl = sqrt(gam*S.pl/S.rl);
 	cr = sqrt(gam*S.pr/S.rr);

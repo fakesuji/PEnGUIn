@@ -104,7 +104,7 @@ const int max_step = 1000000000;
 // Hydro parameters
 //=======================================================================
 
-#define EOS_flag 2
+#define EOS_flag 0
 #define internal_e_flag 0
 
 #if EOS_flag == 0

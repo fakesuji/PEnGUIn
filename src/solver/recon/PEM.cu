@@ -25,114 +25,10 @@ __device__ double get_g_apprx(double x, double k)
 	return tmp;
 }
 
-__device__ double div_3rd(int geom, double x0, double x1, double x2, double x3, double a1, double a2, double a3)
-{
-	double diff, sL, sR, c1, c2, c3, d1, d2, d3;
-
-	d1 = x1-x0;
-	d2 = x2-x1;
-	d3 = x3-x2;
-
-	double d131, d120, d231, d220, d12, d22, deno;
-
-	if (geom==0)
-	{
-		d12 = (1.0/2.0)*(x1+x2);
-		d22 = (1.0/3.0)*(x1*x1 + x1*x2 + x2*x2);
-
-		d131 = (1.0/2.0)*(d2+d3);
-		d120 = (1.0/2.0)*(d1+d2);
-
-		d231 = (1.0/3.0)*(d2+d3)*(x1 + x2 + x3);
-		d220 = (1.0/3.0)*(d1+d2)*(x0 + x1 + x2);
-
-		deno = (1.0/6.0)*(d1+d2)*(d2+d3)*(-d1-d2-d3);
-	}
-	else if (geom==1)
-	{
-		d12 = (2.0/3.0)*(x1*x1 + x1*x2 + x2*x2)/(x1+x2);
-		d22 = (1.0/2.0)*(x1*x1 + x2*x2);
-
-		d131 = (2.0/3.0)*(d2+d3)*(x1*x2 + x2*x3 + x1*x3)/(x1+x2)/(x2+x3);
-		d120 = (2.0/3.0)*(d1+d2)*(x0*x1 + x1*x2 + x0*x2)/(x0+x1)/(x1+x2);
-
-		d231 = (1.0/2.0)*(d2+d3)*(x1 + x3);
-		d220 = (1.0/2.0)*(d1+d2)*(x0 + x2);
-		
-		deno = (1.0/3.0)*(d1+d2)*(d2+d3)*(-d1-d2-d3)*(x0*x1*x2 + x1*x2*x3 + x0*x2*x3 + x0*x1*x3)/(x0+x1)/(x1+x2)/(x2+x3);
-	}	
-
-	c3 = ((a2-a1)*d131 - (a3-a2)*d120)/deno;
-	c2 = ((a3-a2)*d220 - (a2-a1)*d231)/deno;
-	c1 = ((a2-a1)*(d231*d12-d131*d22) + (a3-a2)*(d120*d22-d220*d12))/deno;
-	
-	sL = -(c1 + x1*c2 + x1*x1*c3);
-	sR = (c1 + x2*c2 + x2*x2*c3);
-
-	sL = copysign(fmin(fabs(sL),fabs(a2-a1)),a2-a1);
-	sR = copysign(fmin(fabs(sR),fabs(a3-a2)),a3-a2);
-
-	if (sR*sL<=0.0)
-	{
-		diff = 0.0;
-	}
-	else
-	{
-		if (sR/sL>2.0) sR = 2.0*sL;
-		if (sL/sR>2.0) sL = 2.0*sR;
-
-		diff = (sR+sL)/d2;
-    	}
-
-	return diff;
-}
-
 //=======================================================================================
 
 __device__ void get_PEM_parameters(int i, int geom, double* x, double* dx, double* dv, double* a, double* par)
 {
-/*
-	double a1, a2, a3, x1, x2, x3, sL, sR, aL, aR;
-
-	x1 = dx[i-1];
-	x2 = dx[i];
-	x3 = dx[i+1];
-
-	a1 = a[i-1];//*dv[i-1]/x1;
-	a2 = a[i];//*dv[i]/x2;
-	a3 = a[i+1];//*dv[i+1]/x3;
-
-	//===============================================================================
-
-	sL = (a2-a1)/(x2+x1);
-	sR = (a3-a2)/(x3+x2);
-    
-	aL = x2* ((x3+x2)*sL + x1*sR) / (x1+x2+x3);
-	aR = x2* ((x1+x2)*sR + x3*sL) / (x1+x2+x3);
-
-	sL = copysign(fmin(fabs(aL),fabs(a2-a1)),a2-a1);
-	sR = copysign(fmin(fabs(aR),fabs(a3-a2)),a3-a2);
-
-	//===============================================================================
-
-	if (sR*sL<=0.0)
-	{
-		par[0] = 0.0;
-		par[1] = a2;
-		par[2] = 0.0;
-	}
-	else
-	{
-		//if (sR/sL>4.0) sR = 4.0*sL;
-		//if (sL/sR>4.0) sL = 4.0*sR;
-
-		par[0] = sL;
-		par[1] = a2;
-		par[2] = sR;
-    	}
-	return;
-*/
-
 	double a1, a2, a3, sL, sR, c1, c2, c3, x0, x1, x2, x3, d1, d2, d3;
 
 	a1 = a[i-1];
@@ -150,20 +46,7 @@ __device__ void get_PEM_parameters(int i, int geom, double* x, double* dx, doubl
 
 	double d131, d120, d231, d220, d12, d22, deno;
 
-	if (geom==0)
-	{
-		d12 = (1.0/2.0)*(x1+x2);
-		d22 = (1.0/3.0)*(x1*x1 + x1*x2 + x2*x2);
-
-		d131 = (1.0/2.0)*(d2+d3);
-		d120 = (1.0/2.0)*(d1+d2);
-
-		d231 = (1.0/3.0)*(d2+d3)*(x1 + x2 + x3);
-		d220 = (1.0/3.0)*(d1+d2)*(x0 + x1 + x2);
-
-		deno = (1.0/6.0)*(d1+d2)*(d2+d3)*(-d1-d2-d3);
-	}
-	else if (geom==1)
+	if (geom==1)
 	{
 		d12 = (2.0/3.0)*(x1*x1 + x1*x2 + x2*x2)/(x1+x2);
 		d22 = (1.0/2.0)*(x1*x1 + x2*x2);
@@ -176,6 +59,19 @@ __device__ void get_PEM_parameters(int i, int geom, double* x, double* dx, doubl
 		
 		deno = (1.0/3.0)*(d1+d2)*(d2+d3)*(-d1-d2-d3)*(x0*x1*x2 + x1*x2*x3 + x0*x2*x3 + x0*x1*x3)/(x0+x1)/(x1+x2)/(x2+x3);
 	}	
+	else
+	{
+		d12 = (1.0/2.0)*(x1+x2);
+		d22 = (1.0/3.0)*(x1*x1 + x1*x2 + x2*x2);
+
+		d131 = (1.0/2.0)*(d2+d3);
+		d120 = (1.0/2.0)*(d1+d2);
+
+		d231 = (1.0/3.0)*(d2+d3)*(x1 + x2 + x3);
+		d220 = (1.0/3.0)*(d1+d2)*(x0 + x1 + x2);
+
+		deno = (1.0/6.0)*(d1+d2)*(d2+d3)*(-d1-d2-d3);
+	}
 
 	c3 = ((a2-a1)*d131 - (a3-a2)*d120)/deno;
 	c2 = ((a3-a2)*d220 - (a2-a1)*d231)/deno;
@@ -199,54 +95,30 @@ __device__ void get_PEM_parameters(int i, int geom, double* x, double* dx, doubl
 
 	if (sR/sL>1.0)
 	{
-		S = 0.5*sL*(sqrt(8.0*(a3-a2)/sL+1.0)-1.0);
-		if (sR/S>1.0) sR = S;
+		if (geom==1) S = (a3*(0.5*(x3+x2))-a1*(0.5*(x2+x1)))/x2;
+		else         S = (a3-a2);
+
+		S = 0.5*sL*(sqrt(4.0*S/sL+1.0)-1.0);
+		if (sR/S>1.0 && S/sL>1.0) sR = S;
 	}
 	else if (sL/sR>1.0)
 	{
-		S = 0.5*sR*(sqrt(8.0*(a2-a1)/sR+1.0)-1.0);
-		if (sL/S>1.0) sL = S;
+		if (geom==1) S = (a2*(0.5*(x2+x1))-a1*(0.5*(x1+x0)))/x1;
+		else         S = (a2-a1);
+
+		S = 0.5*sR*(sqrt(4.0*S/sR+1.0)-1.0);
+		if (sL/S>1.0 && S/sR>1.0) sL = S;
 	}
+/*
+	if      (sR/sL>10.0) sR = 10.0*sL;
+	else if (sL/sR>10.0) sL = 10.0*sR;
+*/
 
 	par[0] = sL;
 	par[1] = a2;
 	par[2] = sR;
 
 	return;
-
-/*
-	double a1, a2, a3, x1, x2, x3;
-
-	a1 = a[i-1];
-	a2 = a[i];
-	a3 = a[i+1];
-	
-	if ((a3-a2)*(a2-a1)<=0.0)
-	{
-		par[0] = 0.0;
-		par[1] = a2;
-		par[2] = 0.0;
-		return;	
-	}
-
-	x1 = dx[i-1];
-	x2 = dx[i];
-	x3 = dx[i+1];
-
-	//===============================================================================
-
-	double sL = 0.5*(a2-a1);
-	double sR = 0.5*(a3-a2);
-
-	if (sR/sL>6.0) sR = 6.0*sL;
-	if (sL/sR>6.0) sL = 6.0*sR;
-
-	par[0] = sL;;
-	par[1] = a2;
-	par[2] = sR;;
-
-	return;
-*/
 }
 
 //=======================================================================================
