@@ -245,6 +245,20 @@ void boundx(Grid* dev)
 
 	////////////////////////////////
 
+	if (bound_lft == 3)
+	{
+		cudaSetDevice(0);
+		dump_left<<< gdim, bdim, 0, dev[0].stream >>> (dev[0].xres, dev[0].xarr, dev[0].C, dev[0].BuffL);
+	}
+	else
+	{
+		cudaSetDevice(0);
+		bound_x_left<<< dim3(dev[0].yarr,dev[0].zarr,1) , dim3(xpad,1,1) >>> (dev[0], dev[0].C);
+	}
+	syncallstreams(dev);
+
+	////////////////////////////////
+
 	for (int n=0; n<ndev; n++)
 	{
 		cudaSetDevice(n);
@@ -275,17 +289,6 @@ void boundx(Grid* dev)
 	{
 		cudaSetDevice(ndev-1);
 		bound_x_rght<<< dim3(dev[ndev-1].yarr,dev[ndev-1].zarr,1) , dim3(xpad,1,1) >>> (dev[ndev-1], dev[ndev-1].C);
-	}
-
-	if (bound_lft == 3)
-	{
-		cudaSetDevice(0);
-		dump_left<<< gdim, bdim, 0, dev[0].stream >>> (dev[0].xres, dev[0].xarr, dev[0].C, dev[0].BuffL);
-	}
-	else
-	{
-		cudaSetDevice(0);
-		bound_x_left<<< dim3(dev[0].yarr,dev[0].zarr,1) , dim3(xpad,1,1) >>> (dev[0], dev[0].C);
 	}
 	syncallstreams(dev);
 

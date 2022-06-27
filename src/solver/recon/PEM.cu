@@ -109,10 +109,10 @@ __device__ void get_PEM_parameters(int i, int geom, double* x, double* dx, doubl
 		S = 0.5*sR*(sqrt(4.0*S/sR+1.0)-1.0);
 		if (sL/S>1.0 && S/sR>1.0) sL = S;
 	}
-/*
-	if      (sR/sL>10.0) sR = 10.0*sL;
-	else if (sL/sR>10.0) sL = 10.0*sR;
-*/
+
+	if      (sR/sL>6.0) sR = 6.0*sL;
+	else if (sL/sR>6.0) sL = 6.0*sR;
+
 
 	par[0] = sL;
 	par[1] = a2;

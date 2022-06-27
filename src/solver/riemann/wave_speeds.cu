@@ -329,7 +329,7 @@ __device__ void wave_speeds(State S, double &pm, double &sl, double &sm, double 
 	#else
 	double cl, cr;
 	pm = get_pm_simple(S);
-	get_lr_speeds_iso(S, pm, sl, sr, cl, cr);
+	get_lr_speeds_Einfeldt(S, sl, sr, cl, cr);
 	sm = get_sm(S, cl, cr, us);
 	#endif
 	return;
