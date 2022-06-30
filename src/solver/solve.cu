@@ -8,9 +8,9 @@
 #include "orbit.h"
 #include "planet.h"
 
-__device__ int glo_idx(int i, int j, int k, int imax, int jmax)
+__device__ double exp_lim(double x)
 {
-	return i + imax*(j+jmax*k);
+	return fmax(1.0+x,1.0e-6);
 }
 
 __device__ int jlim(int j, int jmax)
@@ -295,7 +295,7 @@ __global__ void update(Grid G, Cell* in, Cell* out, double dt, double div=1.0)
 	int i = threadIdx.x + blockIdx.x*blockDim.x + xpad;
 	int j = threadIdx.y + blockIdx.y*blockDim.y + ypad;
 	int k = threadIdx.z + blockIdx.z*blockDim.z + zpad;
-	double vol, old_r, old_p;
+	double vol, r_min, p_min;
 	Cell Q;
 	Cell D;
 	int ind;
@@ -319,8 +319,8 @@ __global__ void update(Grid G, Cell* in, Cell* out, double dt, double div=1.0)
 		D.copy(G.F[ind]);
 		D.multiply(div*dt);
 
-		old_r = Q.r;
-		old_p = Q.p;
+		r_min = fmax(Q.r*1.0e-10,smallr);
+		p_min = fmax(Q.p*1.0e-10,smallp);
 
 		//if (!isnan(Q.r) && isnan(D.r)) printf("Error: update, %f, %f\n %e, %e, %e, %e, %e\n %e, %e, %e, %e, %e\n",G.get_xc(i),G.get_yc(j),Q.r,Q.p,Q.u,Q.v,Q.w,D.r,D.p,D.u,D.v,D.w);
 
@@ -357,27 +357,22 @@ __global__ void update(Grid G, Cell* in, Cell* out, double dt, double div=1.0)
 		Q.w += 0.5*fz*dt;
 		#endif
 
-		if (Q.r<=0.0)
+		if (Q.r<r_min)
 		{
-			Q.r = old_r*smallr;
-			Q.p = get_cs2(G.get_xc(i),G.get_yc(j),G.get_zc(k))*Q.r;
+			Q.r = r_min;
+			Q.p = p_min;
 			Q.u = in[ind].u;
 			Q.v = in[ind].v;
 			Q.w = in[ind].w;
-			printf("Error: negative density at %f %f %f\n",G.get_xc(i),G.get_yc(j),G.get_zc(k));
-		}
-		else if (Q.p<=0.0)
-		{
-			Q.p = old_p*smallp;//get_cs2(G.get_xc(i),G.get_yc(j),G.get_zc(k))*Q.r;
-			//printf("Error: negative pressure at %f %f %f\n",G.get_xc(i),G.get_yc(j),G.get_zc(k));
+			//printf("Error: negative density at %f %f %f\n",G.get_xc(i),G.get_yc(j),G.get_zc(k));
 		}
 		else
 		{
 			#if EOS_flag == 2
 			#if internal_e_flag==0
-			Q.p = fmax(Q.p*gamm/vol - gamm*Q.r*(Q.u*Q.u+Q.v*Q.v+Q.w*Q.w)/2.0,0.0);
+			Q.p = fmax(Q.p*gamm/vol - gamm*Q.r*(Q.u*Q.u+Q.v*Q.v+Q.w*Q.w)/2.0,p_min);
 			#else
-			Q.p = fmax(Q.p*gamm/vol,0.0);
+			Q.p = fmax(Q.p*gamm/vol,p_min);
 			#endif
 			#elif EOS_flag == 0
 			Q.p = get_cs2(G.get_xc(i),G.get_yc(j),G.get_zc(k))*Q.r;

@@ -96,6 +96,8 @@ __host__ __device__ double get_r(double x, double y, double z)
 	return 1.0 + A;
 
 	#elif init_flag == 7
+	if (y>=0.25 && y<=0.75) return 2.0;
+	else                    return 1.0;
 
 	#elif init_flag == 8
 
@@ -134,6 +136,7 @@ __host__ __device__ double get_p(double x, double y, double z)
 	return (1.0 + gam*A)*(1.0 + A)/gam;
 
 	#elif init_flag == 7
+	return 1.0;
 
 	#elif init_flag == 8
 
@@ -166,6 +169,8 @@ __host__ __device__ double get_u(double x, double y, double z)
 	return A;
 
 	#elif init_flag == 7
+	if (y>=0.25 && y<=0.75) return 1.0;
+	else                    return 0.0;
 
 	#elif init_flag == 8
 
@@ -199,8 +204,11 @@ __host__ __device__ double get_v(double x, double y, double z)
 	return 0.0;
 
 	#elif init_flag == 6
+	return 0.0;
 
 	#elif init_flag == 7
+	double A = 1.0e-9*sin(twopi*x);
+	return A;
 
 	#elif init_flag == 8
 
@@ -229,8 +237,10 @@ __host__ __device__ double get_w(double x, double y, double z)
 	return 0.0;
 
 	#elif init_flag == 6
+	return 0.0;
 
 	#elif init_flag == 7
+	return 0.0;
 
 	#elif init_flag == 8
 

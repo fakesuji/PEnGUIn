@@ -2,10 +2,12 @@
 #define PARAMETERS_H
 
 #define dump_flag
-//#define kill_flag
+//#define kill_flag 1
 //#define OrbAdv_flag
-//#define visc_flag
+//#define visc_flag 1
+//#define cool_flag
 //#define advec_flag
+//#define rev_flag
 
 //=======================================================================
 // Constants
@@ -29,11 +31,17 @@ const double smallr = 1.0e-14;
 // Geometric parameters
 //=======================================================================
 
+#define recon_flag 0
+
 const int std_thd = 1024;
 
 #define ndim 1
 
+#if recon_flag==2
+const int npad = 3;
+#else
 const int npad = 2;
+#endif
 
 const int xpad = npad;
 #if ndim > 1
@@ -47,7 +55,7 @@ const int zpad = npad;
 const int zpad = 0;
 #endif
 
-const int xres = 9600;
+const int xres = 64;
 const int yres = 1;
 const int zres = 1;
 
@@ -55,7 +63,7 @@ const int xarr = xres + 2*xpad;
 const int yarr = yres + 2*ypad;
 const int zarr = zres + 2*zpad;
 
-const int x_xdiv = 400;
+const int x_xdiv = 64;
 const int x_ydiv = 1;
 const int x_zdiv = 1;
 
@@ -85,9 +93,9 @@ const int ndev = 1;
 
 const double frame_omega = 0.0;
 
-const double sav_interval = 0.0001;//1.0*twopi;
+const double sav_interval = 1.0;//1.0*twopi;
 const double sta_time = 0.0;
-const double end_time = 0.038;//1.0*twopi;
+const double end_time = 100.0;//1.0*twopi;
 
 const int prt_interval = 100;
 const int max_step = 1000000000;
@@ -95,8 +103,6 @@ const int max_step = 1000000000;
 //=======================================================================
 // Hydro parameters
 //=======================================================================
-
-#define recon_flag 0
 
 #define EOS_flag 2
 #define internal_e_flag 0
@@ -116,10 +122,10 @@ const double CFL = 0.5;
 // boundary parameters
 //=======================================================================
 
-#define init_flag 1
+#define init_flag 6
 
-const int bound_lft = 2;
-const int bound_rgh = 2;
+const int bound_lft = 3;
+const int bound_rgh = 3;
 
 const int bound_bak = 3;
 const int bound_frn = 3;
@@ -138,7 +144,7 @@ const double p_alpha = 1.5 - 0.5*p_beta + 1.5;          // midplane density ~ r^
 const double p_alpha = 1.5;                             // surface density ~ r^-p_alpha
 #endif 
 const double ss_alpha = 0.004;                            // alpha-viscosity
-const double sc_h = 0.05;                              // scale height at r=1, normalized to that at r = 100
+const double sc_h = 0.06;                              // scale height at r=1, normalized to that at r = 100
 
 #if ndim==3
 const double Sigma_0 = 0.1*MMSN_1AU/(sqrt_hpi*sc_h);    // midplane density at r=1 in units of M_solar/AU^3

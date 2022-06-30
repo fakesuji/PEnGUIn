@@ -110,8 +110,8 @@ __device__ void get_PEM_parameters(int i, int geom, double* x, double* dx, doubl
 		if (sL/S>1.0 && S/sR>1.0) sL = S;
 	}
 
-	if      (sR/sL>6.0) sR = 6.0*sL;
-	else if (sL/sR>6.0) sL = 6.0*sR;
+	//if      (sR/sL>6.0) sR = 6.0*sL;
+	//else if (sL/sR>6.0) sL = 6.0*sR;
 
 
 	par[0] = sL;
@@ -134,7 +134,7 @@ __device__ double get_PEM_0(double r0, double rx, double r1, double s0, double a
 	double x = (rx-r0)/dr;
 
 	double val;
-	if (x<1.0e-10*fabs(r1-r0)) val = aM + s0;
+	if (x<=0.0) val = aM + s0;
 	else        val = aM + s0*(1.0-exp(eta*log(x)));
 
 	return val;
@@ -147,7 +147,7 @@ __device__ double get_PEM_1(double r0, double rx, double r1, double aM, double s
 	double y = (r1-rx)/dr;
 
 	double val;
-	if          (x<1.0e-10*fabs(r1-r0)) val = aM;
+	if          (x<=0.0) val = aM;
 	else if (eta*y>1e-4) val = aM + s1*lim01(x*(1.0-exp(eta*log(x)))/(y*eta));
 	else                 val = aM + s1*get_g_apprx(x, eta);
 

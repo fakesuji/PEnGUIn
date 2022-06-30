@@ -165,12 +165,20 @@ __device__ Cell riemann(int geom, double* xa, double* dx, double* dv, double rad
 
 		wave_speeds(S, pm, sl, sm, sr, us);
 
-		set_L_state_passive(i-1, geom, xa, dx, dv, rad, sl, sm, u, v, w, dt, S);
-		set_R_state_passive(  i, geom, xa, dx, dv, rad, sr, sm, u, v, w, dt, S);
+		//set_L_state_passive(i-1, geom, xa, dx, dv, rad, sl, sm, u, v, w, dt, S);
+		//set_R_state_passive(  i, geom, xa, dx, dv, rad, sr, sm, u, v, w, dt, S);
 //if (xa[i]<2.0 && xa[i]>1.993) printf("%f:\n %.10e, %.10e, %.10e, %.10e\n %.10e, %.10e, %.10e, %.10e\n %.10e, %.10e, %.10e\n", rad, S.rl, S.pl, S.ul, S.vl, S.rr, S.pr, S.ur, S.vr, sl, sm, sr);
 
 		HLLC_fluxes(S, pm, sl, sm, sr, flux, pres, uprs);
-		if (!isnan(u[i]) && !isnan(u[i-1]) && !isnan(u[i+1]) && isnan(flux.r)) printf("Error: flux nan, %e, %e, %e, %e, %e, %e\n",pm,sl,S.ul,sm,S.ur,sr);
+
+		if (isnan(flux.r) && !isnan(u[i-1]*u[i]*u[i+1]*u[i-2]*p[i-1]*p[i]*p[i+1]*p[i-2]*r[i-1]*r[i]*r[i+1]*r[i-2]))
+		{		
+			printf("Error: flux nan, %e| %e, %e, %e, %e, %e|\n %e, %e, %e, %e|\n %e, %e, %e, %e|\n",
+			pm,sl,S.ul,sm,S.ur,sr,
+			r[i-2],r[i-1],r[i],r[i+1],
+			p[i-2],p[i-1],p[i],p[i+1]);
+			set_state(i, geom, xa, dx, dv, rad, r, p, u, v, w, dt, us, S, true);
+		}
 	}
 	__syncthreads();
 
