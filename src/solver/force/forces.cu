@@ -1,3 +1,13 @@
+__device__ double get_slope(int geom, double x0, double x1, double x2, double x3, double a0, double a1, double a2, double a3, double a4)
+{
+	//double d1 = x1-x0;
+	double d2 = x2-x1;
+	//double d3 = x3-x2;
+
+	//return (a3-a1)/(0.5*d1+0.5*d3+d2);
+	return (-(1.0/12.0)*a4+(2.0/3.0)*a3-(2.0/3.0)*a1+(1.0/12.0)*a0)/d2;
+}
+
 
 //====================================================================
 

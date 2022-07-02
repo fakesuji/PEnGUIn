@@ -47,13 +47,40 @@ __global__ void bound_x_rght(Grid G, Cell* D)
 	return;
 }
 
-__global__ void boundy(Grid G, Cell* C)
+__device__ Cell left_state()
+{
+	Cell Q;
+
+	Q.r = 8.0;
+	Q.p = 116.5;
+	Q.u = 7.14470958122;
+	Q.v =-4.125;
+	Q.w = 0.0;
+
+	return Q;
+}
+
+__device__ Cell right_state()
+{
+	Cell Q;
+
+	Q.r = 1.4;
+	Q.p = 1.0;
+	Q.u = 0.0;
+	Q.v = 0.0;
+	Q.w = 0.0;
+
+	return Q;
+}
+
+__global__ void boundy(Grid G, Cell* C, double t)
 {
 	int n = threadIdx.x;
 	int i = blockIdx.x + xpad;
 	int k = blockIdx.y;
 	int ib = blockIdx.z;
 	Cell T;
+	double x,y;
 
 	if (ib==0)
 	{
@@ -64,7 +91,14 @@ __global__ void boundy(Grid G, Cell* C)
 		else if (bound_bak == 2)
 		{
 			T.copy(C[G.get_ind(i,2*ypad-1-n,k)]);
+			#if init_flag == 10
+			x = G.get_xc(i);
+			if (x>1.0/6.0) T.v *= -1.0;
+			else T.copy(left_state());
+			#else
 			T.v *= -1.0;
+			#endif
+			
 		}
 		else if (bound_bak == 1)
 		{
@@ -72,7 +106,9 @@ __global__ void boundy(Grid G, Cell* C)
 		}
 		else if (bound_bak == 0)
 		{
-			T = init_C(G.get_xc(i),G.get_yc(n),G.get_zc(k));
+			x = G.get_xc(i);
+			y = G.get_yc(n);
+			T = init_C(x,y,G.get_zc(k));
 		}
 		C[G.get_ind(i,n,k)].copy(T);
 	}
@@ -93,7 +129,14 @@ __global__ void boundy(Grid G, Cell* C)
 		}
 		else if (bound_frn == 0)
 		{
-			T = init_C(G.get_xc(i),G.get_yc(G.yres+ypad+n),G.get_zc(k));
+			x = G.get_xc(i);
+			y = G.get_yc(G.yres+ypad+n);
+			#if init_flag == 10
+			if (x>1.0/6.0 + 0.57735026919*y + t*7.14470958122) T.copy(right_state());
+			else                                               T.copy(left_state());
+			#else
+			T = init_C(x,y,G.get_zc(k));
+			#endif
 		}
 		C[G.get_ind(i,G.yres+ypad+n,k)].copy(T);
 	}
@@ -295,13 +338,13 @@ void boundx(Grid* dev)
 	return;
 }
 
-void boundy(Grid* dev)
+void boundy(Grid* dev, double t=0.0)
 {
 	for (int n=0; n<ndev; n++)
 	{
 		cudaSetDevice(n);
 
-		boundy<<< dim3(dev[n].xres,dev[n].zarr,2), dim3(ypad,1,1), 0, dev[n].stream >>>(dev[n], dev[n].C);
+		boundy<<< dim3(dev[n].xres,dev[n].zarr,2), dim3(ypad,1,1), 0, dev[n].stream >>>(dev[n], dev[n].C, t);
 	}
 
 	syncallstreams(dev);
@@ -422,13 +465,13 @@ void boundx2(Grid* dev)
 	return;
 }
 
-void boundy2(Grid* dev)
+void boundy2(Grid* dev, double t=0.0)
 {
 	for (int n=0; n<ndev; n++)
 	{
 		cudaSetDevice(n);
 
-		boundy<<< dim3(dev[n].xres,dev[n].zarr,2), dim3(ypad,1,1), 0, dev[n].stream >>>(dev[n], dev[n].T);
+		boundy<<< dim3(dev[n].xres,dev[n].zarr,2), dim3(ypad,1,1), 0, dev[n].stream >>>(dev[n], dev[n].T, t);
 	}
 
 	syncallstreams(dev);

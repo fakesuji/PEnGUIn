@@ -55,8 +55,8 @@ const int zpad = npad;
 const int zpad = 0;
 #endif
 
-const int xres = 864;
-const int yres = 1536;
+const int xres = 576;
+const int yres = 1024;
 const int zres = 1;
 
 const int xarr = xres + 2*xpad;
@@ -69,8 +69,8 @@ const int x_zdiv = 1;
 
 const int x_xthd = x_xdiv + 2*xpad;
 
-const int y_xdiv = 8;
-const int y_ydiv = 48;
+const int y_xdiv = 12;
+const int y_ydiv = 32;
 const int y_zdiv = 1;
 
 const int y_ythd = y_ydiv + 2*ypad;
@@ -115,7 +115,7 @@ const double gamm = gam - 1.0;
 const double gamp = gam + 1.0;
 const double gammfac = gamm/gam/2.0;
 const double gampfac = gamp/gam/2.0;
-const double CFL = 0.25;
+const double CFL = 0.4;
 
 //=======================================================================
 // boundary parameters
@@ -159,7 +159,7 @@ const double beta_cool = 1.0;                          // in units of dynamical 
 //=======================================================================
 
 const int n_planet = 1;
-const double planet_mass = 0.004;
+const double planet_mass = 0.003;
 const double planet_radius = 1.0;
 const double planet_ecc = 0.0;
 

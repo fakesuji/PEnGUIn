@@ -29,16 +29,16 @@ __device__ double net_flux(double* fluxes, double flux)
 
 __device__ void check_flux(Cell &flux, int geom, double* r, double* xa, double* dx, double gfac, double dt)
 {
-	int imax = blockDim.x;
-	int i = threadIdx.x;
-
 	flux.r *= gfac;
 	flux.p *= gfac;
 	flux.u *= gfac;
 	flux.v *= gfac;
 	flux.w *= gfac;
 
-	//double old_flux = flux.r;
+/*
+	int imax = blockDim.x;
+	int i = threadIdx.x;
+
 	double vol;
 
 	if (i>=npad && i<imax-npad+1)
@@ -80,6 +80,7 @@ __device__ void check_flux(Cell &flux, int geom, double* r, double* xa, double* 
 			}
 		}
 	}	
+*/
 	return;
 }
 

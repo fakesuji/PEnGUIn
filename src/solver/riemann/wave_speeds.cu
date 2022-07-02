@@ -299,9 +299,6 @@ __device__ void get_lr_speeds_Einfeldt(State S, double &sl, double &sr, double &
 	sl = u_-c_;
 	sr = u_+c_;
 
-	if (isnan(c_) && !isnan(S.rl*S.pl*S.ul*S.rr*S.pr*S.ur))
-		printf("%e, %e, %e | %e, %e, %e\n",S.rl, S.pl, S.ul, S.rr, S.pr, S.ur);
-
 	return;
 }
 
@@ -311,11 +308,6 @@ __device__ double get_sm(State S, double cl, double cr, double us)
 	sm  = (S.rl*S.ul*cl + S.rr*S.ur*cr)/(S.rl*cl + S.rr*cr);
 	sm += (S.pl-S.pr)/(S.rl + S.rr)/(0.5*(cl+cr));
 	sm += us*(fmax(S.ul,0.0)+fmax(-S.ur,0.0))/(cl+cr);
-
-	//if (isnan(sm) || isinf(sm))
-	//{
-	//	printf("Error: sm nan, %e, %e, %e, %e, %e, %e, %e, %e\n",S.rl,S.pl,S.ul,S.rr,S.pr,S.ur,cl,cr);
-	//}
 
 	return sm;
 }

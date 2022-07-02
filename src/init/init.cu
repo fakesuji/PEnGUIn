@@ -100,6 +100,19 @@ __host__ __device__ double get_r(double x, double y, double z)
 	else                    return 1.0;
 
 	#elif init_flag == 8
+	return 1.0;
+
+	#elif init_flag == 9
+	if (x<0.125) return 3.857143;
+	else       return 1.0 + 0.2*sin(twopi*x*8.0);
+
+	#elif init_flag == 10
+	if (x<1.0/6.0 + 0.57735026919*y) return 8.0;
+	else                             return 1.4;
+
+	#elif init_flag == 11
+	if (x+y<0.15) return 0.125;
+	else          return 1.0;
 
 	#endif
 }
@@ -139,6 +152,19 @@ __host__ __device__ double get_p(double x, double y, double z)
 	return 1.0;
 
 	#elif init_flag == 8
+	return 3.0*gamm;
+
+	#elif init_flag == 9
+	if (x<0.125) return 10.33333;
+	else       return 1.0;
+
+	#elif init_flag == 10
+	if (x<1.0/6.0 + 0.57735026919*y) return 116.5;
+	else                             return 1.0;
+
+	#elif init_flag == 11
+	if (x+y<0.15) return 0.14;
+	else          return 1.0;
 
 	#endif
 }
@@ -173,6 +199,19 @@ __host__ __device__ double get_u(double x, double y, double z)
 	else                    return 0.0;
 
 	#elif init_flag == 8
+	if (x<=0.5) return -2.0;
+	else        return 2.0;
+
+	#elif init_flag == 9
+	if (x<0.125) return 2.629369;
+	else       return 0.0;
+
+	#elif init_flag == 10
+	if (x<1.0/6.0 + 0.57735026919*y) return 8.25*0.86602540378;
+	else                             return 0.0;
+
+	#elif init_flag == 11
+	return 0.0;
 
 	#endif
 }
@@ -211,6 +250,18 @@ __host__ __device__ double get_v(double x, double y, double z)
 	return A;
 
 	#elif init_flag == 8
+	return 0.0;
+
+	#elif init_flag == 9
+	return 0.0;
+
+	#elif init_flag == 10
+	if (x<1.0/6.0 + 0.57735026919*y) return -8.25*0.5;
+	else                             return 0.0;
+
+	#elif init_flag == 11
+	return 0.0;
+
 
 	#endif
 }
@@ -243,6 +294,17 @@ __host__ __device__ double get_w(double x, double y, double z)
 	return 0.0;
 
 	#elif init_flag == 8
+	return 0.0;
+
+	#elif init_flag == 9
+	return 0.0;
+
+	#elif init_flag == 10
+	return 0.0;
+
+	#elif init_flag == 11
+	return 0.0;
+
 
 	#endif
 }
@@ -262,7 +324,18 @@ __host__ __device__ Cell init_C(double x, double y, double z)
 
 __host__ __device__ Cell init_C(double x0, double x1, double y0, double y1, double z0, double z1)
 {
-	return init_C(0.5*(x0+x1),0.5*(y0+y1),0.5*(z0+z1));
+	Cell L, C, R;
+	L = init_C(x0,y0,z0);
+	C = init_C(0.5*(x0+x1),0.5*(y0+y1),0.5*(z0+z1));
+	R = init_C(x1,y1,z1);
+	L.multiply(1.0/6.0);
+	C.multiply(4.0/6.0);
+	R.multiply(1.0/6.0);
+
+	L.add(C);
+	L.add(R);
+
+	return L;
 }
 
 void make_grid(double* a, double* v, double amin, double amax, int res, int pad, int geom, int grid)

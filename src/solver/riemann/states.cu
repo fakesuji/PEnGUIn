@@ -5,8 +5,8 @@ __device__ void set_state(int i, int geom, double* xa, double* dx, double* dv, d
 	double rl_par[4], pl_par[4], ul_par[4];
 	double rr_par[4], pr_par[4], ur_par[4];
 
-	double rl, pl, ul, cl;
-	double rr, pr, ur, cr;
+	double ul, cl;
+	double ur, cr;
 	double xl, xr, tmp, dis;
 	double r0, p0, u0;
 	double p_, u_;
@@ -82,7 +82,7 @@ __device__ void set_state(int i, int geom, double* xa, double* dx, double* dv, d
 	S.pr = p0*exp_lim(gam*u_);
 	S.ur = u0 + p_ + us;
 
-	if (print) printf(" rr=%e, pr=%e, ur=%e\n r0=%e, p0%e, u0=%e\n u_=%e, p_=%e",rr,pr,ur,r0,p0,u0,u_,p_);
+	if (print) printf(" ur=%e\n r0=%e, p0=%e, u0=%e\n u_=%e, p_=%e\n",ur,r0,p0,u0,u_,p_);
 
 	/////////////////////////////////////////////////////////
 
@@ -153,7 +153,7 @@ __device__ void set_state(int i, int geom, double* xa, double* dx, double* dv, d
 	S.pl = p0*exp_lim(gam*u_);
 	S.ul = u0 + p_ + us;
 
-	if (print) printf(" rl=%e, pl=%e, ul=%e\n r0=%e, p0%e, u0=%e\n u_=%e, p_=%e",rl,pl,ul,r0,p0,u0,u_,p_);
+	if (print) printf(" ul=%e\n r0=%e, p0=%e, u0=%e\n u_=%e, p_=%e\n",ul,r0,p0,u0,u_,p_);
 
 	/////////////////////////////////////////////////////////
 

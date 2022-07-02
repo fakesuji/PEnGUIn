@@ -43,7 +43,7 @@ $(ODIR)/orbit.o: $(SDIR)/orbit/orbit.cu $(DEPS)
 $(ODIR)/planet.o: $(SDIR)/planet/planet.cu $(DEPS)
 	$(CC) --device-c -o $@ $< $(CFLAGS)
 
-$(ODIR)/solver.o: $(SDIR)/solver/solve.cu $(SDIR)/solver/riemann/* $(SDIR)/solver/recon/* $(SDIR)/solver/boundary/* $(SDIR)/solver/force/* $(SDIR)/solver/kill/* $(SDIR)/solver/advection/* $(DEPS)
+$(ODIR)/solver.o: $(SDIR)/solver/solve.cu $(SDIR)/solver/sweeps.cu $(SDIR)/solver/riemann/* $(SDIR)/solver/recon/* $(SDIR)/solver/boundary/* $(SDIR)/solver/force/* $(SDIR)/solver/kill/* $(SDIR)/solver/advection/* $(DEPS)
 	$(CC) --device-c -o $@ $< $(CFLAGS)
 
 clean:
