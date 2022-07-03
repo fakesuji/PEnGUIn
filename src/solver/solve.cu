@@ -441,108 +441,52 @@ void RK2(Grid* dev, double time, double dt)
 
 void DS(Grid* dev, double time, double dt)
 {
-	int nx, ny, nz;
-	int mx, my, mz;
-	int bsz = 32;
 	double hdt = 0.5*dt;
 
 	#ifdef visc_flag
-	syncallstreams(dev);
 	viscosity_tensor_evaluation1(dev);
 	#endif
 
-	for (int n=0; n<ndev; n++)
-	{
-		cudaSetDevice(n);
-
-		mx = dev[n].xarr;
-		my = dev[n].yarr;
-		mz = dev[n].zarr;
-
-		source_terms_inplace<<< dim3((mx+bsz-1)/bsz,my,mz), bsz, 0, dev[n].stream >>> (dev[n], dev[n].C, dev[n].C, 0.0, hdt);
-	}
+	source_terms_inplace(dev, 0.0, hdt);
 
 	boundx(dev);
-	for (int n=0; n<ndev; n++)
-	{
-		cudaSetDevice(n);
-
-		nx = dev[n].xres;
-		ny = dev[n].yres;
-		nz = dev[n].zres;
-
-		sweepx_inplace<<< dim3(nx/x_xdiv,ny/x_ydiv,nz/x_zdiv), dim3(x_xthd,x_ydiv,x_zdiv), 2*sizeof(double)*x_xthd*x_ydiv*x_zdiv, dev[n].stream >>>
-		      (dev[n], dev[n].C, dev[n].T, dt);
-	}
+	sweepx_inplace(dev,dt);
 
 	#if ndim>1
-	boundy2(dev,time+dt);
-	for (int n=0; n<ndev; n++)
-	{
-		cudaSetDevice(n);
-
-		nx = dev[n].xres;
-		ny = dev[n].yres;
-		nz = dev[n].zres;
-
-		sweepy_inplace<<< dim3(ny/y_ydiv,nx/y_xdiv,nz/y_zdiv), dim3(y_ythd,y_xdiv,y_zdiv), 2*sizeof(double)*y_ythd*y_xdiv*y_zdiv, dev[n].stream >>>
-		      (dev[n], dev[n].T, dev[n].C, dt);
-	}
+	boundy(dev,time+dt);
+	sweepy_inplace(dev,dt);
 	#endif
 
 	evolve_planet(dev,time+dt,dt);
 
+	source_terms_replace(dev, dt, hdt);
+	for (int n=0; n<ndev; n++) dev[n].CT_change();
+
 	#ifdef visc_flag
-	syncallstreams(dev);
 	viscosity_tensor_evaluation1(dev);
 	#endif
 
-	for (int n=0; n<ndev; n++)
-	{
-		cudaSetDevice(n);
-
-		mx = dev[n].xarr;
-		my = dev[n].yarr;
-		mz = dev[n].zarr;
-
-		source_terms_inplace<<< dim3((mx+bsz-1)/bsz,my,mz), bsz, 0, dev[n].stream >>> (dev[n], dev[n].C, dev[n].C, dt, hdt);
-	}
+	source_terms_update(dev, dt, hdt);
+	for (int n=0; n<ndev; n++) dev[n].CT_change();
 
 	return;
 }
 
 void solve(Grid* dev, double time, double dt)
 {
-	#ifndef advec_flag
+	#ifdef RadPres_flag
+	compute_extinction(dev, 1.0);
+	#endif
 
-		
+	#if mode_flag == 0
+	DS(dev,time,dt);
+	#elif mode_flag == 1
+	#endif
 
-		#ifdef RadPres_flag
-		compute_extinction(dev, 1.0);
-		#endif
-
-		#if mode_flag == 0
-		DS(dev,time,dt);
-		#elif mode_flag == 1
-		#endif
-
-		#ifdef OrbAdv_flag
-		set_OrbAdv(dev,dt);
-		shift_OrbAdv(dev);
-		advecty(dev,dt);
-		#endif
-
-		#ifdef cool_flag
-		cooling(dev, 0.5*dt);
-		#endif
-	#else
-
-		advectx(dev,dt);
-
-		#if ndim>1
-		advecty(dev,dt);
-		#endif
-
+	#ifdef OrbAdv_flag
+	set_OrbAdv(dev,dt);
+	shift_OrbAdv(dev);
+	advecty(dev,dt);
 	#endif
 
 	return;

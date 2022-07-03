@@ -145,6 +145,14 @@ struct Grid
 
 	body* planets;
 
+	__host__ __device__ void CT_change()
+	{
+		Cell* tmp;
+		tmp = C;
+		C = T;
+		T = tmp;
+	}
+
 	__host__ __device__ int get_ind(int i, int j, int k)
 	{
 		return i + xarr*j + xarr*yarr*k;

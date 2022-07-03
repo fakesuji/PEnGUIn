@@ -15,4 +15,6 @@ __host__ __device__ double get_h(double,double,double);
 
 __host__ __device__ Cell init_C(double, double, double, double, double, double);
 __host__ __device__ Cell init_C(double, double, double);
+
+__global__ void init(Grid, Cell*);
 #endif

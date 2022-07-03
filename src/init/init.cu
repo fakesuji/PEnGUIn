@@ -378,6 +378,24 @@ void fill_grid(double* xa, double* xv, double* ya, double* yv, double* za, doubl
 	return;
 }
 
+__global__ void init(Grid G, Cell* C)
+{
+	int i = threadIdx.x + blockIdx.x*blockDim.x;
+	int j = threadIdx.y + blockIdx.y*blockDim.y;
+	int k = threadIdx.z + blockIdx.z*blockDim.z;
+
+	double xc, yc, zc;
+	if (i<G.xarr && j<G.yarr && k<G.zarr)
+	{
+		xc = G.get_xc(i);
+		yc = G.get_yc(j);
+		zc = G.get_zc(k);
+		C[G.get_ind(i,j,k)] = init_C(xc,yc,zc);
+	}
+
+	return;
+}
+
 void init(Grid* dev)
 {
 	for (int n=0; n<ndev; n++)
