@@ -447,7 +447,8 @@ void DS(Grid* dev, double time, double dt)
 	viscosity_tensor_evaluation1(dev);
 	#endif
 
-	source_terms_inplace(dev, 0.0, hdt);
+	source_terms_replace(dev, 0.0, hdt);
+	for (int n=0; n<ndev; n++) dev[n].CT_change();
 
 	boundx(dev);
 	sweepx_inplace(dev,dt);
