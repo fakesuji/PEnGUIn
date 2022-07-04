@@ -16,6 +16,34 @@ struct State
 	double wr;
 };
 
+struct Dust
+{
+	double r;
+	double u;
+	double v;
+	double w;
+	__host__ __device__ void copy(Dust B)
+	{
+		r = B.r;
+		u = B.u;
+		v = B.v;
+		w = B.w;
+	}
+	__host__ __device__ void add(Dust B)
+	{
+		r += B.r;
+		u += B.u;
+		v += B.v;
+		w += B.w;
+	}
+	__host__ __device__ void multiply(double C)
+	{
+		r *= C;
+		u *= C;
+		v *= C;
+		w *= C;
+	}
+};
 
 struct Cell
 {
@@ -128,8 +156,14 @@ struct Grid
 	Cell* T;
 	Cell* F;
 
+	Dust* CD;
+	Dust* TD;
+
 	Cell* BuffL;
 	Cell* BuffR;
+
+	Dust* BuffLD;
+	Dust* BuffRD;
 
 	double* vis_tensor;
 	double* fx;
@@ -151,6 +185,14 @@ struct Grid
 		tmp = C;
 		C = T;
 		T = tmp;
+	}
+
+	__host__ __device__ void CT_D_change()
+	{
+		Dust* tmp;
+		tmp = CD;
+		CD = TD;
+		TD = tmp;
 	}
 
 	__host__ __device__ int get_ind(int i, int j, int k)

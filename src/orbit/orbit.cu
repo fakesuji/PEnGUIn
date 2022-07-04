@@ -26,8 +26,8 @@ __global__ void shift_orbital_advection(Grid G)
 	int len = blockDim.x;
 	int loop = (jmax+len-1)/len;
 	int inc = G.get_inc(i,k);
-	if (inc==0) return;
-
+	//if (inc==0) return;
+/*
 	for (int l=0; l<loop; l++)
 	{
 		j = threadIdx.x + l*len;
@@ -35,12 +35,12 @@ __global__ void shift_orbital_advection(Grid G)
 		{
 			ind = i + G.xarr*(j+ypad) + G.xarr*G.yarr*k;
 			
-			G.F[ind].copy(G.C[ind]);
+			G.T[ind].copy(G.C[ind]);
 		}
 	}
 
 	__syncthreads();
-
+*/
 	for (int l=0; l<loop; l++)
 	{
 		j = threadIdx.x + l*len;
@@ -51,7 +51,7 @@ __global__ void shift_orbital_advection(Grid G)
 			if (j<0) j += jmax;
 			shf = i + G.xarr*(j+ypad) + G.xarr*G.yarr*k;
 		
-			G.C[shf].copy(G.F[ind]);
+			G.T[shf].copy(G.C[ind]);
 		}
 	}
 
@@ -157,6 +157,7 @@ void shift_OrbAdv(Grid* dev)
 	{
 		cudaSetDevice(i);
 		shift_orbital_advection<<< dim3(dev[i].xres,dev[i].zres,1), dim3(1024,1,1), 0, dev[i].stream >>> (dev[i]);
+		dev[i].CT_change();
 	}
 	for(int n=0; n<ndev; n++) cudaStreamSynchronize(dev[n].stream);
 	return;
