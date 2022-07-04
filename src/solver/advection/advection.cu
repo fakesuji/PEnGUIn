@@ -82,6 +82,50 @@ __device__ Cell advection(int geom, double* xa, double* dx, double* dv, int npad
 	return Del;
 }
 
+<<<<<<< HEAD
+=======
+__global__ void advect_update(Grid G, double dt)
+{
+	int i = threadIdx.x + blockIdx.x*blockDim.x + xpad;
+	int j = threadIdx.y + blockIdx.y*blockDim.y + ypad;
+	int k = threadIdx.z + blockIdx.z*blockDim.z + zpad;
+	double vol;
+	Cell Q;
+	Cell D;
+	int ind;
+
+	if (i>=xpad && i<G.xarr-xpad)
+	if (j>=ypad && j<G.yarr-ypad)
+	if (k>=zpad && k<G.zarr-zpad)
+	{
+		ind = i + G.xarr*(j + G.yarr*k);
+		vol = G.get_xv(i)*G.get_yv(j)*G.get_zv(k);
+
+		Q.copy(G.C[ind]);
+		D.copy(G.F[ind]);		
+		D.multiply(dt);
+
+		Q.r *= vol;
+		Q.p *= vol;
+		Q.u *= Q.r;
+		Q.v *= Q.r;
+		Q.w *= Q.r;
+
+		Q.add(D);
+		Q.r = fmax(Q.r,smallr);
+		Q.p = fmax(Q.p,smallp);
+
+		G.C[ind].r = Q.r/vol;
+		G.C[ind].p = Q.p/vol;
+		G.C[ind].u = Q.u/Q.r;
+		G.C[ind].v = Q.v/Q.r;
+		G.C[ind].w = Q.w/Q.r;
+	}
+
+	return;
+}
+
+>>>>>>> 19e65ff4725ecfa881164c53f98debf109095197
 __global__ void advectx(Grid G, double dt)
 {
 	__shared__ double xa[x_xthd+1], dx[x_xthd], xv[x_xthd];
@@ -127,7 +171,10 @@ __global__ void advectx(Grid G, double dt)
 	__syncthreads();
 
 	/////////////////////////////////////////////////////
+<<<<<<< HEAD
 
+=======
+>>>>>>> 19e65ff4725ecfa881164c53f98debf109095197
 	Cell Del;
 	Del = advection(geomx, xa, dx, xv, xpad, &r[x_xthd*j], &p[x_xthd*j], &u[x_xthd*j], &v[x_xthd*j], &w[x_xthd*j], 1.0, dt);
 	Del.multiply(G.get_yv(idy)*G.get_zv(idz));
@@ -146,6 +193,30 @@ __global__ void advectx(Grid G, double dt)
 	return;
 }
 
+<<<<<<< HEAD
+=======
+void advectx(Grid* dev, double dt)
+{
+	int nx,ny,nz;
+
+	boundx(dev);
+	for (int n=0; n<ndev; n++)
+	{
+		cudaSetDevice(n);
+
+		nx = dev[n].xres;
+		ny = dev[n].yres;
+		nz = dev[n].zres;
+
+		advectx<<< dim3(nx/x_xdiv,ny/x_ydiv,nz/x_zdiv), dim3(x_xthd,x_ydiv,x_zdiv), 2*sizeof(double)*x_xthd*x_ydiv*x_zdiv, dev[n].stream >>>
+		      (dev[n], dt);
+
+		advect_update<<< dim3(nx/x_xdiv,ny,nz), x_xthd, 0, dev[n].stream >>> (dev[n], dt);
+	}
+	return;
+}
+
+>>>>>>> 19e65ff4725ecfa881164c53f98debf109095197
 __global__ void advecty(Grid G, double dt)
 {
 	__shared__ double ya[y_ythd+1], dy[y_ythd], yv[y_ythd];
@@ -211,6 +282,7 @@ __global__ void advecty(Grid G, double dt)
 	return;
 }
 
+<<<<<<< HEAD
 __global__ void advect_update(Grid G, double dt)
 {
 	int i = threadIdx.x + blockIdx.x*blockDim.x + xpad;
@@ -269,6 +341,8 @@ __global__ void advect_update(Grid G, double dt)
 	return;
 }
 
+=======
+>>>>>>> 19e65ff4725ecfa881164c53f98debf109095197
 void advecty(Grid* dev, double dt)
 {
 	int nx,ny,nz;
@@ -287,6 +361,7 @@ void advecty(Grid* dev, double dt)
 
 		advect_update<<< dim3(nx/x_xdiv,ny,nz), x_xthd, 0, dev[n].stream >>> (dev[n], dt);
 	}
+	return;
 }
 
 void advectx(Grid* dev, double dt)

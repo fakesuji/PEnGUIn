@@ -86,7 +86,46 @@ struct body
 	double vy;
 	double vz;
 
+	double fx;
+	double fy;
+	double fz;
+
 	double rs;
+
+	__device__ void grav_sph(double rad, double azi, double pol, double &gx, double &gy, double &gz)
+	{
+		double cosfac, sinfac;
+		sincos(azi-y, &sinfac, &cosfac);
+		double cospol, sinpol;
+		#if ndim==3
+		sincos(pol, &sinpol, &cospol);
+		#else
+		cospol = 0.0;
+		sinpol = 1.0;
+		#endif
+	
+		double Rp = sqrt(rad*rad + x*x - 2.0*x*rad*cosfac*sinpol);
+		double rs_fac = fmax(4.0-3.0*Rp/rs, 1.0)/fmax(rs*rs*rs, Rp*Rp*Rp);
+	
+		gx = -m*(rad-x*cosfac*sinpol)*rs_fac - m*sinpol*cosfac/x/x;
+		gy = -m*x*sinfac*rs_fac              + m*sinpol*sinfac/x/x;
+		gz =  m*x*cosfac*cospol*rs_fac       - m*cospol*cosfac/(sinpol*x*x);
+		return;
+	}
+
+	__device__ void grav_cyl(double rad, double azi, double h, double &gx, double &gy, double &gz)
+	{
+		double cosfac, sinfac;
+		sincos(azi-y, &sinfac, &cosfac);
+	
+		double Rp = sqrt(rad*rad + x*x - 2.0*x*rad*cosfac + h*h + rs*rs);
+	
+		gx = -m*(rad-x*cosfac)/(Rp*Rp*Rp) - m*cosfac/x/x;
+		gy = -m*x*sinfac/(Rp*Rp*Rp)       + m*sinfac/x/x;
+		gz = -m*h/(Rp*Rp*Rp);
+		return;
+	}
+
 };
 
 struct Grid
@@ -297,64 +336,4 @@ struct Grid
 	////////////////////////////////////////
 };
 
-/*
-struct GPU_plan
-{
-  int id;
-
-  int N_ring;
-
-  int istart;
-  int iblk;
-
-  int kstart;
-  int kblk;
-
-  long int memsize;
-
-  ring *rings;
-  ring *h_rings;
-  
-  ConsVar *D;
-  #ifdef dust_flag
-  ConsDus *F;
-  #endif
-
-  ring *lft;
-  ring *rgh;
-  ring *udr;
-  ring *top;
-
-  ring_geometry *ygrid;
-  ring_geometry *h_ygrid;
-
-  PrimVar *sym;
-  #ifdef dust_flag
-  PrimDus *sym_d;
-  #endif
-
-  dim3 sx_grid;
-  dim3 sy_grid;
-  dim3 sz_grid;
-
-  int sx_block;
-  int sy_block;
-  int sz_block;
-
-  dim3 t_grid;
-
-  double *dt;
-  double *h_dt;
-  double *dt_reduc;
-
-  body *planet;
-
-  double *h_output;
-  double *d_output;
-
-  cudaEvent_t event;
-
-  cudaStream_t stream;
-};
-*/
 #endif

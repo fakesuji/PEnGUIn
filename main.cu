@@ -156,14 +156,6 @@ void init_grid_dimensions(Grid* G)
 	}
 }
 
-void save_check_point(ofstream &check_point, string fname, int &sstep, double cur_time, Grid* hst)
-{
-	open_binary_file(check_point,fname);
-	write_check_point(check_point, cur_time, hst);
-	close_output_file(check_point);
-	return;
-}
-
 int main(int narg, char *args[])
 {
 	double sta_time = 0.0;
@@ -201,7 +193,7 @@ int main(int narg, char *args[])
 	{
 		fname = path+"binary_"+label+"_"+frame_num(sstep);
 		#ifdef dump_flag
-		save_check_point(check_point, fname, sstep, cur_time, hst);
+		save_check_point(fname, cur_time, hst);
 		sstep++;
 		#endif
 	}
@@ -280,7 +272,7 @@ int main(int narg, char *args[])
 		{
 			cpy_grid_DevicetoHost(hst, dev);
 			fname = path+"binary_"+label+"_"+frame_num(sstep);
-			save_check_point(check_point, fname, sstep, cur_time, hst);
+			save_check_point(fname, cur_time, hst);
 
 			printf("Check point!\n");
 			//printf("  Current time %f | End time %f | Time step %e\n", cur_time, end_time, dt);

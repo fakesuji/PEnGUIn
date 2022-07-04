@@ -5,8 +5,12 @@
 #define dump_flag
 //#define kill_flag 1
 #define OrbAdv_flag
+<<<<<<< HEAD
 #define visc_flag 1
 //#define cool_flag
+=======
+//#define visc_flag
+>>>>>>> 19e65ff4725ecfa881164c53f98debf109095197
 //#define advec_flag
 
 //=======================================================================
@@ -91,10 +95,15 @@ const int ndev = 1;
 // Temporal parameters
 //=======================================================================
 
+<<<<<<< HEAD
 const double frame_omega = 1.0;
 
 const double sav_interval = 10.0*twopi/frame_omega;
 const double end_time = 10000.0*twopi/frame_omega;
+=======
+const double sav_interval = 0.1*twopi;
+const double end_time = 0.1*twopi;
+>>>>>>> 19e65ff4725ecfa881164c53f98debf109095197
 
 const int prt_interval = 1000;
 const int max_step = 1000000000;
