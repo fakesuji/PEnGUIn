@@ -15,7 +15,7 @@ double h_get_dt(double xa, double dx, double r, double p, double u)
 	return CFL*fabs(dx/u);
 }
 
-__global__ void get_dt_lv1(double* dt_lv1, double* xa, double* ya, double* za, int nx, int ny, int nz, Cell* C, double* rot)
+__global__ void get_dt_lv1(double* dt_lv1, double* xa, double* ya, double* za, int nx, int ny, int nz, Cell* C, Dust* CD, double* rot)
 {
 	extern __shared__ double sm[];
 	int i = threadIdx.x;
@@ -61,17 +61,26 @@ __global__ void get_dt_lv1(double* dt_lv1, double* xa, double* ya, double* za, i
 			#endif
 
 			spd = fabs(C[ind].u)+cs;
+			#ifdef dust_flag
+			spd = fmax(fabs(CD[ind].u),spd);
+			#endif
 			wid = fabs(xa[idx+1]-xa[idx]);
 			tmp = fmax(spd/wid,tmp);
 
 			#if ndim>1
 			spd = fabs(C[ind].v - rad_cyl*frame_omega - rot[idx+(nx+2*xpad)*idz])+cs;
+			#ifdef dust_flag
+			spd = fmax(fabs(CD[ind].v - rad_cyl*frame_omega - rot[idx+(nx+2*xpad)*idz]),spd);
+			#endif
 			wid = fabs(ya[idy+1]-ya[idy])*rad_cyl;
 			tmp = fmax(spd/wid,tmp);
 			#endif
 
 			#if ndim>2
 			spd = fabs(C[ind].w)+cs;
+			#ifdef dust_flag
+			spd = fmax(fabs(CD[ind].w),spd);
+			#endif
 			wid = fabs(za[idz+1]-za[idz])*rad;
 			tmp = fmax(spd/wid,tmp);
 			#endif
@@ -114,7 +123,7 @@ double global_dt(Grid* hst, Grid* dev, double dt)
 		nz = dev[n].zres;
 
 		lv1_size = min(1024,(nx*ny*nz+std_thd-1)/std_thd);
-		get_dt_lv1<<< lv1_size, std_thd, std_thd*sizeof(double), dev[n].stream >>>(dev[n].Buff, &dev[n].xa[dev[n].xbgn], dev[n].ya, dev[n].za, nx, ny, nz, dev[n].C, dev[n].orb_rot);
+		get_dt_lv1<<< lv1_size, std_thd, std_thd*sizeof(double), dev[n].stream >>>(dev[n].Buff, &dev[n].xa[dev[n].xbgn], dev[n].ya, dev[n].za, nx, ny, nz, dev[n].C, dev[n].CD, dev[n].orb_rot);
 		get_dt_lv2<<< 1, lv1_size, lv1_size*sizeof(double), dev[n].stream >>>(dev[n].dt, dev[n].Buff);
 		cudaMemcpyAsync( hst[n].dt, dev[n].dt, sizeof(double), cudaMemcpyDeviceToHost, dev[n].stream );
 	}

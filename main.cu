@@ -25,6 +25,11 @@ void cpy_grid_DevicetoHost(Grid* hst, Grid* dev)
 	{
 		cudaSetDevice(n);
 		cudaMemcpyAsync( hst[n].C, dev[n].C, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(Cell), cudaMemcpyDeviceToHost, dev[n].stream );
+
+		#ifdef dust_flag
+		cudaMemcpyAsync( hst[n].CD, dev[n].CD, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(Dust), cudaMemcpyDeviceToHost, dev[n].stream );
+		#endif
+
 		cudaMemcpyAsync( hst[n].orb_shf, dev[n].orb_shf, dev[n].xarr*dev[n].zarr*sizeof(int), cudaMemcpyDeviceToHost, dev[n].stream );
 		cudaMemcpyAsync( hst[n].planets, dev[n].planets, n_planet*sizeof(body), cudaMemcpyDeviceToHost, dev[n].stream );
 	}
@@ -48,6 +53,10 @@ void cpy_grid_HosttoDevice(Grid* hst, Grid* dev)
 
 		cudaMemcpyAsync( dev[n].C, hst[n].C, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(Cell), cudaMemcpyHostToDevice, dev[n].stream );
 
+		#ifdef dust_flag
+		cudaMemcpyAsync( dev[n].CD, hst[n].CD, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(Dust), cudaMemcpyHostToDevice, dev[n].stream );
+		#endif
+
 		cudaMemcpyAsync( dev[n].planets, hst[n].planets, n_planet*sizeof(body), cudaMemcpyHostToDevice, dev[n].stream );
 	}
 	for (int n=0; n<ndev; n++) cudaStreamSynchronize(dev[n].stream);
@@ -70,6 +79,11 @@ void mem_allocation(Grid* hst, Grid* dev)
 		cudaMallocHost( (void**)&hst[n].zv, zarr*sizeof(double) );
 	
 		cudaMallocHost( (void**)&hst[n].C, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(Cell) );
+
+		#ifdef dust_flag
+		cudaMallocHost( (void**)&hst[n].CD, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(Dust) );
+		#endif
+
 		cudaMallocHost( (void**)&hst[n].orb_shf, dev[n].xarr*dev[n].zarr*sizeof(int) );
 
 		cudaMallocHost( (void**)&hst[n].planets, n_planet*sizeof(body) );
@@ -95,16 +109,9 @@ void mem_allocation(Grid* hst, Grid* dev)
 		cudaMalloc( (void**)&dev[n].T, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(Cell) );
 		cudaMalloc( (void**)&dev[n].F, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(Cell) );
 
-		cudaMalloc( (void**)&dev[n].fx, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(double) );
-		cudaMalloc( (void**)&dev[n].fy, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(double) );
-		cudaMalloc( (void**)&dev[n].fz, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(double) );
-
-		cudaMalloc( (void**)&dev[n].Du, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(double) );
-		cudaMalloc( (void**)&dev[n].Dv, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(double) );
-		cudaMalloc( (void**)&dev[n].Dw, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(double) );
-
-		#if EOS_flag > 0
-		cudaMalloc( (void**)&dev[n].De, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(double) );
+		#ifdef dust_flag
+		cudaMalloc( (void**)&dev[n].CD, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(Dust) );
+		cudaMalloc( (void**)&dev[n].TD, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(Dust) );
 		#endif
 
 		#ifdef visc_flag
@@ -123,6 +130,11 @@ void mem_allocation(Grid* hst, Grid* dev)
 
 		cudaMalloc( (void**)&dev[n].BuffL, xpad*dev[n].yarr*dev[n].zarr*sizeof(Cell) );
 		cudaMalloc( (void**)&dev[n].BuffR, xpad*dev[n].yarr*dev[n].zarr*sizeof(Cell) );
+
+		#ifdef dust_flag
+		cudaMalloc( (void**)&dev[n].BuffLD, xpad*dev[n].yarr*dev[n].zarr*sizeof(Dust) );
+		cudaMalloc( (void**)&dev[n].BuffRD, xpad*dev[n].yarr*dev[n].zarr*sizeof(Dust) );
+		#endif
 
 		cudaMalloc( (void**)&dev[n].orb_rot, dev[n].xarr*dev[n].zarr*sizeof(double) );
 		cudaMalloc( (void**)&dev[n].orb_res, dev[n].xarr*dev[n].zarr*sizeof(double) );

@@ -41,7 +41,7 @@ __device__ void get_PRM_parameters(int i, int geom, double* x, double* dx, doubl
 	#if recon_flag==0
 	get_VAN_parameters(i, geom, x, dx, dv, a, par);
 	#elif recon_flag==1
-	get_VAN_parameters(i, geom, x, dx, dv, a, par);
+	get_MOC_parameters(i, geom, x, dx, dv, a, par);
 	#elif recon_flag==2
 	get_PPM_parameters(i, geom, x, dx, dv, a, par);
 	#endif

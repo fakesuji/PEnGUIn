@@ -84,7 +84,7 @@ __device__ void check_flux(Cell &flux, int geom, double* r, double* xa, double* 
 	return;
 }
 
-__device__ void net_source(Cell &flux, int geom, double* r, double* xa, double* dx, double pres, double uprs, double dt)
+__device__ void net_source(Cell &flux, int geom, double* r, double* xa, double* dx, double pres, double uprs)
 {
 	int imax = blockDim.x;
 	int i = threadIdx.x;
@@ -120,18 +120,15 @@ __device__ void net_source(Cell &flux, int geom, double* r, double* xa, double* 
 	#endif
 	__syncthreads();
 
-	check_flux(flux, geom, r, xa, dx, gfac, dt);
+	flux.r = net_flux(tmp1,flux.r*gfac);
 	__syncthreads();
-
-	flux.r = net_flux(tmp1,flux.r);
+	flux.p = net_flux(tmp1,flux.p*gfac) + de;
 	__syncthreads();
-	flux.p = net_flux(tmp1,flux.p) + de;
+	flux.u = net_flux(tmp1,flux.u*gfac) + du;
 	__syncthreads();
-	flux.u = net_flux(tmp1,flux.u) + du;
+	flux.v = net_flux(tmp1,flux.v*gfac);
 	__syncthreads();
-	flux.v = net_flux(tmp1,flux.v);
-	__syncthreads();
-	flux.w = net_flux(tmp1,flux.w);
+	flux.w = net_flux(tmp1,flux.w*gfac);
 	__syncthreads();
 	return;
 }
@@ -160,16 +157,9 @@ __device__ Cell riemann(int geom, double* xa, double* dx, double* dv, double rad
 	if (i>=npad && i<imax+1-npad)
 	{
 		us = 0.5*dt*force;
-		if (geom>2) dt /= rad;
 
-		set_state(i, geom, xa, dx, dv, rad, r, p, u, v, w, dt, us, S);
-
+		set_state(i, geom, xa, dx, dv, rad, r, p, u, v, w, dt/rad, us, S);
 		wave_speeds(S, pm, sl, sm, sr, us);
-
-		//set_L_state_passive(i-1, geom, xa, dx, dv, rad, sl, sm, u, v, w, dt, S);
-		//set_R_state_passive(  i, geom, xa, dx, dv, rad, sr, sm, u, v, w, dt, S);
-//if (xa[i]<2.0 && xa[i]>1.993) printf("%f:\n %.10e, %.10e, %.10e, %.10e\n %.10e, %.10e, %.10e, %.10e\n %.10e, %.10e, %.10e\n", rad, S.rl, S.pl, S.ul, S.vl, S.rr, S.pr, S.ur, S.vr, sl, sm, sr);
-
 		HLLC_fluxes(S, pm, sl, sm, sr, flux, pres, uprs);
 
 		if (isnan(flux.r) && !isnan(u[i-1]*u[i]*u[i+1]*u[i-2]*p[i-1]*p[i]*p[i+1]*p[i-2]*r[i-1]*r[i]*r[i+1]*r[i-2]))
@@ -178,12 +168,12 @@ __device__ Cell riemann(int geom, double* xa, double* dx, double* dv, double rad
 			pm,sl,S.ul,sm,S.ur,sr,
 			r[i-2],r[i-1],r[i],r[i+1],
 			p[i-2],p[i-1],p[i],p[i+1]);
-			set_state(i, geom, xa, dx, dv, rad, r, p, u, v, w, dt, us, S, true);
+			set_state(i, geom, xa, dx, dv, rad, r, p, u, v, w, dt/rad, us, S, true);
 		}
 	}
 	__syncthreads();
 
-	net_source(flux, geom, r, xa, dx, pres, uprs, dt);
+	net_source(flux, geom, r, xa, dx, pres, uprs);
 
 	return flux;
 }

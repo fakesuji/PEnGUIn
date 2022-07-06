@@ -309,6 +309,67 @@ __host__ __device__ double get_w(double x, double y, double z)
 	#endif
 }
 
+__host__ __device__ double get_r_dust(double x, double y, double z)
+{
+	#if init_flag == 2
+	return D_G_ratio*pow(x/planet_radius,-p_alpha)*get_vertical(x,y,z);
+
+	#elif init_flag == 3
+	return D_G_ratio*pow(x*sin(z)/planet_radius,-p_alpha)*get_vertical(x,y,z);
+
+	#else
+	return 1.0;
+
+	#endif
+}
+
+__host__ __device__ double get_u_dust(double x, double y, double z)
+{
+	#if init_flag == 2
+	return -1.5*get_nu(x,y,z)/x;
+
+	#elif init_flag == 3
+	double r = x * sin(z);
+	return -1.5*get_nu(x,y,z)/r;
+
+	#else
+	return 0.0;
+
+	#endif
+
+}
+
+__host__ __device__ double get_v_dust(double x, double y, double z)
+{
+	#if init_flag == 2
+	return sqrt(1.0/x);
+
+	#elif init_flag == 3
+	return sqrt(1.0/x);
+
+	#else
+	return 0.0;
+
+	#endif
+
+}
+
+
+__host__ __device__ double get_w_dust(double x, double y, double z)
+{
+	#if init_flag == 2
+	return 0.0;
+
+	#elif init_flag == 3
+	return 0.0;
+
+	#else
+	return 0.0;
+
+	#endif
+
+}
+
 __host__ __device__ Cell init_C(double x, double y, double z)
 {
 	Cell Q;
@@ -318,6 +379,18 @@ __host__ __device__ Cell init_C(double x, double y, double z)
 	Q.u = get_u(x,y,z);
 	Q.v = get_v(x,y,z);
 	Q.w = get_w(x,y,z);
+
+	return Q;
+}
+
+__host__ __device__ Dust init_CD(double x, double y, double z)
+{
+	Dust Q;
+
+	Q.r = get_r_dust(x,y,z);
+	Q.u = get_u_dust(x,y,z);
+	Q.v = get_v_dust(x,y,z);
+	Q.w = get_w_dust(x,y,z);
 
 	return Q;
 }
@@ -365,34 +438,19 @@ void make_grid(double* a, double* v, double amin, double amax, int res, int pad,
 	return;
 }
 
-void fill_grid(double* xa, double* xv, double* ya, double* yv, double* za, double* zv, int mx, int my, int mz, Cell* C)
+void fill_grid(Grid G)
 {
 	int ind;
-	for (int i=0; i<mx; i++)
-	for (int j=0; j<my; j++)
-	for (int k=0; k<mz; k++)
+	for (int i=0; i<G.xarr; i++)
+	for (int j=0; j<G.yarr; j++)
+	for (int k=0; k<G.zarr; k++)
 	{
-		ind = i + mx*(j + my*k);
-		C[ind] = init_C(xa[i], xa[i+1], ya[j], ya[j+1], za[k], za[k+1]);
+		ind = G.get_ind(i,j,k);
+		G.C[ind] = init_C(G.get_xa(i), G.get_xa(i+1), G.get_ya(j), G.get_ya(j+1), G.get_za(k), G.get_za(k+1));
+		#ifdef dust_flag
+		G.CD[ind] = init_CD(G.get_xc(i), G.get_yc(j), G.get_zc(k));
+		#endif
 	}
-	return;
-}
-
-__global__ void init(Grid G, Cell* C)
-{
-	int i = threadIdx.x + blockIdx.x*blockDim.x;
-	int j = threadIdx.y + blockIdx.y*blockDim.y;
-	int k = threadIdx.z + blockIdx.z*blockDim.z;
-
-	double xc, yc, zc;
-	if (i<G.xarr && j<G.yarr && k<G.zarr)
-	{
-		xc = G.get_xc(i);
-		yc = G.get_yc(j);
-		zc = G.get_zc(k);
-		C[G.get_ind(i,j,k)] = init_C(xc,yc,zc);
-	}
-
 	return;
 }
 
@@ -403,10 +461,7 @@ void init(Grid* dev)
 		make_grid(dev[n].xa, dev[n].xv, xmin, xmax, xres, xpad, geomx, gridx);
 		make_grid(dev[n].ya, dev[n].yv, ymin, ymax, yres, ypad, geomy, gridy);
 		make_grid(dev[n].za, dev[n].zv, zmin, zmax, zres, zpad, geomz, gridz);
-		fill_grid(&dev[n].xa[dev[n].xbgn], &dev[n].xv[dev[n].xbgn], 
-		          &dev[n].ya[dev[n].ybgn], &dev[n].yv[dev[n].ybgn], 
-		          &dev[n].za[dev[n].zbgn], &dev[n].zv[dev[n].zbgn], 
-		          dev[n].xarr, dev[n].yarr, dev[n].zarr, dev[n].C);
+		fill_grid(dev[n]);
 	}
 
 	return;

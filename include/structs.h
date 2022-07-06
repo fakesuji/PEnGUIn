@@ -179,12 +179,18 @@ struct Grid
 
 	body* planets;
 
+	__host__ __device__ int get_ind(int i, int j, int k)
+	{
+		return i + xarr*j + xarr*yarr*k;
+	}
+
 	__host__ __device__ void CT_change()
 	{
 		Cell* tmp;
 		tmp = C;
 		C = T;
 		T = tmp;
+		return;
 	}
 
 	__host__ __device__ void CT_D_change()
@@ -193,11 +199,7 @@ struct Grid
 		tmp = CD;
 		CD = TD;
 		TD = tmp;
-	}
-
-	__host__ __device__ int get_ind(int i, int j, int k)
-	{
-		return i + xarr*j + xarr*yarr*k;
+		return;
 	}
 
 	////////////////////////////////////////
@@ -294,6 +296,54 @@ struct Grid
 	__host__ __device__ void write_w(int i, int j, int k, double w)
 	{
 		C[get_ind(i,j,k)].w=w;
+		return;
+	}
+	////////////////////////////////////////
+	__host__ __device__ double get_r_dust(int i, int j, int k)
+	{
+		return CD[get_ind(i,j,k)].r;
+	}
+	__host__ __device__ double get_u_dust(int i, int j, int k)
+	{
+		return CD[get_ind(i,j,k)].u;
+	}
+	__host__ __device__ double get_v_dust(int i, int j, int k)
+	{
+		return CD[get_ind(i,j,k)].v;
+	}
+	__host__ __device__ double get_w_dust(int i, int j, int k)
+	{
+		return CD[get_ind(i,j,k)].w;
+	}
+	////////////////////////////////////////
+	__host__ __device__ Dust get_dust(int i, int j, int k)
+	{
+		return CD[get_ind(i,j,k)];
+	}
+	__host__ __device__ void write_dust(int i, int j, int k, Dust W)
+	{
+		CD[get_ind(i,j,k)].copy(W);
+		return;
+	}
+	////////////////////////////////////////
+	__host__ __device__ void write_r_dust(int i, int j, int k, double r)
+	{
+		CD[get_ind(i,j,k)].r=r;
+		return;
+	}
+	__host__ __device__ void write_u_dust(int i, int j, int k, double u)
+	{
+		CD[get_ind(i,j,k)].u=u;
+		return;
+	}
+	__host__ __device__ void write_v_dust(int i, int j, int k, double v)
+	{
+		CD[get_ind(i,j,k)].v=v;
+		return;
+	}
+	__host__ __device__ void write_w_dust(int i, int j, int k, double w)
+	{
+		CD[get_ind(i,j,k)].w=w;
 		return;
 	}
 	////////////////////////////////////////

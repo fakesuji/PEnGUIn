@@ -32,17 +32,21 @@ string create_label()
 	}
 
 	#if visc_flag == 1
-	label += "_a"+int_to_string(log10(ss_alpha));
+	label += "_a"+int_to_string(log10(ss_alpha)*10.0);
 	#elif visc_flag == 2
-	label += "_ah"+int_to_string(log10(ss_alpha));
+	label += "_ah"+int_to_string(log10(ss_alpha)*10.0);
 	#endif
 
 	#ifdef cool_flag
-	label += "_b"+int_to_string(log10(beta_cool));
+	label += "_b"+int_to_string(log10(beta_cool)*10.0);
 	#endif
 	
 	#ifdef OrbAdv_flag
 	label += "_OA";
+	#endif
+
+	#ifdef dust_flag
+	label += "_St"+int_to_string(log10(Stokes)*10.0);
 	#endif
 
 	#if recon_flag == 1
@@ -91,6 +95,7 @@ void write_grid_val(ofstream &ofile, Grid* G)
 		ofile.write((char*)&tmp, sizeof(double));		
 	}
 
+	#if ndim>1
 	for (int k=zpad; k<zres+zpad; k++)
 	for (int j=ypad; j<yres+ypad; j++)
 	for (int n=0; n<ndev; n++)
@@ -99,7 +104,9 @@ void write_grid_val(ofstream &ofile, Grid* G)
 		tmp = G[n].get_v(i,j,k);
 		ofile.write((char*)&tmp, sizeof(double));		
 	}
+	#endif
 
+	#if ndim>2
 	for (int k=zpad; k<zres+zpad; k++)
 	for (int j=ypad; j<yres+ypad; j++)
 	for (int n=0; n<ndev; n++)
@@ -108,6 +115,51 @@ void write_grid_val(ofstream &ofile, Grid* G)
 		tmp = G[n].get_w(i,j,k);
 		ofile.write((char*)&tmp, sizeof(double));		
 	}
+	#endif
+
+	#ifdef dust_flag
+
+	for (int k=zpad; k<zres+zpad; k++)
+	for (int j=ypad; j<yres+ypad; j++)
+	for (int n=0; n<ndev; n++)
+	for (int i=xpad; i<G[n].xres+xpad; i++)
+	{
+		tmp = G[n].get_r_dust(i,j,k);
+		ofile.write((char*)&tmp, sizeof(double));		
+	}
+
+	for (int k=zpad; k<zres+zpad; k++)
+	for (int j=ypad; j<yres+ypad; j++)
+	for (int n=0; n<ndev; n++)
+	for (int i=xpad; i<G[n].xres+xpad; i++)
+	{
+		tmp = G[n].get_u_dust(i,j,k);
+		ofile.write((char*)&tmp, sizeof(double));		
+	}
+
+	#if ndim>1
+	for (int k=zpad; k<zres+zpad; k++)
+	for (int j=ypad; j<yres+ypad; j++)
+	for (int n=0; n<ndev; n++)
+	for (int i=xpad; i<G[n].xres+xpad; i++)
+	{
+		tmp = G[n].get_v_dust(i,j,k);
+		ofile.write((char*)&tmp, sizeof(double));		
+	}
+	#endif
+
+	#if ndim>2
+	for (int k=zpad; k<zres+zpad; k++)
+	for (int j=ypad; j<yres+ypad; j++)
+	for (int n=0; n<ndev; n++)
+	for (int i=xpad; i<G[n].xres+xpad; i++)
+	{
+		tmp = G[n].get_w_dust(i,j,k);
+		ofile.write((char*)&tmp, sizeof(double));		
+	}
+	#endif
+
+	#endif
 
 	return;
 }
