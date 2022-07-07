@@ -151,9 +151,6 @@ __device__ Cell riemann(int geom, double* xa, double* dx, double* dv, double rad
 	__syncthreads();
 	#endif
 
-	//p[i] = p[i]/r[i];
-	//__syncthreads();
-
 	if (i>=npad && i<imax+1-npad)
 	{
 		us = 0.5*dt*force;
