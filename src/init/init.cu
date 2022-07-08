@@ -246,7 +246,7 @@ __host__ __device__ double get_v(double x, double y, double z)
 	return 0.0;
 
 	#elif init_flag == 7
-	double A = 1.0e-8*sin(twopi*x);
+	double A = 1.0e-6*sin(twopi*x);
 	return A;
 
 	#elif init_flag == 8

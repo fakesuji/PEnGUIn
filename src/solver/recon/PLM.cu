@@ -86,10 +86,9 @@ __device__ void get_VAN_parameters(int i, int geom, double* r, double* dr, doubl
 
 //=======================================================================================
 
-__device__ double get_PLM_aveR(int geom, double rL, double r0, double rR, double* par)
+__device__ double get_PLM_aveR(int geom, double x, double* par)
 {
 	double sR = par[2];
-	double x = (r0-rL)/(rR-rL);
 	double val;
 
 	val = par[1] + sR*x;
@@ -97,10 +96,9 @@ __device__ double get_PLM_aveR(int geom, double rL, double r0, double rR, double
 	return val;
 }
 
-__device__ double get_PLM_aveL(int geom, double rL, double r0, double rR, double* par)
+__device__ double get_PLM_aveL(int geom, double x, double* par)
 {
 	double sL = par[0];
-	double x = (r0-rL)/(rR-rL);
 	double val;
 
 	val = par[1] - sL*(1.0-x);

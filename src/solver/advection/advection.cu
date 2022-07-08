@@ -5,7 +5,8 @@ __device__ Cell advection(int geom, double* xa, double* dx, double* dv, int npad
 	int imax = blockDim.x;
 	int i = threadIdx.x;
 
-	double xl, xr, tmp;
+	double xl, xr, x0;
+	double q, ql, qr;
 	double par[4];
 
 	#if recon_flag==2
@@ -22,43 +23,45 @@ __device__ Cell advection(int geom, double* xa, double* dx, double* dv, int npad
 		{
 			xl = xa[i-1];
 			xr = xa[i];
-			tmp = xr - speed*dt;
+			x0 = xr - speed*dt;
+			dimensionless_x(xl,x0,xr,q,ql,qr);
 	
 			get_CON_parameters(i-1, geom, xa, dx, dv, r, par);
-			Del.r = get_CON_aveR(geom, xl, tmp, xr, par);
+			Del.r = get_CON_aveR(geom, q, par, ql, qr);
 	
 			get_CON_parameters(i-1, geom, xa, dx, dv, e, par);
-			Del.p = get_CON_aveR(geom, xl, tmp, xr, par);
+			Del.p = get_CON_aveR(geom, q, par, ql, qr);
 
 			get_PRM_parameters(i-1, geom, xa, dx, dv, u, par);
-			Del.u = get_PRM_aveR(geom, xl, tmp, xr, par)*Del.r;
+			Del.u = get_PRM_aveR(geom, q, par, ql, qr)*Del.r;
 
 			get_PRM_parameters(i-1, geom, xa, dx, dv, v, par);
-			Del.v = get_PRM_aveR(geom, xl, tmp, xr, par)*Del.r;
+			Del.v = get_PRM_aveR(geom, q, par, ql, qr)*Del.r;
 
 			get_PRM_parameters(i-1, geom, xa, dx, dv, w, par);
-			Del.w = get_PRM_aveR(geom, xl, tmp, xr, par)*Del.r;
+			Del.w = get_PRM_aveR(geom, q, par, ql, qr)*Del.r;
 		}
 		else
 		{
 			xl = xa[i];
 			xr = xa[i+1];
-			tmp = xl - speed*dt;
+			x0 = xl - speed*dt;
+			dimensionless_x(xl,x0,xr,q,ql,qr);
 	
 			get_CON_parameters(i, geom, xa, dx, dv, r, par);
-			Del.r = get_CON_aveL(geom, xl, tmp, xr, par);
+			Del.r = get_CON_aveL(geom, q, par, ql, qr);
 	
 			get_CON_parameters(i, geom, xa, dx, dv, e, par);
-			Del.p = get_CON_aveL(geom, xl, tmp, xr, par);
+			Del.p = get_CON_aveL(geom, q, par, ql, qr);
 	
 			get_PRM_parameters(i, geom, xa, dx, dv, u, par);
-			Del.u = get_PRM_aveL(geom, xl, tmp, xr, par)*Del.r;
+			Del.u = get_PRM_aveL(geom, q, par, ql, qr)*Del.r;
 
 			get_PRM_parameters(i, geom, xa, dx, dv, v, par);
-			Del.v = get_PRM_aveL(geom, xl, tmp, xr, par)*Del.r;
+			Del.v = get_PRM_aveL(geom, q, par, ql, qr)*Del.r;
 
 			get_PRM_parameters(i, geom, xa, dx, dv, w, par);
-			Del.w = get_PRM_aveL(geom, xl, tmp, xr, par)*Del.r;
+			Del.w = get_PRM_aveL(geom, q, par, ql, qr)*Del.r;
 		}
 	}
 	Del.multiply(speed);
@@ -215,7 +218,8 @@ __device__ Dust advection(int geom, double* xa, double* dx, double* dv, int npad
 	int imax = blockDim.x;
 	int i = threadIdx.x;
 
-	double xl, xr, tmp;
+	double xl, xr, x0;
+	double q, ql, qr;
 	double par[4];
 
 	#if recon_flag==2
@@ -232,37 +236,39 @@ __device__ Dust advection(int geom, double* xa, double* dx, double* dv, int npad
 		{
 			xl = xa[i-1];
 			xr = xa[i];
-			tmp = xr - speed*dt;
+			x0 = xr - speed*dt;
+			dimensionless_x(xl,x0,xr,q,ql,qr);
 	
 			get_CON_parameters(i-1, geom, xa, dx, dv, r, par);
-			Del.r = get_CON_aveR(geom, xl, tmp, xr, par);
+			Del.r = get_CON_aveR(geom, q, par, ql, qr);
 
 			get_PRM_parameters(i-1, geom, xa, dx, dv, u, par);
-			Del.u = get_PRM_aveR(geom, xl, tmp, xr, par)*Del.r;
+			Del.u = get_PRM_aveR(geom, q, par, ql, qr)*Del.r;
 
 			get_PRM_parameters(i-1, geom, xa, dx, dv, v, par);
-			Del.v = get_PRM_aveR(geom, xl, tmp, xr, par)*Del.r;
+			Del.v = get_PRM_aveR(geom, q, par, ql, qr)*Del.r;
 
 			get_PRM_parameters(i-1, geom, xa, dx, dv, w, par);
-			Del.w = get_PRM_aveR(geom, xl, tmp, xr, par)*Del.r;
+			Del.w = get_PRM_aveR(geom, q, par, ql, qr)*Del.r;
 		}
 		else
 		{
 			xl = xa[i];
 			xr = xa[i+1];
-			tmp = xl - speed*dt;
+			x0 = xl - speed*dt;
+			dimensionless_x(xl,x0,xr,q,ql,qr);
 	
 			get_CON_parameters(i, geom, xa, dx, dv, r, par);
-			Del.r = get_CON_aveL(geom, xl, tmp, xr, par);
+			Del.r = get_CON_aveL(geom, q, par, ql, qr);
 	
 			get_PRM_parameters(i, geom, xa, dx, dv, u, par);
-			Del.u = get_PRM_aveL(geom, xl, tmp, xr, par)*Del.r;
+			Del.u = get_PRM_aveL(geom, q, par, ql, qr)*Del.r;
 
 			get_PRM_parameters(i, geom, xa, dx, dv, v, par);
-			Del.v = get_PRM_aveL(geom, xl, tmp, xr, par)*Del.r;
+			Del.v = get_PRM_aveL(geom, q, par, ql, qr)*Del.r;
 
 			get_PRM_parameters(i, geom, xa, dx, dv, w, par);
-			Del.w = get_PRM_aveL(geom, xl, tmp, xr, par)*Del.r;
+			Del.w = get_PRM_aveL(geom, q, par, ql, qr)*Del.r;
 		}
 	}
 	Del.multiply(speed);

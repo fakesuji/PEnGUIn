@@ -11,6 +11,21 @@
 #include "planet.h"
 #include "viscosity.h"
 
+__device__ double lim01(double a)
+{
+	return fmin(fmax(a,0.0),1.0);
+}
+
+__device__ void dimensionless_x(double rL, double r0, double rR, double &x, double &lx, double &ly)
+{
+	x = lim01((r0-rL)/(rR-rL));
+	#if recon_flag==0
+	lx = __logf(x);
+	ly = __logf(1.0-x);
+	#endif
+	return;
+}
+
 __device__ double exp_lim(double x)
 {
 	return fmax(1.0+x,1.0e-6);
