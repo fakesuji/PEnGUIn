@@ -123,7 +123,7 @@ const double CFL = 0.4;
 //=======================================================================
 
 const double D_G_ratio = 0.01;
-const double Stokes = 0.01;
+const double Stokes = 0.001;
 
 //=======================================================================
 // boundary parameters
@@ -167,7 +167,7 @@ const double beta_cool = 1.0;                          // in units of dynamical 
 //=======================================================================
 
 const int n_planet = 1;
-const double planet_mass = 0.00003;
+const double planet_mass = 0.004;
 const double planet_radius = 1.0;
 const double planet_ecc = 0.0;
 

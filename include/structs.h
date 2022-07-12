@@ -170,10 +170,9 @@ struct Grid
 	double* fy;
 	double* fz;
 
-	double* Du;
-	double* Dv;
-	double* Dw;
-	double* De;
+	double* fx_d;
+	double* fy_d;
+	double* fz_d;
 
 	double* ext;
 

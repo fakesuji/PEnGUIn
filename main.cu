@@ -109,9 +109,17 @@ void mem_allocation(Grid* hst, Grid* dev)
 		cudaMalloc( (void**)&dev[n].T, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(Cell) );
 		cudaMalloc( (void**)&dev[n].F, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(Cell) );
 
+		cudaMalloc( (void**)&dev[n].fx, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(double) );
+		cudaMalloc( (void**)&dev[n].fy, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(double) );
+		cudaMalloc( (void**)&dev[n].fz, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(double) );
+
 		#ifdef dust_flag
 		cudaMalloc( (void**)&dev[n].CD, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(Dust) );
 		cudaMalloc( (void**)&dev[n].TD, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(Dust) );
+
+		cudaMalloc( (void**)&dev[n].fx_d, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(double) );
+		cudaMalloc( (void**)&dev[n].fy_d, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(double) );
+		cudaMalloc( (void**)&dev[n].fz_d, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(double) );
 		#endif
 
 		#ifdef visc_flag

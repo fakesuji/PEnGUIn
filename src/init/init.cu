@@ -326,12 +326,31 @@ __host__ __device__ double get_r_dust(double x, double y, double z)
 __host__ __device__ double get_u_dust(double x, double y, double z)
 {
 	#if init_flag == 2
-	return -1.5*get_nu(x,y,z)/x;
+	double f_gas = get_v(x, y, z)/sqrt(1.0/x);
+	double tmp = Stokes*Stokes*f_gas;
+
+	double L = ((1.0+tmp)/tmp) * (1.0 - sqrt(1.0 - 2.0*tmp*(1.0-f_gas)/(1.0 + tmp)/(1.0 + tmp)));
+	double u0 = Stokes*(L*L - 2.0*L);
+	double u = (1.0 - sqrt(1.0 - 2.0*Stokes*u0))/Stokes;
+	
+	L = (1.0 - f_gas + Stokes*u/2.0)/(1.0 + Stokes*u/2.0);
+	u0 = Stokes*(L*L - 2.0*L);
+	u = (1.0 - sqrt(1.0 - 2.0*Stokes*u0))/Stokes;
+
+
+	return u*sqrt(1.0/x);
 
 	#elif init_flag == 3
-	double r = x * sin(z);
-	return -1.5*get_nu(x,y,z)/r;
+	double f_gas = get_v(x, y, z)/sqrt(1.0/x);
+	double tmp = Stokes*Stokes*f_gas;
 
+	double L = ((1.0+tmp)/tmp) * (1.0 - sqrt(1.0 - 2.0*tmp*(1.0-f_gas)/(1.0 + tmp)/(1.0 + tmp)));
+	double u0 = Stokes*(L*L - 2.0*L);
+	double u = (1.0 - sqrt(1.0 - 2.0*Stokes*u0))/Stokes;
+	
+	L = (1.0 - f_gas + Stokes*u/2.0)/(1.0 + Stokes*u/2.0);
+	u0 = Stokes*(L*L - 2.0*L);
+	u = (1.0 - sqrt(1.0 - 2.0*Stokes*u0))/Stokes;
 	#else
 	return 0.0;
 

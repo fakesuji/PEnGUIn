@@ -84,8 +84,8 @@ __device__ double get_rad_cyl(Grid G, int i, int j, int k)
 #include "recon/recon.cu"
 
 #include "riemann/riemann.cu"
-#include "sweeps.cu"
 #include "dust/dust.cu"
+#include "sweeps.cu"
 #include "advection/advection.cu"
 
 __global__ void clear_flux(int mx, int my, int mz, Cell* F)
@@ -305,14 +305,7 @@ void DS(Grid* dev, double time, double dt)
 	viscosity_tensor_evaluation1(dev);
 	#endif
 
-	source_terms_replace(dev, 0.0, hdt);
-	#ifdef dust_flag
-	source_terms_dust_replace(dev, 0.0, hdt);
-	#endif
-	for (int n=0; n<ndev; n++) dev[n].CT_change();
-	#ifdef dust_flag
-	for (int n=0; n<ndev; n++) dev[n].CT_D_change();
-	#endif
+	apply_source_terms_inplace(dev, 0.0, 0.0, hdt);
 
 	boundx(dev);
 	sweepx_inplace(dev,dt);
@@ -344,23 +337,15 @@ void DS(Grid* dev, double time, double dt)
 
 	evolve_planet(dev,time+dt,dt);
 
-	source_terms_replace(dev, dt, hdt);
-	for (int n=0; n<ndev; n++) dev[n].CT_change();
-	#ifdef dust_flag
-	source_terms_dust_replace(dev, dt, hdt);
-	for (int n=0; n<ndev; n++) dev[n].CT_D_change();
-	#endif
-
 	#ifdef visc_flag
-	viscosity_tensor_evaluation1(dev);
+	//apply_source_terms(dev, dt, hdt, hdt);
+	//viscosity_tensor_evaluation2(dev);
+	apply_source_terms_inplace(dev, dt, hdt, hdt);
+	#else
+	apply_source_terms_inplace(dev, dt, hdt, hdt);
 	#endif
 
-	source_terms_update(dev, dt, hdt);
-	for (int n=0; n<ndev; n++) dev[n].CT_change();
-	#ifdef dust_flag
-	source_terms_dust_update(dev, dt, hdt);
-	for (int n=0; n<ndev; n++) dev[n].CT_D_change();
-	#endif
+
 
 	return;
 }
