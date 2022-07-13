@@ -95,7 +95,7 @@ const int ndev = 1;
 const double frame_omega = 1.0;
 
 const double sav_interval = 10.0*twopi/frame_omega;
-const double end_time = 10000.0*twopi/frame_omega;
+const double end_time = 1000.0*twopi/frame_omega;
 
 const int prt_interval = 1000;
 const int max_step = 1000000000;

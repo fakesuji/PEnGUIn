@@ -54,17 +54,86 @@ __device__ void star_planet_grav_cyl(double rad, double azi, double z, body p, d
 //====================================================================
 
 __device__ double get_fx(double rad, double azi, double pol,
-                         double u, double v, double w, body *planet)
+                         double u, double v, double w)
 {
-	double gx, fx;
+	double fx;
+
+	#if geomx==0
+		#ifdef shear_box
+		fx = 2.0*v;
+		#else
+		fx = 0.0;
+		#endif
+
+	#elif geomx==1
+		fx = v*v/rad;
+
+	#elif geomx==2
+		fx = v*v/rad + w*w/rad;
+	#endif
+	return fx;
+}
+
+//====================================================================
+
+__device__ double get_fy(double rad, double azi, double pol,
+                         double u, double v, double w)
+{
+	double fy;
+
+	#if geomx==0
+		#ifdef shear_box
+		fy = 0.0;
+		#else
+		fy = 0.0;
+		#endif
+
+	#elif geomx==1
+		fy = 0.0;
+
+	#elif geomx==2
+		fy = 0.0;
+	#endif
+
+	return fy;
+}
+
+//====================================================================
+
+__device__ double get_fz(double rad, double azi, double pol,
+                         double u, double v, double w)
+{
+	double fz;
+
+	#if geomx==0
+		#ifdef shear_box
+		fz = 0.0;
+		#else
+		fz = 0.0;
+		#endif
+
+	#elif geomx==1
+		fz = 0.0;
+
+	#elif geomx==2
+		fz = v*v/rad/tan(pol);
+		if (pol < zmin) {fz *=-1.0;}
+	#endif
+
+	return fz;
+}
+
+//====================================================================
+
+__device__ double get_gx(double rad, double azi, double pol, body *planet)
+{
+	double gx;
 
 	#if geomx==0
 		#ifdef shear_box
 		gx = -rad;
-		fx = 2.0*v;
 		#else
 		gx = 0.0;
-		fx = 0.0;
 		#endif
 
 	#elif geomx==1
@@ -77,8 +146,6 @@ __device__ double get_fx(double rad, double azi, double pol,
 			gx += gx_tmp;
 		}
 
-		fx = v*v/rad;
-
 	#elif geomx==2
 		gx = -1.0/rad/rad;
 		double gx_tmp, gy_tmp, gz_tmp;
@@ -87,26 +154,21 @@ __device__ double get_fx(double rad, double azi, double pol,
 			star_planet_grav(rad, azi, pol, planet[m], 0.0, gx_tmp, gy_tmp, gz_tmp);
 			gx += gx_tmp;
 		}
-
-		fx = v*v/rad + w*w/rad;
 	#endif
-	return gx+fx;
+	return gx;
 }
 
 //====================================================================
 
-__device__ double get_fy(double rad, double azi, double pol,
-                         double u, double v, double w, body *planet)
+__device__ double get_gy(double rad, double azi, double pol, body *planet)
 {
-	double gy, fy;
+	double gy;
 
 	#if geomx==0
 		#ifdef shear_box
 		gy = 0.0;
-		fy = 0.0;
 		#else
 		gy = 0.0;
-		fy = 0.0;
 		#endif
 
 	#elif geomx==1
@@ -118,8 +180,6 @@ __device__ double get_fy(double rad, double azi, double pol,
 			gy += gy_tmp;
 		}
 
-		fy = 0.0;
-
 	#elif geomx==2
 		gy = 0.0;
 		double gx_tmp, gy_tmp, gz_tmp;
@@ -128,27 +188,22 @@ __device__ double get_fy(double rad, double azi, double pol,
 			star_planet_grav(rad, azi, pol, planet[m], 0.0, gx_tmp, gy_tmp, gz_tmp);
 			gy += gy_tmp;
 		}
-
-		fy = 0.0;
 	#endif
 
-	return gy+fy;
+	return gy;
 }
 
 //====================================================================
 
-__device__ double get_fz(double rad, double azi, double pol,
-                         double u, double v, double w, body *planet)
+__device__ double get_gz(double rad, double azi, double pol, body *planet)
 {
-	double gz, fz;
+	double gz;
 
 	#if geomx==0
 		#ifdef shear_box
 		gz = 0.0;
-		fz = 0.0;
 		#else
 		gz = 0.0;
-		fz = 0.0;
 		#endif
 
 	#elif geomx==1
@@ -160,8 +215,6 @@ __device__ double get_fz(double rad, double azi, double pol,
 			star_planet_grav_cyl(rad, azi, pol, planet[m], 0.0, gx_tmp, gy_tmp, gz_tmp);
 			gz += gz_tmp;
 		}
-		
-		fz = 0.0;
 
 	#elif geomx==2
 		gz = 0.0;
@@ -171,12 +224,10 @@ __device__ double get_fz(double rad, double azi, double pol,
 			star_planet_grav(rad, azi, pol, planet[m], 0.0, gx_tmp, gy_tmp, gz_tmp);
 			gz += gz_tmp;
 		}
-
-		fz = v*v/rad/tan(pol);
-		if (pol < zmin) {gz *= -1.0; fz *=-1.0;}
+		if (pol < zmin) {gz *= -1.0;}
 	#endif
 
-	return gz+fz;
+	return gz;
 }
 
 //====================================================================

@@ -198,99 +198,6 @@ __global__ void update(Grid G, Cell* in, Cell* out, double dt, double div=1.0)
 	return;
 }
 
-__global__ void compute_forces(Grid G, Cell* C, double x_dt, bool ave=false)
-{
-	int i = threadIdx.x + blockIdx.x*blockDim.x;
-	int j = threadIdx.y + blockIdx.y*blockDim.y;
-	int k = threadIdx.z + blockIdx.z*blockDim.z;
-
-	Cell T;
-	double xc,yc,zc;
-	double fx = 0.0;
-	double fy = 0.0;
-	double fz = 0.0;
-	int ind;
-
-	if (i>=xpad-1 && i<G.xarr-xpad+1)
-	if (j>=ypad-1 && j<G.yarr-ypad+1)
-	if (k>=zpad-1 && k<G.zarr-zpad+1)
-	{		
-		ind = G.get_ind(i,j,k);
-		T.copy(C[ind]);
-
-		xc = G.get_xc(i);
-		#if ndim > 1
-		yc = G.get_yc(j) + G.get_rot(i,k)*x_dt;
-		#else
-		yc = 0.0;
-		#endif
-		#if ndim > 2
-		zc = G.get_zc(k);
-		#else
-		zc = 0.0;
-		#endif
-
-		#if ndim > 1
-		fy = get_fy(xc,yc,zc,T.u,T.v,T.w,G.planets);
-		#ifdef visc_flag
-		fy += G.vis_tensor[ndim*ind+1]/T.r;
-		#endif
-		if (ave) G.fy[ind] = (G.fy[ind] + fy)/2.0;
-		else     G.fy[ind] = fy;
-		#endif
-
-		#if ndim > 2
-		fz = get_fz(xc,yc,zc,T.u,T.v,T.w,G.planets);
-		#ifdef visc_flag
-		fz += G.vis_tensor[ndim*ind+2]/T.r;
-		#endif
-		if (ave) G.fz[ind] = (G.fz[ind] + fz)/2.0;
-		else     G.fz[ind] = fz;
-		#endif
-
-		fx = get_fx(xc,yc,zc,T.u,T.v,T.w,G.planets);
-		#ifdef visc_flag
-		fx += G.vis_tensor[ndim*ind+0]/T.r;
-		#endif
-		if (ave) G.fx[ind] = (G.fx[ind] + fx)/2.0;
-		else     G.fx[ind] = fx;
-	}
-
-	return;
-}
-
-__global__ void apply_forces(Grid G, Cell* C, double dt)
-{
-	int i = threadIdx.x + blockIdx.x*blockDim.x + xpad;
-	int j = threadIdx.y + blockIdx.y*blockDim.y + ypad;
-	int k = threadIdx.z + blockIdx.z*blockDim.z + zpad;
-
-	Cell T;
-	int ind;
-
-	if (i>=xpad && i<G.xarr-xpad)
-	if (j>=ypad && j<G.yarr-ypad)
-	if (k>=zpad && k<G.zarr-zpad)
-	{		
-		ind = G.get_ind(i,j,k);
-		T.copy(C[ind]);
-
-		T.u += G.fx[ind]*dt;
-
-		#if ndim > 1
-		T.v += G.fy[ind]*dt;
-		#endif
-
-		#if ndim > 2
-		T.w += G.fz[ind]*dt;
-		#endif
-
-		C[ind].copy(T);
-	}
-
-	return;
-}
-
 void RK2(Grid* dev, double time, double dt)
 {
 
@@ -305,9 +212,13 @@ void DS(Grid* dev, double time, double dt)
 	viscosity_tensor_evaluation1(dev);
 	#endif
 
+	boundx(dev);
+	#ifdef dust_flag
+	boundx_dust(dev);
+	#endif
+
 	apply_source_terms_inplace(dev, 0.0, 0.0, hdt);
 
-	boundx(dev);
 	sweepx_inplace(dev,dt);
 
 	#if ndim>1
@@ -321,7 +232,6 @@ void DS(Grid* dev, double time, double dt)
 	#endif
 
 	#ifdef dust_flag
-	boundx_dust(dev);
 	sweepx_dust_inplace(dev,dt);
 
 	#if ndim>1
@@ -338,8 +248,8 @@ void DS(Grid* dev, double time, double dt)
 	evolve_planet(dev,time+dt,dt);
 
 	#ifdef visc_flag
-	//apply_source_terms(dev, dt, hdt, hdt);
-	//viscosity_tensor_evaluation2(dev);
+	apply_source_terms(dev, dt, hdt, hdt);
+	viscosity_tensor_evaluation2(dev);
 	apply_source_terms_inplace(dev, dt, hdt, hdt);
 	#else
 	apply_source_terms_inplace(dev, dt, hdt, hdt);

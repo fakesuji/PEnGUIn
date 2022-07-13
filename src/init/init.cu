@@ -465,7 +465,8 @@ void fill_grid(Grid G)
 	for (int k=0; k<G.zarr; k++)
 	{
 		ind = G.get_ind(i,j,k);
-		G.C[ind] = init_C(G.get_xa(i), G.get_xa(i+1), G.get_ya(j), G.get_ya(j+1), G.get_za(k), G.get_za(k+1));
+		//G.C[ind] = init_C(G.get_xa(i), G.get_xa(i+1), G.get_ya(j), G.get_ya(j+1), G.get_za(k), G.get_za(k+1));
+		G.C[ind] = init_C(G.get_xc(i), G.get_yc(j), G.get_zc(k));
 		#ifdef dust_flag
 		G.CD[ind] = init_CD(G.get_xc(i), G.get_yc(j), G.get_zc(k));
 		#endif
