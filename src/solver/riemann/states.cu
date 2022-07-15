@@ -19,7 +19,8 @@ __device__ void set_state(int i, int geom, double* xa, double* dx, double* dv, d
 	xl = xa[i];
 	xr = xa[i+1];
 
-	tmp = fmin(u_par[1]-u_par[0],0.0);
+	//tmp = fmin(u_par[1]-u_par[0],0.0);
+	tmp = fmin(u[i],0.0);
 	tmp = xl - tmp*dt + sqrt(gam*p[i]/r[i])*dt;
 	dimensionless_x(xl,tmp,xr,q,ql,qr);
 
@@ -67,7 +68,8 @@ __device__ void set_state(int i, int geom, double* xa, double* dx, double* dv, d
 	xl = xa[i-1];
 	xr = xa[i];
 
-	tmp = fmax(u_par[1]+u_par[2],0.0);
+	//tmp = fmax(u_par[1]+u_par[2],0.0);
+	tmp = fmax(u[i-1],0.0);
 	tmp = xr - tmp*dt - sqrt(gam*p[i-1]/r[i-1])*dt;
 	dimensionless_x(xl,tmp,xr,q,ql,qr);
 
