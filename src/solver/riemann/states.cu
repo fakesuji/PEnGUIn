@@ -8,7 +8,7 @@ __device__ void set_state(int i, int geom, double* xa, double* dx, double* dv, d
 	double xl, xr, tmp, dis, q;
 	double ql, qr;
 	double r0, p0, u0;
-	double p_, u_;
+	double p_, u_, cs;
 
 	/////////////////////////////////////////////////////////
 
@@ -41,9 +41,19 @@ __device__ void set_state(int i, int geom, double* xa, double* dx, double* dv, d
 	u0 = get_PRM_aveL(geom, q, u_par, ql, qr);
 	r0 = fmax(r0, rmin);
 	p0 = fmax(p0, pmin);
+	cs = sqrt(gam*p0/r0);
 
-	u_ = 0.5*dt*(u0-u[i])/(0.5*(xr-tmp));
-	p_ = 0.5*dt*(p0-p[i])/(0.5*(xr-tmp))/r0;
+	//u_ = 0.5*dt*(u0-u[i])/(0.5*(xr-tmp));
+	//p_ = 0.5*dt*(p0-p[i])/(0.5*(xr-tmp))/r0;
+
+	tmp = xl - dis + cs*dt;
+	dimensionless_x(xl,tmp,xr,q,ql,qr);
+
+	p_ = get_CON_aveL(geom, q, p_par, ql, qr);
+	u_ = get_PRM_aveL(geom, q, u_par, ql, qr);
+
+	u_ = 0.5*(u0-u_)/(0.5*cs);
+	p_ = 0.5*(p0-p_)/(0.5*cs)/r0;
 	
 	S.rr = r0*exp_lim(u_);
 	S.pr = p0*exp_lim(gam*u_);
@@ -89,9 +99,19 @@ __device__ void set_state(int i, int geom, double* xa, double* dx, double* dv, d
 	u0 = get_PRM_aveR(geom, q, u_par, ql, qr);
 	r0 = fmax(r0, rmin);
 	p0 = fmax(p0, pmin);
+	cs = sqrt(gam*p0/r0);
 
-	u_ = 0.5*dt*(u[i-1]-u0)/(0.5*(tmp-xl));
-	p_ = 0.5*dt*(p[i-1]-p0)/(0.5*(tmp-xl))/r0;
+	tmp = xr - dis - cs*dt;
+	dimensionless_x(xl,tmp,xr,q,ql,qr);
+
+	p_ = get_CON_aveR(geom, q, p_par, ql, qr);
+	u_ = get_PRM_aveR(geom, q, u_par, ql, qr);
+
+	//u_ = 0.5*dt*(u[i-1]-u0)/(0.5*(tmp-xl));
+	//p_ = 0.5*dt*(p[i-1]-p0)/(0.5*(tmp-xl))/r0;
+
+	u_ = 0.5*(u_-u0)/(0.5*cs);
+	p_ = 0.5*(p_-p0)/(0.5*cs)/r0;
 
 	S.rl = r0*exp_lim(u_);
 	S.pl = p0*exp_lim(gam*u_);

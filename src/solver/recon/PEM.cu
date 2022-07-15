@@ -188,3 +188,26 @@ __device__ double get_PEM_aveL(int geom, double x, double* par, double lx, doubl
 	return val;
 }
 
+__device__ double get_PEM_slope(int geom, double x, double* par)
+{
+	double sL = par[0];
+	double sR = par[2];
+	double eta, val;
+
+	if      (sL==0.0) val = 0.0;
+	else if (sR/sL>=1.0) 
+	{
+		eta = sR/sL;
+		if (x>0.0) val = eta*(sR+sL)*__expf((eta-1.0)*__logf(x));
+		else val = 0.0;
+	}
+	else
+	{
+		x = 1.0-x;
+		eta = sL/sR;
+		if (x>0.0) val = eta*(sR+sL)*__expf((eta-1.0)*__logf(x));
+		else val = 0.0;
+	}
+
+	return val;
+}

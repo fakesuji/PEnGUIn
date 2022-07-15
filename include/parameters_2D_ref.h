@@ -2,10 +2,12 @@
 #define PARAMETERS_H
 
 #define dump_flag
-//#define kill_flag
+//#define kill_flag 1
 //#define OrbAdv_flag
-//#define visc_flag
+//#define visc_flag 1
+//#define cool_flag
 //#define advec_flag
+//#define rev_flag
 
 //=======================================================================
 // Constants
@@ -29,7 +31,7 @@ const double smallr = 1.0e-14;
 // Geometric parameters
 //=======================================================================
 
-#define recon_flag 1
+#define recon_flag 0
 
 const int std_thd = 1024;
 
@@ -53,8 +55,8 @@ const int zpad = npad;
 const int zpad = 0;
 #endif
 
-const int xres = 960;
-const int yres = 960;
+const int xres = 480;
+const int yres = 120;
 const int zres = 1;
 
 const int xarr = xres + 2*xpad;
@@ -73,7 +75,7 @@ const int y_zdiv = 1;
 
 const int y_ythd = y_ydiv + 2*ypad;
 
-const int z_xdiv = 10;
+const int z_xdiv = 8;
 const int z_ydiv = 1;
 const int z_zdiv = 32;
 
@@ -91,9 +93,9 @@ const int ndev = 1;
 
 const double frame_omega = 0.0;
 
-const double sav_interval = 0.01;
+const double sav_interval = 0.01;//1.0*twopi;
 const double sta_time = 0.0;
-const double end_time = 10.0;
+const double end_time = 0.2;//1.0*twopi;
 
 const int prt_interval = 100;
 const int max_step = 1000000000;
@@ -114,26 +116,19 @@ const double gamm = gam - 1.0;
 const double gamp = gam + 1.0;
 const double gammfac = gamm/gam/2.0;
 const double gampfac = gamp/gam/2.0;
-const double CFL = 0.4;
-
-//=======================================================================
-// Dust parameters
-//=======================================================================
-
-const double D_G_ratio = 0.01;
-const double Stokes = 0.01;
+const double CFL = 0.5;
 
 //=======================================================================
 // boundary parameters
 //=======================================================================
 
-#define init_flag 7
+#define init_flag 10
 
-const int bound_lft = 3;
-const int bound_rgh = 3;
+const int bound_lft = 0;
+const int bound_rgh = 1;
 
-const int bound_bak = 3;
-const int bound_frn = 3;
+const int bound_bak = 2;
+const int bound_frn = 0;
 
 const int bound_bom = 2;
 const int bound_top = 2;
@@ -176,11 +171,11 @@ const double ramp_time = twopi*5.0;
 //=======================================================================
 
 const double xmin = 0.0;
-const double xmax = 1.0;
+const double xmax = 4.0;
 const double ymin = 0.0;
 const double ymax = 1.0;
-const double zmin = hpi-3.0*sc_h;
-const double zmax = hpi;
+const double zmin = 0.0;
+const double zmax = 1.0;
 
 #define geomx 0
 #define geomy 0

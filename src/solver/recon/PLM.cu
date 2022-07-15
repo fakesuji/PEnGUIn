@@ -106,3 +106,7 @@ __device__ double get_PLM_aveL(int geom, double x, double* par)
 	return val;
 }
 
+__device__ double get_PLM_slope(int geom, double x, double* par)
+{
+	return par[2]+par[0];
+}
