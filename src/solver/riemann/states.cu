@@ -5,7 +5,7 @@ __device__ void set_state(int i, int geom, double* xa, double* dx, double* dv, d
 	double r_par[4], p_par[4], u_par[4];
 
 	double ul, ur;
-	double xl, xr, tmp, dis, q;
+	double xl, xr, tmp, dis, q, q1;
 	double ql, qr;
 	double r0, p0, u0;
 	double p_, u_, cs;
@@ -19,8 +19,7 @@ __device__ void set_state(int i, int geom, double* xa, double* dx, double* dv, d
 	xl = xa[i];
 	xr = xa[i+1];
 
-	//tmp = fmin(u_par[1]-u_par[0],0.0);
-	tmp = fmin(u[i],0.0);
+	tmp = fmin(u_par[1]-u_par[0],0.0);
 	tmp = xl - tmp*dt + sqrt(gam*p[i]/r[i])*dt;
 	dimensionless_x(xl,tmp,xr,q,ql,qr);
 
@@ -43,17 +42,11 @@ __device__ void set_state(int i, int geom, double* xa, double* dx, double* dv, d
 	p0 = fmax(p0, pmin);
 	cs = sqrt(gam*p0/r0);
 
-	//u_ = 0.5*dt*(u0-u[i])/(0.5*(xr-tmp));
-	//p_ = 0.5*dt*(p0-p[i])/(0.5*(xr-tmp))/r0;
-
 	tmp = xl - dis + cs*dt;
-	dimensionless_x(xl,tmp,xr,q,ql,qr);
+	dimensionless_x(xl,tmp,xr,q1,ql,qr);
 
-	p_ = get_CON_aveL(geom, q, p_par, ql, qr);
-	u_ = get_PRM_aveL(geom, q, u_par, ql, qr);
-
-	u_ = 0.5*(u0-u_)/(0.5*cs);
-	p_ = 0.5*(p0-p_)/(0.5*cs)/r0;
+	u_ = -0.5*dt*get_slopeL(geom,0.0,q1,u_par)/(xr-xl);
+	p_ = -0.5*dt*get_slopeL(geom,0.0,q1,p_par)/(xr-xl)/r0;
 	
 	S.rr = r0*exp_lim(u_);
 	S.pr = p0*exp_lim(gam*u_);
@@ -78,8 +71,7 @@ __device__ void set_state(int i, int geom, double* xa, double* dx, double* dv, d
 	xl = xa[i-1];
 	xr = xa[i];
 
-	//tmp = fmax(u_par[1]+u_par[2],0.0);
-	tmp = fmax(u[i-1],0.0);
+	tmp = fmax(u_par[1]+u_par[2],0.0);
 	tmp = xr - tmp*dt - sqrt(gam*p[i-1]/r[i-1])*dt;
 	dimensionless_x(xl,tmp,xr,q,ql,qr);
 
@@ -102,16 +94,10 @@ __device__ void set_state(int i, int geom, double* xa, double* dx, double* dv, d
 	cs = sqrt(gam*p0/r0);
 
 	tmp = xr - dis - cs*dt;
-	dimensionless_x(xl,tmp,xr,q,ql,qr);
+	dimensionless_x(xl,tmp,xr,q1,ql,qr);
 
-	p_ = get_CON_aveR(geom, q, p_par, ql, qr);
-	u_ = get_PRM_aveR(geom, q, u_par, ql, qr);
-
-	//u_ = 0.5*dt*(u[i-1]-u0)/(0.5*(tmp-xl));
-	//p_ = 0.5*dt*(p[i-1]-p0)/(0.5*(tmp-xl))/r0;
-
-	u_ = 0.5*(u_-u0)/(0.5*cs);
-	p_ = 0.5*(p_-p0)/(0.5*cs)/r0;
+	u_ = -0.5*dt*get_slopeR(geom,1.0,q1,u_par)/(xr-xl);
+	p_ = -0.5*dt*get_slopeR(geom,1.0,q1,p_par)/(xr-xl)/r0;
 
 	S.rl = r0*exp_lim(u_);
 	S.pl = p0*exp_lim(gam*u_);

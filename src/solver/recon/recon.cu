@@ -68,3 +68,25 @@ __device__ double get_PRM_aveL(int geom, double x, double* par, double lx, doubl
 	return get_PPM_aveL(geom, x, par);
 	#endif
 }
+
+__device__ double get_slopeR(int geom, double x1, double x2, double* par)
+{
+	#if recon_flag==0
+	return get_PEM_slopeR(geom, x1, x2, par);
+	#elif recon_flag==1
+	return get_PLM_slopeR(geom, x1, x2, par);
+	#elif recon_flag==2
+	return get_PPM_slopeR(geom, x1, x2, par);
+	#endif
+}
+
+__device__ double get_slopeL(int geom, double x1, double x2, double* par)
+{
+	#if recon_flag==0
+	return get_PEM_slopeL(geom, x1, x2, par);
+	#elif recon_flag==1
+	return get_PLM_slopeL(geom, x1, x2, par);
+	#elif recon_flag==2
+	return get_PPM_slopeL(geom, x1, x2, par);
+	#endif
+}

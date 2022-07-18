@@ -320,7 +320,7 @@ __global__ void sweepx_inplace(Grid G, Cell* C, Cell* out, double dt)
 		#endif
 /*
 		if (idx<5 && idy==100) printf("R=%f; Del_r=%e\n",rad,Del.r);
-		if (idx==2 && idy==100) 
+		if (idx==10 && idy==100) 
 		{
 			printf("%f, %f, %f, %f, %f\n",xa[i-2],xa[i-1],xa[i],xa[i+1],xa[i+2]);
 			printf("%e, %e, %e, %e, %e\n",r[i+x_xthd*j-2],r[i+x_xthd*j-1],r[i+x_xthd*j],r[i+x_xthd*j+1],r[i+x_xthd*j+2]);

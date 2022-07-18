@@ -72,7 +72,7 @@ __device__ void get_PPM_parameters(int i, int geom, double* r, double* dr, doubl
 	double d1,d2,d3,d4,d5,a2,a3,a4;
   	double a21, a32, a43, a54;
  	double daL, daC, daR;
- 	double aR, aL;
+ 	double sR, sL;
   	double t1, t2, t3;
 
 	d1 = dr[i-2];
@@ -110,33 +110,33 @@ __device__ void get_PPM_parameters(int i, int geom, double* r, double* dr, doubl
 	t1 = d2+d3+d4+d5;
 	t2 = (d2+d3)/(d3+d3+d4)/t1;
 	t3 = (d4+d5)/(d3+d4+d4)/t1;
-	aR = a3 + a43*(d3/(d3+d4))*(1.0 + 2.0*d4*(t2-t3)) - daR*d3*t2 + daC*d4*t3;
+	sR = a43*(d3/(d3+d4))*(1.0 + 2.0*d4*(t2-t3)) - daR*d3*t2 + daC*d4*t3;
 
 	t1 = d4+d3+d2+d1;
 	t2 = (d4+d3)/(d3+d3+d2)/t1;
 	t3 = (d2+d1)/(d3+d2+d2)/t1;
-	aL = a3 - a32*(d3/(d3+d2))*(1.0 + 2.0*d2*(t2-t3)) + daL*d3*t2 - daC*d2*t3;
+	sL = a32*(d3/(d3+d2))*(1.0 + 2.0*d2*(t2-t3)) - daL*d3*t2 + daC*d2*t3;
 
 	/////////////////////////////////////////////////////////////////////////////
 
-	aR = flat*a3 + (1.0 - flat)*aR;
-	aL = flat*a3 + (1.0 - flat)*aL;
+	sR *= 1.0 - flat;
+	sL *= 1.0 - flat;
 
-	t3 = aR-aL;
+	t3 = sR+sL;
 	t2 = t3*t3;
-	t1 = t3*6.0*(a3 - 0.5*(aR + aL));
+	t1 = t3*(-3.0*(sR-sL));
 
-	if ((aR-a3)*(a3-aL)<=0.0)
+	if (sR*sL<=0.0)
 	{
-		aR = a3;
-		aL = a3;
+		sR = 0.0;
+		sL = 0.0;
 	}
-	else if (t2 <  t1) aL = 3.0*a3 - 2.0*aR;
-	else if (t2 < -t1) aR = 3.0*a3 - 2.0*aL;
+	else if (t2 <  t1) sL = 2.0*sR;
+	else if (t2 < -t1) sR = 2.0*sL;
 
-	par[0] = aL;
-	par[1] = 6.0*(a3 - 0.5*(aR + aL));
-	par[2] = aR;
+	par[0] = sL;
+	par[1] = a3;
+	par[2] = sR;
     
 	return;
 }
@@ -145,28 +145,41 @@ __device__ void get_PPM_parameters(int i, int geom, double* r, double* dr, doubl
 
 __device__ double get_PPM_aveR(int geom, double x, double* par)
 {
-	double a6 = par[1];
-	double aL = par[0];
-	double aR = par[2];
+	double sL = par[0];
+	double am = par[1];
+	double sR = par[2];
+	double a6 = -3.0*(sR-sL);
 	x = 1.0 - x;
 
-	return aR - (x/2.0) * ( aR-aL - (1.0 - x/1.5) * a6);
+	return am+sR - (x/2.0) * ( sR+sL - (1.0 - x/1.5) * a6);
 }
 
 __device__ double get_PPM_aveL(int geom, double x, double* par)
 {
-	double a6 = par[1];
-	double aL = par[0];
-	double aR = par[2];
+	double sL = par[0];
+	double am = par[1];
+	double sR = par[2];
+	double a6 = -3.0*(sR-sL);
 
-	return aL + (x/2.0) * ( aR-aL + (1.0 - x/1.5) * a6);
+	return am-sL + (x/2.0) * ( sR+sL + (1.0 - x/1.5) * a6);
 }
 
-__device__ double get_PPM_slope(int geom, double x, double* par)
+__device__ double get_PPM_slopeR(int geom, double x1, double x2, double* par)
 {
-	double a6 = par[1];
-	double aL = par[0];
-	double aR = par[2];
+	double sL = par[0];
+	double sR = par[2];
+	double a6 = -3.0*(sR-sL);
+	x2 = 1.0 - x2;
+	x1 = 1.0 - x1;
 
-	return aR-aL + (1.0 - 2.0*x)*a6;
+	return (sR+sL-a6) + a6*(x1+x2)/1.5;
+}
+
+__device__ double get_PPM_slopeL(int geom, double x1, double x2, double* par)
+{
+	double sL = par[0];
+	double sR = par[2];
+	double a6 = -3.0*(sR-sL);
+
+	return (sR+sL+a6) - a6*(x2+x1)/1.5;
 }

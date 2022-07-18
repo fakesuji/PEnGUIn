@@ -246,7 +246,7 @@ __host__ __device__ double get_v(double x, double y, double z)
 	return 0.0;
 
 	#elif init_flag == 7
-	double A = 1.0e-6*sin(twopi*x);
+	double A = 0.0e-6*sin(4.0*twopi*x);
 	return A;
 
 	#elif init_flag == 8
@@ -417,9 +417,9 @@ __host__ __device__ Dust init_CD(double x, double y, double z)
 __host__ __device__ Cell init_C(double x0, double x1, double y0, double y1, double z0, double z1)
 {
 	Cell L, C, R;
-	L = init_C(x0,y0,z0);
+	L = init_C(0.5*(x0+x1),0.5*(y0+y1),z0);
 	C = init_C(0.5*(x0+x1),0.5*(y0+y1),0.5*(z0+z1));
-	R = init_C(x1,y1,z1);
+	R = init_C(0.5*(x0+x1),0.5*(y0+y1),z1);
 	L.multiply(1.0/6.0);
 	C.multiply(4.0/6.0);
 	R.multiply(1.0/6.0);
@@ -433,11 +433,18 @@ __host__ __device__ Cell init_C(double x0, double x1, double y0, double y1, doub
 void make_grid(double* a, double* v, double amin, double amax, int res, int pad, int geom, int grid)
 {
 	if      (grid==0) linspace(&a[pad], amin, amax, res+1);
-	else if (grid==1) logspace(&a[pad], amin, amax, res+1); 
+	else if (grid==1) logspace(&a[pad], amin, amax, res+1);
+	else if (grid==2) nonuspace(&a[pad], amin, amax, res+1);
+	else if (grid==3) nonuspace_half(&a[pad], amin, amax, res+1);
 
 	for (int i = 0; i<pad; i++)
 	{
-		if (grid==1)
+		if (grid==2)
+		{
+			a[i] = a[pad] - (a[2*pad-i]-a[pad]);
+			a[res+pad+1+i] = a[res+pad] + (a[res+pad]-a[res+pad-1-i]);
+		}
+		else if (grid==1)
 		{
 			a[i] = amin*exp(log(amax/amin)*(double)(i-pad)/(double)(res));
 			a[res+pad+1+i] = amin*exp(log(amax/amin)*(double)(res+1+i)/(double)(res));
@@ -448,6 +455,8 @@ void make_grid(double* a, double* v, double amin, double amax, int res, int pad,
 			a[res+pad+1+i] = a[res+pad] + (a[res+pad]-a[res+pad-1-i]);
 		}
 	}
+
+	//for (int i=0; i<res+2*pad; i++) printf("%i %f %f\n",i,a[i],a[i+1]-a[i]);
 
 	for (int i=0; i<res+2*pad; i++)
 	{
@@ -465,8 +474,8 @@ void fill_grid(Grid G)
 	for (int k=0; k<G.zarr; k++)
 	{
 		ind = G.get_ind(i,j,k);
-		//G.C[ind] = init_C(G.get_xa(i), G.get_xa(i+1), G.get_ya(j), G.get_ya(j+1), G.get_za(k), G.get_za(k+1));
-		G.C[ind] = init_C(G.get_xc(i), G.get_yc(j), G.get_zc(k));
+		G.C[ind] = init_C(G.get_xa(i), G.get_xa(i+1), G.get_ya(j), G.get_ya(j+1), G.get_za(k), G.get_za(k+1));
+		//G.C[ind] = init_C(G.get_xc(i), G.get_yc(j), G.get_zc(k));
 		#ifdef dust_flag
 		G.CD[ind] = init_CD(G.get_xc(i), G.get_yc(j), G.get_zc(k));
 		#endif

@@ -20,8 +20,8 @@ __device__ void dimensionless_x(double rL, double r0, double rR, double &x, doub
 {
 	x = lim01((r0-rL)/(rR-rL));
 	#if recon_flag==0
-	lx = __logf(x);
-	ly = __logf(1.0-x);
+	//lx = __logf(x);
+	//ly = __logf(1.0-x);
 	#endif
 	return;
 }

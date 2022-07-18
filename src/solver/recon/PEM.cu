@@ -121,7 +121,7 @@ __device__ void get_PEM_parameters(int i, int geom, double* x, double* dx, doubl
 __device__ double get_PEM_0(double x, double s0, double aM, double eta, double lx)
 {
 	double val;
-	val = aM + s0*(1.0-__expf(eta*lx));
+	val = aM + s0*(1.0-__expf(eta*__logf(x)));
 
 	return val;
 }
@@ -130,7 +130,7 @@ __device__ double get_PEM_1(double x, double aM, double s1, double eta, double l
 {
 	double val;
 	double y=1.0-x;
-	if (eta*y>1e-4) val = aM + s1*lim01(x*(1.0-__expf(eta*lx))/(y*eta));
+	if (eta*y>1e-4) val = aM + s1*lim01(x*(1.0-__expf(eta*__logf(x)))/(y*eta));
 	else            val = aM + s1*get_g_apprx(x, eta);
 
 	return val;
@@ -188,26 +188,52 @@ __device__ double get_PEM_aveL(int geom, double x, double* par, double lx, doubl
 	return val;
 }
 
-__device__ double get_PEM_slope(int geom, double x, double* par)
+__device__ double get_PEM_slopeR(int geom, double x1, double x2, double* par)
 {
 	double sL = par[0];
 	double sR = par[2];
-	double eta, val;
-
-	if      (sL==0.0) val = 0.0;
-	else if (sR/sL>=1.0) 
+/*
+	if (sR/sL>=1.0) 
 	{
-		eta = sR/sL;
-		if (x>0.0) val = eta*(sR+sL)*__expf((eta-1.0)*__logf(x));
-		else val = 0.0;
+		return (sR+sL)*(__powf(x2,sR/sL) - __powf(x1,sR/sL))/(x2-x1);
 	}
 	else
 	{
-		x = 1.0-x;
-		eta = sL/sR;
-		if (x>0.0) val = eta*(sR+sL)*__expf((eta-1.0)*__logf(x));
-		else val = 0.0;
-	}
+		x2 = 1.0 - x2;
+		x1 = 1.0 - x1;
 
-	return val;
+		return (-sR-sL)*(__powf(x2,sL/sR) - __powf(x1,sL/sR))/(x2-x1);
+	}
+*/
+	double slope = (4.0*sR-2.0*sL) - 2.0*(sR-sL)*(2.0-x2-x1);
+
+	if (sR>=0.0) return fmax(slope,0.0);
+	else         return fmin(slope,0.0);
+
+	//return 2.0*(get_PEM_aveR(geom, x2, par, 0.0,0.0)-get_PEM_aveR(geom, x1, par, 0.0,0.0))/(x2-x1);
+}
+
+__device__ double get_PEM_slopeL(int geom, double x1, double x2, double* par)
+{
+	double sL = par[0];
+	double sR = par[2];
+/*
+	if (sR/sL>=1.0) 
+	{
+		return (sR+sL)*(__powf(x2,sR/sL) - __powf(x1,sR/sL))/(x2-x1);
+	}
+	else
+	{
+		x2 = 1.0 - x2;
+		x1 = 1.0 - x1;
+
+		return (-sR-sL)*(__powf(x2,sL/sR) - __powf(x1,sL/sR))/(x2-x1);
+	}
+*/
+	double slope = (4.0*sL-2.0*sR) + 2.0*(sR-sL)*(x2+x1);
+
+	if (sR>=0.0) return fmax(slope,0.0);
+	else         return fmin(slope,0.0);
+
+	//return 2.0*(get_PEM_aveL(geom, x2, par, 0.0,0.0)-get_PEM_aveL(geom, x1, par, 0.0,0.0))/(x2-x1);
 }
