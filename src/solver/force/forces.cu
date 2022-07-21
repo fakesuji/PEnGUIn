@@ -26,8 +26,11 @@ __device__ void star_planet_grav(double rad, double azi, double pol, body p, dou
 	double plm = p.m;
 	double plx = p.x;
 
-	double Rp = sqrt(rad*rad + plx*plx - 2.0*plx*rad*cosfac*sinpol);
-	double rs_fac = fmax(4.0-3.0*Rp/p.rs, 1.0)/fmax(p.rs*p.rs*p.rs, Rp*Rp*Rp);
+//	double Rp = sqrt(rad*rad + plx*plx - 2.0*plx*rad*cosfac*sinpol);
+//	double rs_fac = fmax(4.0-3.0*Rp/p.rs, 1.0)/fmax(p.rs*p.rs*p.rs, Rp*Rp*Rp);
+
+	double Rp = sqrt(rad*rad + plx*plx - 2.0*plx*rad*cosfac*sinpol + p.rs*p.rs);
+	double rs_fac = 1.0/(Rp*Rp*Rp);
 
 	fx = -plm*(rad-plx*cosfac*sinpol)*rs_fac - plm*sinpol*cosfac/plx/plx;
 	fy = -plm*plx*sinfac*rs_fac              + plm*sinpol*sinfac/plx/plx;
@@ -117,7 +120,7 @@ __device__ double get_fz(double rad, double azi, double pol,
 
 	#elif geomx==2
 		fz = v*v/rad/tan(pol);
-		if (pol < zmin) {fz *=-1.0;}
+		//if (pol < zmin) {fz *=-1.0;}
 	#endif
 
 	return fz;
@@ -137,7 +140,14 @@ __device__ double get_gx(double rad, double azi, double pol, body *planet)
 		#endif
 
 	#elif geomx==1
-		double dis = sqrt(rad*rad+pol*pol);
+		double dis;
+		#if ndim > 2
+		dis = sqrt(rad*rad+pol*pol);
+		#else
+		dis = rad;
+		pol = 0.0;
+		#endif
+
 		gx = -rad/dis/dis/dis;
 		double gx_tmp, gy_tmp, gz_tmp;
 		for (int m=0; m<n_planet; m++)
@@ -172,6 +182,10 @@ __device__ double get_gy(double rad, double azi, double pol, body *planet)
 		#endif
 
 	#elif geomx==1
+		#if ndim < 3
+		pol = 0.0;
+		#endif
+
 		gy = 0.0;
 		double gx_tmp, gy_tmp, gz_tmp;
 		for (int m=0; m<n_planet; m++)
@@ -207,7 +221,14 @@ __device__ double get_gz(double rad, double azi, double pol, body *planet)
 		#endif
 
 	#elif geomx==1
-		double dis = sqrt(rad*rad+pol*pol);
+		double dis;
+		#if ndim > 2
+		dis = sqrt(rad*rad+pol*pol);
+		#else
+		dis = rad;
+		pol = 0.0;
+		#endif
+
 		gz = -pol/dis/dis/dis;
 		double gx_tmp, gy_tmp, gz_tmp;
 		for (int m=0; m<n_planet; m++)
@@ -224,7 +245,7 @@ __device__ double get_gz(double rad, double azi, double pol, body *planet)
 			star_planet_grav(rad, azi, pol, planet[m], 0.0, gx_tmp, gy_tmp, gz_tmp);
 			gz += gz_tmp;
 		}
-		if (pol < zmin) {gz *= -1.0;}
+		//if (pol < zmin) {gz *= -1.0;}
 	#endif
 
 	return gz;
@@ -248,7 +269,13 @@ __device__ void get_grav(double rad, double azi, double pol,
 		#endif
 
 	#elif geomx==1
-		double dis = sqrt(rad*rad+pol*pol);
+		double dis;
+		#if ndim > 2
+		dis = sqrt(rad*rad+pol*pol);
+		#else
+		dis = rad;
+		#endif
+
 		gx = -rad/dis/dis/dis;
 		gy = 0.0;
 		gz = -pol/dis/dis/dis;
@@ -275,7 +302,7 @@ __device__ void get_grav(double rad, double azi, double pol,
 			gy += gy_tmp;
 			gz += gz_tmp;
 		}
-		if (pol < zmin) {gz *= -1.0;}
+		//if (pol < zmin) {gz *= -1.0;}
 	#endif
 	return;
 }

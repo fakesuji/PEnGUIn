@@ -5,7 +5,7 @@ __device__ void set_state(int i, int geom, double* xa, double* dx, double* dv, d
 	double r_par[4], p_par[4], u_par[4];
 
 	double ul, ur;
-	double xl, xr, tmp, dis, q, q1;
+	double xl, xr, tmp, dis, q, q1, q2;
 	double ql, qr;
 	double r0, p0, u0;
 	double p_, u_, cs;
@@ -45,8 +45,12 @@ __device__ void set_state(int i, int geom, double* xa, double* dx, double* dv, d
 	tmp = xl - dis + cs*dt;
 	dimensionless_x(xl,tmp,xr,q1,ql,qr);
 
-	u_ = -0.5*dt*get_slopeL(geom,0.0,q1,u_par)/(xr-xl);
-	p_ = -0.5*dt*get_slopeL(geom,0.0,q1,p_par)/(xr-xl)/r0;
+	tmp = xl - dis - cs*dt;
+	dimensionless_x(xl,tmp,xr,q2,ql,qr);
+	q2 = fmax(0.0,q2);
+
+	u_ = -0.5*dt*get_slopeL(geom,q2,q1,u_par)/(xr-xl);
+	p_ = -0.5*dt*get_slopeL(geom,q2,q1,p_par)/(xr-xl)/r0;
 	
 	S.rr = r0*exp_lim(u_);
 	S.pr = p0*exp_lim(gam*u_);
@@ -96,8 +100,12 @@ __device__ void set_state(int i, int geom, double* xa, double* dx, double* dv, d
 	tmp = xr - dis - cs*dt;
 	dimensionless_x(xl,tmp,xr,q1,ql,qr);
 
-	u_ = -0.5*dt*get_slopeR(geom,1.0,q1,u_par)/(xr-xl);
-	p_ = -0.5*dt*get_slopeR(geom,1.0,q1,p_par)/(xr-xl)/r0;
+	tmp = xr - dis + cs*dt;
+	dimensionless_x(xl,tmp,xr,q2,ql,qr);
+	q2 = fmin(1.0,q2);
+
+	u_ = -0.5*dt*get_slopeR(geom,q1,q2,u_par)/(xr-xl);
+	p_ = -0.5*dt*get_slopeR(geom,q1,q2,p_par)/(xr-xl)/r0;
 
 	S.rl = r0*exp_lim(u_);
 	S.pl = p0*exp_lim(gam*u_);

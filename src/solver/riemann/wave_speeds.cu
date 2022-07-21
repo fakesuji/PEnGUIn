@@ -307,7 +307,7 @@ __device__ double get_sm(State S, double cl, double cr, double us)
 	double sm;
 	sm  = (S.rl*S.ul*cl + S.rr*S.ur*cr)/(S.rl*cl + S.rr*cr);
 	sm += (S.pl-S.pr)/(S.rl + S.rr)/(0.5*(cl+cr));
-	sm += us*(fmax(S.ul,0.0)+fmax(-S.ur,0.0))/(cl+cr);
+	//sm += us*(fmax(S.ul,0.0)+fmax(-S.ur,0.0))/(cl+cr);
 
 	return sm;
 }

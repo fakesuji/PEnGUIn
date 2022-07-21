@@ -4,8 +4,7 @@ import read_penguin as rd
 
 second = 0
 
-label = 'h50_p4J_a-40_OA_St-30'
-labeh = 'h50_PLM'
+label = 'h50_OA'
 xmax = 576
 ymax = 1024
 
@@ -18,7 +17,7 @@ ymax = 1024
 #xmax = 960
 #ymax = 960
 
-frame = 20
+frame = 1
 inc = 2
 p0 = rd.load_2D_dust_data('/mnt/penguin/fung/p2/',xmax,ymax,label,frame)
 p1 = rd.load_2D_dust_data('/mnt/penguin/fung/p2/',xmax,ymax,label,frame//inc)
@@ -36,13 +35,13 @@ plt.figure(2)
 plt.plot(xc,(dat0[5]).mean(axis=0),':k')
 plt.plot(xc,(p0[5]).mean(axis=0),'r')
 
-plt.figure(3)
-plt.pcolormesh(dat0[1],dat0[2],np.log10(p0[7]))
-plt.colorbar()
+#plt.figure(3)
+#plt.pcolormesh(dat0[1],dat0[2],np.log10(p0[7]))
+#plt.colorbar()
 
-plt.figure(4)
-plt.plot(xc,(dat0[8]).mean(axis=0),':k')
-plt.plot(xc,(p0[8]).mean(axis=0),'r')
+#plt.figure(4)
+#plt.plot(xc,(dat0[8]).mean(axis=0),':k')
+#plt.plot(xc,(p0[8]).mean(axis=0),'r')
 
 #plt.figure(2)
 #plt.pcolormesh(dat0[1],dat0[2],p0[4]/p0[3])

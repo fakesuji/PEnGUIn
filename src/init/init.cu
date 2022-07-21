@@ -436,6 +436,7 @@ void make_grid(double* a, double* v, double amin, double amax, int res, int pad,
 	else if (grid==1) logspace(&a[pad], amin, amax, res+1);
 	else if (grid==2) nonuspace(&a[pad], amin, amax, res+1);
 	else if (grid==3) nonuspace_half(&a[pad], amin, amax, res+1);
+	else if (grid==4) nonuspace_mix(&a[pad], amin, amax, res+1);
 
 	for (int i = 0; i<pad; i++)
 	{

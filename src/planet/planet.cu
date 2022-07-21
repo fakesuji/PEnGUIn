@@ -83,7 +83,7 @@ void init_planet(Grid* G, double time)
 			G[i].planets[n].rs = fmin(sc_h,fmax(sc_h/2.0,pow(planet_mass/3.0,1.0/3.0)/3.0))*planet_radius;
 			#else
 			//G[i].planets[n].rs = (pow(planet_mass/3.0,1.0/3.0)/3.0)*planet_radius;
-			G[i].planets[n].rs = min_res*5.0;
+			G[i].planets[n].rs = min_res*3.0;
 			#endif
 		}
 	}

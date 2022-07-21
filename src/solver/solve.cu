@@ -217,32 +217,34 @@ void DS(Grid* dev, double time, double dt)
 	boundx_dust(dev);
 	#endif
 
-	apply_source_terms_inplace(dev, 0.0, 0.0, hdt);
+	compute_source_terms(dev, 0.0, 0.0, hdt);
+	//apply_source_terms_inplace(dev, 0.0, 0.0, hdt);
 
 	sweepx_inplace(dev,dt);
-
-	#if ndim>1
-	boundy(dev,time+dt);
-	sweepy_inplace(dev,dt);
-	#endif
 
 	#if ndim>2
 	boundz(dev);
 	sweepz_inplace(dev,dt);
 	#endif
 
+	#if ndim>1
+	boundy(dev,time+dt);
+	sweepy_inplace(dev,dt);
+	#endif
+
 	#ifdef dust_flag
 	sweepx_dust_inplace(dev,dt);
+
+	#if ndim>2
+	boundz_dust(dev);
+	sweepz_dust_inplace(dev,dt);
+	#endif
 
 	#if ndim>1
 	boundy_dust(dev,time+dt);
 	sweepy_dust_inplace(dev,dt);
 	#endif
 
-	#if ndim>2
-	boundz_dust(dev);
-	sweepz_dust_inplace(dev,dt);
-	#endif
 	#endif
 
 	evolve_planet(dev,time+dt,dt);

@@ -22,8 +22,8 @@ const double NeptuneMass = 0.00005;
 const double SaturnMass = 0.0002857;
 const double JupiterMass = 0.0009543;
 const double MMSN_1AU = 0.00019126835;
-const double smallp = 1.0e-14;
-const double smallr = 1.0e-14;
+const double smallp = 1.0e-20;
+const double smallr = 1.0e-20;
 
 //=======================================================================
 // Geometric parameters
@@ -53,9 +53,9 @@ const int zpad = npad;
 const int zpad = 0;
 #endif
 
-const int xres = 192;
-const int yres = 960;
-const int zres = 48;
+const int xres = 192+64;
+const int yres = 672+64;
+const int zres = 72;
 
 const int xarr = xres + 2*xpad;
 const int yarr = yres + 2*ypad;
@@ -75,7 +75,7 @@ const int y_ythd = y_ydiv + 2*ypad;
 
 const int z_xdiv = 8;
 const int z_ydiv = 1;
-const int z_zdiv = 16;
+const int z_zdiv = 12;
 
 const int z_zthd = z_zdiv + 2*zpad;
 
@@ -91,9 +91,9 @@ const int ndev = 1;
 
 const double frame_omega = 1.0;
 
-const double sav_interval = 5.0;
+const double sav_interval = 1.0*twopi;
 const double sta_time = 0.0;
-const double end_time = 40.0;
+const double end_time = 20.0*twopi;
 
 const int prt_interval = 100;
 const int max_step = 1000000000;
@@ -165,11 +165,11 @@ const double beta_cool = 10.0;                          // in units of dynamical
 //=======================================================================
 
 const int n_planet = 1;
-const double planet_mass = 0.00042875;
+const double planet_mass = 6.0*0.00042875;
 const double planet_radius = 1.0;
 const double planet_ecc = 0.0;
 
-const double ramp_time = 1.0;//twopi*0.0;
+const double ramp_time = twopi*5.0;
 
 //=======================================================================
 // Grid parameters
@@ -179,18 +179,19 @@ const double xmin = 0.65;
 const double xmax = 1.35;
 const double ymin = 0.0;
 const double ymax = twopi;
-const double zmin = hpi-4.0*sc_h;
+const double zmin = hpi-5.0*sc_h;
 const double zmax = hpi;
 
 const double min_res = sc_h/32.0;
-const double max_res = sc_h/2.0;
+const double max_res = sc_h/3.0;
+const double max_zres = sc_h/6.0;
 
 #define geomx 2
 #define geomy 4
 #define geomz 5
 
 const int gridx = 2;
-const int gridy = 2;
+const int gridy = 4;
 const int gridz = 3;
 
 

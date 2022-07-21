@@ -3,12 +3,12 @@
 
 #define mode_flag 0
 #define dump_flag
-//#define kill_flag 1
+#define kill_flag 1
 #define OrbAdv_flag
-#define visc_flag 1
+//#define visc_flag 1
 //#define cool_flag
 //#define advec_flag
-#define dust_flag
+//#define dust_flag
 
 //=======================================================================
 // Constants
@@ -64,14 +64,14 @@ const int xarr = xres + 2*xpad;
 const int yarr = yres + 2*ypad;
 const int zarr = zres + 2*zpad;
 
-const int x_xdiv = 48;
+const int x_xdiv = 16;
 const int x_ydiv = 8;
 const int x_zdiv = 1;
 
 const int x_xthd = x_xdiv + 2*xpad;
 
-const int y_xdiv = 12;
-const int y_ydiv = 32;
+const int y_xdiv = 8;
+const int y_ydiv = 16;
 const int y_zdiv = 1;
 
 const int y_ythd = y_ydiv + 2*ypad;
@@ -95,7 +95,7 @@ const int ndev = 1;
 const double frame_omega = 1.0;
 
 const double sav_interval = 10.0*twopi/frame_omega;
-const double end_time = 1000.0*twopi/frame_omega;
+const double end_time = 10.0*twopi/frame_omega;
 
 const int prt_interval = 1000;
 const int max_step = 1000000000;
@@ -150,7 +150,7 @@ const double p_alpha = 1.0 - 0.5*p_beta + 1.5;          // midplane density ~ r^
 #else 
 const double p_alpha = 1.0;                             // surface density ~ r^-p_alpha
 #endif 
-const double ss_alpha = 0.0001;                            // alpha-viscosity
+const double ss_alpha = 0.01;                            // alpha-viscosity
 const double sc_h = 0.05;                              // scale height at r=1, normalized to that at r = 100
 
 #if ndim==3
@@ -166,7 +166,7 @@ const double beta_cool = 1.0;                          // in units of dynamical 
 // planet parameters
 //=======================================================================
 
-const int n_planet = 1;
+const int n_planet = 0;
 const double planet_mass = 0.004;
 const double planet_radius = 1.0;
 const double planet_ecc = 0.0;
@@ -183,6 +183,10 @@ const double ymin = 0.0;
 const double ymax = twopi;
 const double zmin = hpi-4.0*sc_h;
 const double zmax = hpi;
+
+const double min_res = sc_h/32.0;
+const double max_res = sc_h/3.0;
+const double max_zres = sc_h/6.0;
 
 #define geomx 1
 #define geomy 3
