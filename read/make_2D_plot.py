@@ -4,9 +4,11 @@ import read_penguin as rd
 
 second = 0
 
-label = 'h50_OA'
-xmax = 576
-ymax = 1024
+label = 'h50_p1J_a-4_b1_OA'
+xmax = 1152
+ymax = 2016
+#xmax = 576
+#ymax = 1024
 
 #xmax = 720
 #ymax = 1536
@@ -28,7 +30,8 @@ dat0 = rd.load_2D_dust_data('/mnt/penguin/fung/p2/',xmax,ymax,label,0)
 xc = rd.cell_center(dat0[1])
 
 plt.figure(1)
-plt.pcolormesh(dat0[1],dat0[2],np.log10(p0[3]))
+plt.pcolormesh(dat0[1],dat0[2],p0[3])
+plt.clim(0,10.0)
 plt.colorbar()
 
 plt.figure(2)

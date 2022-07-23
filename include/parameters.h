@@ -53,9 +53,9 @@ const int zpad = npad;
 const int zpad = 0;
 #endif
 
-const int xres = 192+64;
-const int yres = 672+64;
-const int zres = 72;
+const int xres = 192+32;
+const int yres = 672+32;
+const int zres = 64+32;
 
 const int xarr = xres + 2*xpad;
 const int yarr = yres + 2*ypad;
@@ -75,7 +75,7 @@ const int y_ythd = y_ydiv + 2*ypad;
 
 const int z_xdiv = 8;
 const int z_ydiv = 1;
-const int z_zdiv = 12;
+const int z_zdiv = 16;
 
 const int z_zthd = z_zdiv + 2*zpad;
 
@@ -114,7 +114,7 @@ const double gamm = gam - 1.0;
 const double gamp = gam + 1.0;
 const double gammfac = gamm/gam/2.0;
 const double gampfac = gamp/gam/2.0;
-const double CFL = 0.4;
+const double CFL = 0.3;
 
 //=======================================================================
 // Dust parameters
@@ -175,16 +175,16 @@ const double ramp_time = twopi*5.0;
 // Grid parameters
 //=======================================================================
 
-const double xmin = 0.65;
-const double xmax = 1.35;
+const double xmin = 1.0-10.0*sc_h;
+const double xmax = 1.0+10.0*sc_h;
 const double ymin = 0.0;
 const double ymax = twopi;
-const double zmin = hpi-5.0*sc_h;
+const double zmin = hpi-4.0*sc_h;
 const double zmax = hpi;
 
 const double min_res = sc_h/32.0;
 const double max_res = sc_h/3.0;
-const double max_zres = sc_h/6.0;
+const double max_zres = sc_h/16.0;
 
 #define geomx 2
 #define geomy 4
