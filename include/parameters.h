@@ -2,10 +2,12 @@
 #define PARAMETERS_H
 
 #define dump_flag
-//#define kill_flag
+//#define kill_flag 1
 //#define OrbAdv_flag
-//#define visc_flag
+//#define visc_flag 1
+//#define cool_flag
 //#define advec_flag
+//#define rev_flag
 
 //=======================================================================
 // Constants
@@ -29,11 +31,11 @@ const double smallr = 1.0e-14;
 // Geometric parameters
 //=======================================================================
 
-#define recon_flag 1
+#define recon_flag 2
 
 const int std_thd = 1024;
 
-#define ndim 2
+#define ndim 1
 
 #if recon_flag==2
 const int npad = 3;
@@ -53,22 +55,22 @@ const int zpad = npad;
 const int zpad = 0;
 #endif
 
-const int xres = 960;
-const int yres = 960;
+const int xres = 128;
+const int yres = 1;
 const int zres = 1;
 
 const int xarr = xres + 2*xpad;
 const int yarr = yres + 2*ypad;
 const int zarr = zres + 2*zpad;
 
-const int x_xdiv = 40;
-const int x_ydiv = 8;
+const int x_xdiv = 128;
+const int x_ydiv = 1;
 const int x_zdiv = 1;
 
 const int x_xthd = x_xdiv + 2*xpad;
 
 const int y_xdiv = 8;
-const int y_ydiv = 40;
+const int y_ydiv = 48;
 const int y_zdiv = 1;
 
 const int y_ythd = y_ydiv + 2*ypad;
@@ -91,9 +93,9 @@ const int ndev = 1;
 
 const double frame_omega = 0.0;
 
-const double sav_interval = 0.01;
+const double sav_interval = 1.0;//0.0001;//1.0*twopi;
 const double sta_time = 0.0;
-const double end_time = 10.0;
+const double end_time = 10.0;//0.038;//1.0*twopi;
 
 const int prt_interval = 100;
 const int max_step = 1000000000;
@@ -127,7 +129,7 @@ const double Stokes = 0.01;
 // boundary parameters
 //=======================================================================
 
-#define init_flag 7
+#define init_flag 6
 
 const int bound_lft = 3;
 const int bound_rgh = 3;
@@ -178,7 +180,7 @@ const double ramp_time = twopi*5.0;
 const double xmin = 0.0;
 const double xmax = 1.0;
 const double ymin = 0.0;
-const double ymax = 1.0;
+const double ymax = twopi;
 const double zmin = hpi-3.0*sc_h;
 const double zmax = hpi;
 
