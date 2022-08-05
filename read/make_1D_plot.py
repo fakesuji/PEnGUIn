@@ -37,21 +37,21 @@ plt.plot(xc,ppm[2]-sol,'b:', mfc='none')
 #plt.plot(xc,c,'bx')
 #print(np.max(np.abs(ppm[2]-c)))
 
-print(np.sqrt(np.sum((ppm[2]-sol)*(ppm[2]-sol))/xmax))
+print('PPM:',np.sqrt(np.sum((ppm[2]-sol)*(ppm[2]-sol))/xmax))
 
 plt.plot(xc,plm[2]-sol,'g:', mfc='none')
 #plt.plot(hpl[1],hpl[2],'gx-')
 #plt.plot(xc,b,'gx')
 #print(np.max(np.abs(plm[2]-b)))
 
-print(np.sqrt(np.sum((plm[2]-sol)*(plm[2]-sol))/xmax))
+print('PLM:',np.sqrt(np.sum((plm[2]-sol)*(plm[2]-sol))/xmax))
 
 plt.plot(xc,pem[2]-sol,'r:', mfc='none')
 #plt.plot(hpe[1],hpe[2],'rx-')
 #plt.plot(xc,a,'rx')
 #print(np.max(np.abs(pem[2]-a)))
 
-print(np.sqrt(np.sum((pem[2]-sol)*(pem[2]-sol))/xmax))
+print('PEM:',np.sqrt(np.sum((pem[2]-sol)*(pem[2]-sol))/xmax))
 
 pem = rd.load_1D_data('/mnt/penguin/fung/p2/',xmax,label_pem,frame)
 plm = rd.load_1D_data('/mnt/penguin/fung/p2/',xmax,label_plm,frame)

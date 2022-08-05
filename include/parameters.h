@@ -31,16 +31,16 @@ const double smallr = 1.0e-14;
 // Geometric parameters
 //=======================================================================
 
-#define recon_flag 2
+#define recon_flag 0
 
 const int std_thd = 1024;
 
 #define ndim 1
 
-#if recon_flag==2
+#if recon_flag>1
 const int npad = 3;
 #else
-const int npad = 2;
+const int npad = 3;
 #endif
 
 const int xpad = npad;
@@ -93,11 +93,11 @@ const int ndev = 1;
 
 const double frame_omega = 0.0;
 
-const double sav_interval = 1.0;//0.0001;//1.0*twopi;
+const double sav_interval = 10.0;//0.0001;//1.0*twopi;
 const double sta_time = 0.0;
-const double end_time = 10.0;//0.038;//1.0*twopi;
+const double end_time = 100.0;//0.038;//1.0*twopi;
 
-const int prt_interval = 100;
+const int prt_interval = 1000;
 const int max_step = 1000000000;
 
 //=======================================================================
@@ -116,7 +116,7 @@ const double gamm = gam - 1.0;
 const double gamp = gam + 1.0;
 const double gammfac = gamm/gam/2.0;
 const double gampfac = gamp/gam/2.0;
-const double CFL = 0.4;
+const double CFL = 0.8;
 
 //=======================================================================
 // Dust parameters

@@ -9,6 +9,7 @@ __device__ void set_state(int i, int geom, double* xa, double* dx, double* dv, d
 	double ql, qr;
 	double r0, p0, u0;
 	double p_, u_, cs;
+	double hdt = 0.5*dt;
 
 	/////////////////////////////////////////////////////////
 
@@ -19,9 +20,9 @@ __device__ void set_state(int i, int geom, double* xa, double* dx, double* dv, d
 	xl = xa[i];
 	xr = xa[i+1];
 
-	//tmp = fmin(u_par[1]-u_par[0],0.0);
+	cs = sqrt(gam*p[i]/r[i]);
 	tmp = fmin(u[i],0.0);
-	tmp = xl - tmp*dt + sqrt(gam*p[i]/r[i])*dt;
+	tmp = xl - tmp*dt + cs*dt;
 	dimensionless_x(xl,tmp,xr,q,ql,qr);
 
 	double rmin, pmin;
@@ -49,17 +50,11 @@ __device__ void set_state(int i, int geom, double* xa, double* dx, double* dv, d
 	u_ = get_PRM_aveL(geom, q, u_par, ql, qr);
 	p_ = get_CON_aveL(geom, q, p_par, ql, qr);
 
-	u_ = 2.0*(u_-u_par[1]+u_par[0])/(tmp-xl);
-	p_ = 2.0*(p_-p_par[1]+p_par[0])/(tmp-xl);
-/*
-	u_ = get_PPM_val(geom, q, u_par);
-	p_ = get_PPM_val(geom, q, p_par);
+	u_ = 2.0*(u_-u0)/(cs*dt);
+	p_ = 2.0*(p_-p0)/(cs*dt);
 
-	u_ = (u_-u_par[1]+u_par[0])/(tmp-xl);
-	p_ = (p_-p_par[1]+p_par[0])/(tmp-xl);
-*/
-	u_ *= -0.5*dt;
-	p_ *= -0.5*dt;
+	u_ *= -hdt;
+	p_ *= -hdt;
 	
 	S.rr = r0*exp_lim(u_);
 	S.pr = p0*exp_lim(gam*u_);
@@ -84,9 +79,9 @@ __device__ void set_state(int i, int geom, double* xa, double* dx, double* dv, d
 	xl = xa[i-1];
 	xr = xa[i];
 
-	//tmp = fmax(u_par[1]+u_par[2],0.0);
+	cs = sqrt(gam*p[i-1]/r[i-1]);
 	tmp = fmax(u[i-1],0.0);
-	tmp = xr - tmp*dt - sqrt(gam*p[i-1]/r[i-1])*dt;
+	tmp = xr - tmp*dt - cs*dt;
 	dimensionless_x(xl,tmp,xr,q,ql,qr);
 
 	rmin = r[i-1]*1.0e-10;
@@ -113,17 +108,11 @@ __device__ void set_state(int i, int geom, double* xa, double* dx, double* dv, d
 	u_ = get_PRM_aveR(geom, q, u_par, ql, qr);
 	p_ = get_CON_aveR(geom, q, p_par, ql, qr);
 
-	u_ = 2.0*(u_par[1]+u_par[2]-u_)/(xr-tmp);
-	p_ = 2.0*(p_par[1]+p_par[2]-p_)/(xr-tmp);
-/*
-	u_ = get_PPM_val(geom, q, u_par);
-	p_ = get_PPM_val(geom, q, p_par);
+	u_ = 2.0*(u0-u_)/(cs*dt);
+	p_ = 2.0*(p0-p_)/(cs*dt);
 
-	u_ = (u_par[1]+u_par[2]-u_)/(xr-tmp);
-	p_ = (p_par[1]+p_par[2]-p_)/(xr-tmp);
-*/
-	u_ *= -0.5*dt;
-	p_ *= -0.5*dt;
+	u_ *= -hdt;
+	p_ *= -hdt;
 
 	S.rl = r0*exp_lim(u_);
 	S.pl = p0*exp_lim(gam*u_);

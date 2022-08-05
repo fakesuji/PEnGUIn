@@ -61,7 +61,7 @@ __device__ void flatten(double *r, double *p, double *u)
   return;
 }
 
-__device__ void get_PPM_parameters(int i, int geom, double* r, double* dr, double* dv, double* a, double* par)
+__device__ void adjust_PPM_parameters(int i, double* par)
 {
 	extern __shared__ double share[];
 	double* tmp = &share[0];
@@ -69,105 +69,21 @@ __device__ void get_PPM_parameters(int i, int geom, double* r, double* dr, doubl
 	int is = i + imax*threadIdx.y;
 	double flat = tmp[is];
 
-	double d1,d2,d3,d4,d5,a2,a3,a4;
-  	double a21, a32, a43, a54;
- 	double daL, daC, daR;
- 	double aR, aL;
-  	double t1, t2, t3;
+	double sL = par[0];
+	double sR = par[2];
 
-	d1 = dr[i-2];
-	d2 = dr[i-1];
-	d3 = dr[i];
-	d4 = dr[i+1];
-	d5 = dr[i+2];
-
-	a2 = a[i-1];
-	a3 = a[i];
-	a4 = a[i+1];
-
-	a21 = a2-a[i-2];
-	a32 = a3-a2;
-	a43 = a4-a3;
-	a54 = a[i+2]-a4;
-
-	/////////////////////////////////////////////////////////////////////////////
+	sR *= (1.0 - flat);
+	sL *= (1.0 - flat);
 	
-	daL = (d2/(d1+d2+d3)) * (a32*(d1+d1+d2)/(d3+d2) + a21*(d3+d3+d2)/(d1+d2));
-	daC = (d3/(d2+d3+d4)) * (a43*(d2+d2+d3)/(d4+d3) + a32*(d4+d4+d3)/(d2+d3));
-	daR = (d4/(d3+d4+d5)) * (a54*(d3+d3+d4)/(d5+d4) + a43*(d5+d5+d4)/(d3+d4));
+	double t3 = sR+sL;
+	double t2 = t3*t3;
+	double t1 = t3*3.0*(sL-sR);
+	
+	if      (t2 <  t1) sL = 2.0*sR;
+	else if (t2 < -t1) sR = 2.0*sL;
 
-	if (a32*a21<=0.0) daL = 0.0;
-	else daL = copysign( fmin( 2.0*fmin(fabs(a21), fabs(a32)), fabs(daL)) , daL );
-
-	if (a43*a32<=0.0) daC = 0.0;
-	else daC = copysign( fmin( 2.0*fmin(fabs(a32), fabs(a43)), fabs(daC)) , daC );
-
-	if (a54*a43<=0.0) daR = 0.0;
-	else daR = copysign( fmin( 2.0*fmin(fabs(a43), fabs(a54)), fabs(daR)) , daR );
-
-	/////////////////////////////////////////////////////////////////////////////
-/*
-	t1 = d2+d3+d4+d5;
-	t2 = (d2+d3)/(d3+d3+d4)/t1;
-	t3 = (d4+d5)/(d3+d4+d4)/t1;
-	aR = a3 + a43*(d3/(d3+d4))*(1.0 + 2.0*d4*(t2-t3)) - daR*d3*t2 + daC*d4*t3;
-
-	t1 = d4+d3+d2+d1;
-	t2 = (d4+d3)/(d3+d3+d2)/t1;
-	t3 = (d2+d1)/(d3+d2+d2)/t1;
-	aL = a3 - a32*(d3/(d3+d2))*(1.0 + 2.0*d2*(t2-t3)) + daL*d3*t2 - daC*d2*t3;
-
-	/////////////////////////////////////////////////////////////////////////////
-
-	aR = flat*a3 + (1.0 - flat)*aR;
-	aL = flat*a3 + (1.0 - flat)*aL;
-
-	t3 = aR-aL;
-	t2 = t3*t3;
-	t1 = t3*6.0*(a3 - 0.5*(aR + aL));
-
-	if ((aR-a3)*(a3-aL)<=0.0)
-	{
-		aR = a3;
-		aL = a3;
-	}
-	else if (t2 <  t1) aL = 3.0*a3 - 2.0*aR;
-	else if (t2 < -t1) aR = 3.0*a3 - 2.0*aL;
-
-	par[0] = aL;
-	par[1] = 6.0*(a3 - 0.5*(aR + aL));
-	par[2] = aR;
-*/  
-	t1 = d2+d3+d4+d5;
-	t2 = (d2+d3)/(d3+d3+d4)/t1;
-	t3 = (d4+d5)/(d3+d4+d4)/t1;
-	aR = a43*(d3/(d3+d4))*(1.0 + 2.0*d4*(t2-t3)) - daR*d3*t2 + daC*d4*t3;
-
-	t1 = d4+d3+d2+d1;
-	t2 = (d4+d3)/(d3+d3+d2)/t1;
-	t3 = (d2+d1)/(d3+d2+d2)/t1;
-	aL = a32*(d3/(d3+d2))*(1.0 + 2.0*d2*(t2-t3)) - daL*d3*t2 + daC*d2*t3;
-
-	/////////////////////////////////////////////////////////////////////////////
-
-	aR *= (1.0 - flat);
-	aL *= (1.0 - flat);
-
-	t3 = aR+aL;
-	t2 = t3*t3;
-	t1 = t3*3.0*(aL-aR);
-
-	if (aR*aL<=0.0)
-	{
-		aR = 0.0;
-		aL = 0.0;
-	}
-	else if (t2 <  t1) aL = 2.0*aR;
-	else if (t2 < -t1) aR = 2.0*aL;
-
-	par[0] = aL;
-	par[1] = a3;
-	par[2] = aR;
+	par[0] = sL;
+	par[2] = sR;
 
 	return;
 }
@@ -176,10 +92,6 @@ __device__ void get_PPM_parameters(int i, int geom, double* r, double* dr, doubl
 
 __device__ double get_PPM_aveR(int geom, double x, double* par)
 {
-//	double a6 = par[1];
-//	double aL = par[0];
-//	double aR = par[2];
-
 	double a6 = 3.0*(par[0]-par[2]);
 	double aR = par[1]+par[2];
 	double S = par[2]+par[0];
@@ -191,27 +103,9 @@ __device__ double get_PPM_aveR(int geom, double x, double* par)
 
 __device__ double get_PPM_aveL(int geom, double x, double* par)
 {
-//	double a6 = par[1];
-//	double aL = par[0];
-//	double aR = par[2];
-
 	double a6 = 3.0*(par[0]-par[2]);
 	double aL = par[1]-par[0];
 	double S = par[2]+par[0];
 
 	return aL + (x/2.0) * ( S + (1.0 - x/1.5) * a6);
-}
-
-__device__ double get_PPM_val(int geom, double x, double* par)
-{
-//	double a6 = par[1];
-//	double aL = par[0];
-//	double aR = par[2];
-
-	double a6 = 3.0*(par[0]-par[2]);
-	double aL = par[1]-par[0];
-	double aR = par[1]+par[2];
-
-
-	return aL + (aR-aL)*x + (x-x*x)*a6;
 }

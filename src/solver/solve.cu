@@ -28,9 +28,9 @@ __device__ void dimensionless_x(double rL, double r0, double rR, double &x, doub
 
 __device__ double exp_lim(double x)
 {
-	//return fmax(1.0+x,1.0e-6);
-	if (x>0.0) return 1.0+x;
-	else       return exp(x);
+	return fmax(1.0+x,1.0e-6);
+	//if (x>0.0) return 1.0+x;
+	//else       return exp(x);
 }
 
 __device__ int jlim(int j, int jmax)
