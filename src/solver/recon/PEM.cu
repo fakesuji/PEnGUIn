@@ -1,89 +1,95 @@
-__device__ double get_g_apprx(double x, double k)
+//=======================================================================================
+
+__device__ double get_PEM_0(double x, double S, double aB, double eta)
 {
-	double y = x-1.0;
-	double tmp = 1.0;
-	double val = tmp;
+	double val;
 
-	tmp *= y*(k+1.0)/2.0;
-	val += tmp;
-	
-	tmp *= y*(k-1.0)/3.0;
-	val += tmp;
+	if (x==0.0) 
+	{
+		val = 0.0;
+	}
+	else
+	{
+	        val = exp(eta*log(x));
+	}
 
-	tmp *= y*(k-2.0)/4.0;
-	val += tmp;
+	return aB + S*val;
+}
 
-	return val;
+__device__ double get_PEM_1(double x, double S, double aB, double eta)
+{
+	double tmp, val;
+
+	if (x>=1.0)
+	{
+		val = 1.0;
+	}
+	if (eta*x>0.001)
+	{
+		val = (1.0-x)*(exp(eta*log(1.0-x))-1.0)/(eta*x)+1.0;
+	}
+	else
+	{
+		tmp = (eta+1.0)*x/2.0;
+       		val = tmp;
+        
+        	tmp*=-(eta-1.0)*x/3.0;
+        	val+= tmp;
+        
+        	tmp*=-(eta-2.0)*x/4.0;
+        	val+= tmp;
+        
+        	tmp*=-(eta-3.0)*x/5.0;
+        	val+= tmp;
+	}
+
+	return aB + S*val;
 }
 
 //=======================================================================================
 
-__device__ double get_PEM_0(double x, double s0, double aM, double eta, double lx)
-{
-	double val;
-	val = aM + s0*(1.0-__expf(eta*lx));
-
-	return val;
-}
-
-__device__ double get_PEM_1(double x, double aM, double s1, double eta, double lx)
-{
-	double val;
-	double y=1.0-x;
-	if (eta*y>1e-4) val = aM + s1*lim01(x*(1.0-__expf(eta*lx))/(y*eta));
-	else            val = aM + s1*get_g_apprx(x, eta);
-
-	return val;
-}
-
-//=======================================================================================
-
-__device__ double get_PEM_aveR(int geom, double x, double* par, double lx, double ly)
+__device__ double get_PEM_aveL(int geom, double x, double* par)
 {
 	double sL = par[0];
 	double aM = par[1];
 	double sR = par[2];
-	double val;
 
-	if      (sR==0.0) val = aM;
+	if      (sL*sR==0.0) 
+	{
+		return aM;
+	}
 	else if (sR/sL>=1.0) 
 	{
-		if      (x>=1.0) val = aM + sR;
-		else if (x<=0.0) val = aM;
-		else             val = get_PEM_1(x, aM, sR, sR/sL, lx);
+		if (sR/sL<=2.0) return get_PPM_aveL(geom, x, par);
+		else            return get_PEM_0( x, sL, aM-sL, sR/sL);
 	}
 	else
 	{
-		x = 1.0-x;
-		if      (x>=1.0) val = aM;
-		else if (x<=0.0) val = aM + sR;
-		else             val = get_PEM_0(x, sR, aM, sL/sR, ly);
+		if (sL/sR<=2.0) return get_PPM_aveL(geom, x, par);
+		else            return get_PEM_1( x, sL, aM-sL, sL/sR);
 	}
-
-	return val;
 }
 
-__device__ double get_PEM_aveL(int geom, double x, double* par, double lx, double ly)
+__device__ double get_PEM_aveR(int geom, double x, double* par)
 {
 	double sL = par[0];
 	double aM = par[1];
 	double sR = par[2];
-	double val;
 
-	if      (sL==0.0) val = aM;
-	else if (sR/sL>=1.0) 
+	if      (sR*sL==0.0)
 	{
-		if      (x>=1.0) val = aM;
-		else if (x<=0.0) val = aM - sL;
-		else             val = get_PEM_0(x, -sL, aM, sR/sL, lx);
+		return aM;
+	}
+	else if (sR/sL>1.0) 
+	{
+		if (sR/sL<=2.0) return get_PPM_aveR(geom, x, par);
+		else            return get_PEM_1( 1.0-x, -sR, aM+sR, sR/sL);
 	}
 	else
 	{
-		x = 1.0-x;
-		if      (x>=1.0) val = aM - sL;
-		else if (x<=0.0) val = aM;
-		else             val = get_PEM_1(x, aM, -sL, sL/sR, ly);
+		if (sL/sR<=2.0) return get_PPM_aveR(geom, x, par);
+		else            return get_PEM_0( 1.0-x, -sR, aM+sR, sL/sR);
 	}
-
-	return val;
 }
+
+

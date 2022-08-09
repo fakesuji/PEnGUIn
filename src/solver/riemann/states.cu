@@ -58,7 +58,7 @@ __device__ void set_state(int i, int geom, double* xa, double* dx, double* dv, d
 	
 	S.rr = r0*exp_lim(u_);
 	S.pr = p0*exp_lim(gam*u_);
-	S.ur = u0 + p_ + us;
+	S.ur = u0 + p_/r0 + us;
 
 	if (print) printf(" ur=%e\n r0=%e, p0=%e, u0=%e\n u_=%e, p_=%e\n",ur,r0,p0,u0,u_,p_);
 
@@ -116,7 +116,7 @@ __device__ void set_state(int i, int geom, double* xa, double* dx, double* dv, d
 
 	S.rl = r0*exp_lim(u_);
 	S.pl = p0*exp_lim(gam*u_);
-	S.ul = u0 + p_ + us;
+	S.ul = u0 + p_/r0 + us;
 
 	if (print) printf(" ul=%e\n r0=%e, p0=%e, u0=%e\n u_=%e, p_=%e\n",ul,r0,p0,u0,u_,p_);
 

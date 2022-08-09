@@ -19,10 +19,10 @@ __device__ double lim01(double a)
 __device__ void dimensionless_x(double rL, double r0, double rR, double &x, double &lx, double &ly)
 {
 	x = lim01((r0-rL)/(rR-rL));
-	#if recon_flag==0
-	lx = __logf(x);
-	ly = __logf(1.0-x);
-	#endif
+	//#if recon_flag==0
+	//lx = __logf(x);
+	//ly = __logf(1.0-x);
+	//#endif
 	return;
 }
 
@@ -268,10 +268,7 @@ void solve(Grid* dev, double time, double dt)
 	compute_extinction(dev, 1.0);
 	#endif
 
-	#if mode_flag == 0
 	DS(dev,time,dt);
-	#elif mode_flag == 1
-	#endif
 
 	#ifdef OrbAdv_flag
 	set_OrbAdv(dev,dt);

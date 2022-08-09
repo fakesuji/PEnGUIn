@@ -31,16 +31,16 @@ const double smallr = 1.0e-14;
 // Geometric parameters
 //=======================================================================
 
-#define recon_flag 0
+#define recon_flag 1
 
 const int std_thd = 1024;
 
 #define ndim 1
 
-#if recon_flag>1
+#if recon_flag>3
 const int npad = 3;
 #else
-const int npad = 3;
+const int npad = 2;
 #endif
 
 const int xpad = npad;
@@ -55,7 +55,7 @@ const int zpad = npad;
 const int zpad = 0;
 #endif
 
-const int xres = 128;
+const int xres = 64;
 const int yres = 1;
 const int zres = 1;
 
@@ -63,7 +63,7 @@ const int xarr = xres + 2*xpad;
 const int yarr = yres + 2*ypad;
 const int zarr = zres + 2*zpad;
 
-const int x_xdiv = 128;
+const int x_xdiv = 32;
 const int x_ydiv = 1;
 const int x_zdiv = 1;
 
@@ -93,9 +93,9 @@ const int ndev = 1;
 
 const double frame_omega = 0.0;
 
-const double sav_interval = 10.0;//0.0001;//1.0*twopi;
+const double sav_interval = 1.0;//0.0001;//1.0*twopi;
 const double sta_time = 0.0;
-const double end_time = 100.0;//0.038;//1.0*twopi;
+const double end_time = 1000.0;//0.038;//1.0*twopi;
 
 const int prt_interval = 1000;
 const int max_step = 1000000000;
@@ -116,7 +116,7 @@ const double gamm = gam - 1.0;
 const double gamp = gam + 1.0;
 const double gammfac = gamm/gam/2.0;
 const double gampfac = gamp/gam/2.0;
-const double CFL = 0.8;
+const double CFL = 0.4;
 
 //=======================================================================
 // Dust parameters

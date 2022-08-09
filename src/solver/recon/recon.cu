@@ -1,6 +1,6 @@
-#include "PEM.cu"
 #include "PLM.cu"
 #include "PPM.cu"
+#include "PEM.cu"
 
 //=======================================================================================
 
@@ -74,94 +74,6 @@ __device__ void get_2nd_VAN_parameters(int i, int geom, double* r, double* dr, d
 
 __device__ void get_3rd_parameters(int i, int geom, double* x, double* dx, double* dv, double* a, double* par)
 {
-/*
-	double a1, a2, a3, sL, sR, c1, c2, c3, x0, x1, x2, x3, d1, d2, d3;
-
-	a1 = a[i-1];
-	a2 = a[i];
-	a3 = a[i+1];
-
-	x0 = x[i-1];
-	x1 = x[i];
-	x2 = x[i+1];
-	x3 = x[i+2];
-
-	d1 = dx[i-1];
-	d2 = dx[i];
-	d3 = dx[i+1];
-
-	double d131, d120, d231, d220, d12, d22, deno;
-
-	if (geom==1)
-	{
-		d12 = (2.0/3.0)*(x1*x1 + x1*x2 + x2*x2)/(x1+x2);
-		d22 = (1.0/2.0)*(x1*x1 + x2*x2);
-
-		d131 = (2.0/3.0)*(d2+d3)*(x1*x2 + x2*x3 + x1*x3)/(x1+x2)/(x2+x3);
-		d120 = (2.0/3.0)*(d1+d2)*(x0*x1 + x1*x2 + x0*x2)/(x0+x1)/(x1+x2);
-
-		d231 = (1.0/2.0)*(d2+d3)*(x1 + x3);
-		d220 = (1.0/2.0)*(d1+d2)*(x0 + x2);
-		
-		deno = (1.0/3.0)*(d1+d2)*(d2+d3)*(-d1-d2-d3)*(x0*x1*x2 + x1*x2*x3 + x0*x2*x3 + x0*x1*x3)/(x0+x1)/(x1+x2)/(x2+x3);
-	}	
-	else
-	{
-		d12 = (1.0/2.0)*(x1+x2);
-		d22 = (1.0/3.0)*(x1*x1 + x1*x2 + x2*x2);
-
-		d131 = (1.0/2.0)*(d2+d3);
-		d120 = (1.0/2.0)*(d1+d2);
-
-		d231 = (1.0/3.0)*(d2+d3)*(x1 + x2 + x3);
-		d220 = (1.0/3.0)*(d1+d2)*(x0 + x1 + x2);
-
-		deno = (1.0/6.0)*(d1+d2)*(d2+d3)*(-d1-d2-d3);
-	}
-
-	c3 = ((a2-a1)*d131 - (a3-a2)*d120)/deno;
-	c2 = ((a3-a2)*d220 - (a2-a1)*d231)/deno;
-	c1 = ((a2-a1)*(d231*d12-d131*d22) + (a3-a2)*(d120*d22-d220*d12))/deno;
-	
-	sL = -(c1 + x1*c2 + x1*x1*c3);
-	sR = (c1 + x2*c2 + x2*x2*c3);
-
-	sL = copysign(fmin(fabs(sL),fabs(a2-a1)),a2-a1);
-	sR = copysign(fmin(fabs(sR),fabs(a3-a2)),a3-a2);
-	
-	if (sR*sL<=0.0)
-	{
-		par[0] = 0.0;
-		par[1] = a2;
-		par[2] = 0.0;
-		return;
-	}
-
-	#if recon_flag==0
-	double S;
-	if (sR/sL>1.0)
-	{
-		if (geom==1) S = (a3*(0.5*(x3+x2))-a1*(0.5*(x2+x1)))/x2;
-		else         S = (a3-a2);
-
-		S = 0.5*sL*(sqrt(4.0*S/sL+1.0)-1.0);
-		if (sR/S>1.0 && S/sL>1.0) sR = S;
-	}
-	else if (sL/sR>1.0)
-	{
-		if (geom==1) S = (a2*(0.5*(x2+x1))-a1*(0.5*(x1+x0)))/x1;
-		else         S = (a2-a1);
-
-		S = 0.5*sR*(sqrt(4.0*S/sR+1.0)-1.0);
-		if (sL/S>1.0 && S/sR>1.0) sL = S;
-	}
-	#endif
-
-	par[0] = sL;
-	par[1] = a2;
-	par[2] = sR;
-	return;
-*/
 	double a0, a1, a2, sL, sR, c1, c2, x0, x1, x2, x3;
 
 	a0 = a[i-1];
@@ -210,7 +122,27 @@ __device__ void get_3rd_parameters(int i, int geom, double* x, double* dx, doubl
 
 	sL = copysign(fmin(fabs(sL),fabs(a1-a0)),a1-a0);
 	sR = copysign(fmin(fabs(sR),fabs(a2-a1)),a2-a1);
+/*
+	#if recon_flag==2 || recon_flag==4
+	double S;
+	if (sR/sL>1.0)
+	{
+		if (geom==1) S = (a2*(0.5*(x3+x2))-a1*(0.5*(x2+x1)))/x2;
+		else         S = (a2-a1);
 
+		S = 0.5*sL*(sqrt(4.0*S/sL+1.0)-1.0);
+		if (sR/S>1.0 && S/sL>1.0) sR = S;
+	}
+	else if (sL/sR>1.0)
+	{
+		if (geom==1) S = (a1*(0.5*(x2+x1))-a0*(0.5*(x1+x0)))/x1;
+		else         S = (a1-a0);
+
+		S = 0.5*sR*(sqrt(4.0*S/sR+1.0)-1.0);
+		if (sL/S>1.0 && S/sR>1.0) sL = S;
+	}
+	#endif
+*/
 	if (sR*sL<=0.0)
 	{
 		par[0] = 0.0;
@@ -228,75 +160,7 @@ __device__ void get_3rd_parameters(int i, int geom, double* x, double* dx, doubl
 }
 
 //=======================================================================================
-/*
-__device__ void get_4th_parameters(int i, int geom, double* r, double* dr, double* dv, double* a, double* par)
-{
-	double d1,d2,d3,d4,d5,a2,a3,a4;
-  	double a21, a32, a43, a54;
- 	double daL, daC, daR;
- 	double sR, sL;
-  	double t1, t2, t3;
 
-	d1 = dr[i-2];
-	d2 = dr[i-1];
-	d3 = dr[i];
-	d4 = dr[i+1];
-	d5 = dr[i+2];
-
-	a2 = a[i-1];
-	a3 = a[i];
-	a4 = a[i+1];
-
-	a21 = a2-a[i-2];
-	a32 = a3-a2;
-	a43 = a4-a3;
-	a54 = a[i+2]-a4;
-
-	/////////////////////////////////////////////////////////////////////////////
-	
-	daL = (d2/(d1+d2+d3)) * (a32*(d1+d1+d2)/(d3+d2) + a21*(d3+d3+d2)/(d1+d2));
-	daC = (d3/(d2+d3+d4)) * (a43*(d2+d2+d3)/(d4+d3) + a32*(d4+d4+d3)/(d2+d3));
-	daR = (d4/(d3+d4+d5)) * (a54*(d3+d3+d4)/(d5+d4) + a43*(d5+d5+d4)/(d3+d4));
-
-	if (a32*a21<=0.0) daL = 0.0;
-	else daL = copysign( fmin( 2.0*fmin(fabs(a21), fabs(a32)), fabs(daL)) , daL );
-
-	if (a43*a32<=0.0) daC = 0.0;
-	else daC = copysign( fmin( 2.0*fmin(fabs(a32), fabs(a43)), fabs(daC)) , daC );
-
-	if (a54*a43<=0.0) daR = 0.0;
-	else daR = copysign( fmin( 2.0*fmin(fabs(a43), fabs(a54)), fabs(daR)) , daR );
-
-	/////////////////////////////////////////////////////////////////////////////
-
-	t1 = d2+d3+d4+d5;
-	t2 = (d2+d3)/(d3+d3+d4)/t1;
-	t3 = (d4+d5)/(d3+d4+d4)/t1;
-	sR = a43*(d3/(d3+d4))*(1.0 + 2.0*d4*(t2-t3)) - daR*d3*t2 + daC*d4*t3;
-
-	t1 = d4+d3+d2+d1;
-	t2 = (d4+d3)/(d3+d3+d2)/t1;
-	t3 = (d2+d1)/(d3+d2+d2)/t1;
-	sL = a32*(d3/(d3+d2))*(1.0 + 2.0*d2*(t2-t3)) - daL*d3*t2 + daC*d2*t3;
-
-	/////////////////////////////////////////////////////////////////////////////
-
-	if (sR*sL<=0.0)
-	{
-		par[0] = 0.0;
-		par[1] = a3;
-		par[2] = 0.0;
-	}
-	else
-	{
-		par[0] = sL;
-		par[1] = a3;
-		par[2] = sR;
-	}
-
-	return;
-}
-*/
 __device__ void get_4th_parameters(int i, int geom, double* x, double* dx, double* dv, double* a, double* par)
 {
 	double a0, a1, a2, a3, a4, sL, sR, c1, c2, c3, x0, x1, x2, x3, x4, x5;
@@ -447,14 +311,18 @@ __device__ void get_4th_parameters(int i, int geom, double* x, double* dx, doubl
 __device__ void get_CON_parameters(int i, int geom, double* x, double* dx, double* dv, double* a, double* par)
 {
 	#if recon_flag==0
-	get_3rd_parameters(i, geom, x, dx, dv, a, par);
+	get_2nd_VAN_parameters(i, geom, x, dx, dv, a, par);
 	#elif recon_flag==1
 	get_2nd_MOC_parameters(i, geom, x, dx, dv, a, par);
 	#elif recon_flag==2
-	get_4th_parameters(i, geom, x, dx, dv, a, par);
-	adjust_PPM_parameters(i,par);
+	get_3rd_parameters(i, geom, x, dx, dv, a, par);
 	#elif recon_flag==3
 	get_3rd_parameters(i, geom, x, dx, dv, a, par);
+	adjust_PPM_parameters(i,par);
+	#elif recon_flag==4
+	get_4th_parameters(i, geom, x, dx, dv, a, par);
+	#elif recon_flag==5
+	get_4th_parameters(i, geom, x, dx, dv, a, par);
 	adjust_PPM_parameters(i,par);
 	#endif
 	return;
@@ -463,10 +331,16 @@ __device__ void get_CON_parameters(int i, int geom, double* x, double* dx, doubl
 __device__ double get_CON_aveR(int geom, double x, double* par, double lx, double ly)
 {
 	#if recon_flag==0
-	return get_PEM_aveR(geom, x, par, lx, ly);
+	return get_PLM_aveR(geom, x, par);
 	#elif recon_flag==1
 	return get_PLM_aveR(geom, x, par);
-	#elif recon_flag>1
+	#elif recon_flag==2
+	return get_PEM_aveR(geom, x, par);
+	#elif recon_flag==3
+	return get_PPM_aveR(geom, x, par);
+	#elif recon_flag==4
+	return get_PEM_aveR(geom, x, par);
+	#elif recon_flag==5
 	return get_PPM_aveR(geom, x, par);
 	#endif
 }
@@ -474,10 +348,16 @@ __device__ double get_CON_aveR(int geom, double x, double* par, double lx, doubl
 __device__ double get_CON_aveL(int geom, double x, double* par, double lx, double ly)
 {
 	#if recon_flag==0
-	return get_PEM_aveL(geom, x, par, lx, ly);
+	return get_PLM_aveL(geom, x, par);
 	#elif recon_flag==1
 	return get_PLM_aveL(geom, x, par);
-	#elif recon_flag>1
+	#elif recon_flag==2
+	return get_PEM_aveL(geom, x, par);
+	#elif recon_flag==3
+	return get_PPM_aveL(geom, x, par);
+	#elif recon_flag==4
+	return get_PEM_aveL(geom, x, par);
+	#elif recon_flag==5
 	return get_PPM_aveL(geom, x, par);
 	#endif
 }
@@ -485,14 +365,18 @@ __device__ double get_CON_aveL(int geom, double x, double* par, double lx, doubl
 __device__ void get_PRM_parameters(int i, int geom, double* x, double* dx, double* dv, double* a, double* par)
 {
 	#if recon_flag==0
-	get_3rd_parameters(i, geom, x, dx, dv, a, par);
+	get_2nd_VAN_parameters(i, geom, x, dx, dv, a, par);
 	#elif recon_flag==1
 	get_2nd_MOC_parameters(i, geom, x, dx, dv, a, par);
 	#elif recon_flag==2
-	get_4th_parameters(i, geom, x, dx, dv, a, par);
-	adjust_PPM_parameters(i,par);
+	get_3rd_parameters(i, geom, x, dx, dv, a, par);
 	#elif recon_flag==3
 	get_3rd_parameters(i, geom, x, dx, dv, a, par);
+	adjust_PPM_parameters(i,par);
+	#elif recon_flag==4
+	get_4th_parameters(i, geom, x, dx, dv, a, par);
+	#elif recon_flag==5
+	get_4th_parameters(i, geom, x, dx, dv, a, par);
 	adjust_PPM_parameters(i,par);
 	#endif
 	return;
@@ -501,10 +385,16 @@ __device__ void get_PRM_parameters(int i, int geom, double* x, double* dx, doubl
 __device__ double get_PRM_aveR(int geom, double x, double* par, double lx, double ly)
 {
 	#if recon_flag==0
-	return get_PEM_aveR(geom, x, par, lx, ly);
+	return get_PLM_aveR(geom, x, par);
 	#elif recon_flag==1
 	return get_PLM_aveR(geom, x, par);
-	#elif recon_flag>1
+	#elif recon_flag==2
+	return get_PEM_aveR(geom, x, par);
+	#elif recon_flag==3
+	return get_PPM_aveR(geom, x, par);
+	#elif recon_flag==4
+	return get_PEM_aveR(geom, x, par);
+	#elif recon_flag==5
 	return get_PPM_aveR(geom, x, par);
 	#endif
 }
@@ -512,10 +402,16 @@ __device__ double get_PRM_aveR(int geom, double x, double* par, double lx, doubl
 __device__ double get_PRM_aveL(int geom, double x, double* par, double lx, double ly)
 {
 	#if recon_flag==0
-	return get_PEM_aveL(geom, x, par, lx, ly);
+	return get_PLM_aveL(geom, x, par);
 	#elif recon_flag==1
 	return get_PLM_aveL(geom, x, par);
-	#elif recon_flag>1
+	#elif recon_flag==2
+	return get_PEM_aveL(geom, x, par);
+	#elif recon_flag==3
+	return get_PPM_aveL(geom, x, par);
+	#elif recon_flag==4
+	return get_PEM_aveL(geom, x, par);
+	#elif recon_flag==5
 	return get_PPM_aveL(geom, x, par);
 	#endif
 }

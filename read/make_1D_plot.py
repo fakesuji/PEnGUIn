@@ -2,83 +2,41 @@ import numpy as np
 import matplotlib.pyplot as plt
 import read_penguin as rd
 
-label_pem = 'h50'
-label_plm = 'h50_PLM'
-label_ppm = 'h50_PPM'
-xmax = 128
+label_moc = 'h50_MOC'
+label_van = 'h50_VAN'
+label_pe3 = 'h50_PEM3'
+label_pp3 = 'h50_PPM3'
+label_pe4 = 'h50_PEM4'
+label_pp4 = 'h50_PPM4'
 
+xmax = 128
 frame = 10
 
-#std = rd.load_1D_data('/mnt/penguin/fung/p2/',3200,label_pem,frame)
-#hpe = rd.load_1D_data('/mnt/penguin/fung/p2/',400,label_pem,frame)
-#hpl = rd.load_1D_data('/mnt/penguin/fung/p2/',400,label_plm,frame)
-#hpp = rd.load_1D_data('/mnt/penguin/fung/p2/',400,label_ppm,frame)
-pem = rd.load_1D_data('/mnt/penguin/fung/p2/',xmax,label_pem,frame)
-plm = rd.load_1D_data('/mnt/penguin/fung/p2/',xmax,label_plm,frame)
-ppm = rd.load_1D_data('/mnt/penguin/fung/p2/',xmax,label_ppm,frame)
+van = rd.load_1D_data('/mnt/penguin/fung/p2/',xmax,label_van,frame)
+moc = rd.load_1D_data('/mnt/penguin/fung/p2/',xmax,label_moc,frame)
+pe3 = rd.load_1D_data('/mnt/penguin/fung/p2/',xmax,label_pe3,frame)
+pp3 = rd.load_1D_data('/mnt/penguin/fung/p2/',xmax,label_pp3,frame)
+pe4 = rd.load_1D_data('/mnt/penguin/fung/p2/',xmax,label_pe4,frame)
+pp4 = rd.load_1D_data('/mnt/penguin/fung/p2/',xmax,label_pp4,frame)
 
-#pem_r = rd.load_1D_data('/mnt/penguin/fung/p2/',xmax,label_pem+'_rev',frame)
-#plm_r = rd.load_1D_data('/mnt/penguin/fung/p2/',xmax,label_plm+'_rev',frame)
-#ppm_r = rd.load_1D_data('/mnt/penguin/fung/p2/',xmax,label_ppm+'_rev',frame)
-#a = np.flip(pem_r[2])
-#b = np.flip(plm_r[2])
-#c = np.flip(ppm_r[2])
-
-xc = pem[1]
+xc = van[1]
 sol = 1.0 + 1.e-6*np.sin(2.0*np.pi*xc)
 
 plt.figure(1)
 
-#plt.plot(std[1],std[2],'grey')
+plt.plot(xc,van[2]-sol,'-', mfc='none',label='VAN')
+print('VAN',np.std(van[2]-sol))
+plt.plot(xc,moc[2]-sol,'-', mfc='none',label='MOC')
+print('MOC',np.std(moc[2]-sol))
+plt.plot(xc,pe3[2]-sol,'-', mfc='none',label='PEM3')
+print('PEM3',np.std(pe3[2]-sol))
+plt.plot(xc,pp3[2]-sol,'-', mfc='none',label='PPM3')
+print('PPM3',np.std(pp3[2]-sol))
+plt.plot(xc,pe4[2]-sol,'-', mfc='none',label='PEM4')
+print('PEM4',np.std(pe4[2]-sol))
+plt.plot(xc,pp4[2]-sol,'-', mfc='none',label='PPM4')
+print('PPM4',np.std(pp4[2]-sol))
 
-
-plt.plot(xc,ppm[2]-sol,'b:', mfc='none')
-#plt.plot(hpp[1],hpp[2],'bx-')
-#plt.plot(xc,c,'bx')
-#print(np.max(np.abs(ppm[2]-c)))
-
-print('PPM:',np.sqrt(np.sum((ppm[2]-sol)*(ppm[2]-sol))/xmax))
-
-plt.plot(xc,plm[2]-sol,'g:', mfc='none')
-#plt.plot(hpl[1],hpl[2],'gx-')
-#plt.plot(xc,b,'gx')
-#print(np.max(np.abs(plm[2]-b)))
-
-print('PLM:',np.sqrt(np.sum((plm[2]-sol)*(plm[2]-sol))/xmax))
-
-plt.plot(xc,pem[2]-sol,'r:', mfc='none')
-#plt.plot(hpe[1],hpe[2],'rx-')
-#plt.plot(xc,a,'rx')
-#print(np.max(np.abs(pem[2]-a)))
-
-print('PEM:',np.sqrt(np.sum((pem[2]-sol)*(pem[2]-sol))/xmax))
-
-pem = rd.load_1D_data('/mnt/penguin/fung/p2/',xmax,label_pem,frame)
-plm = rd.load_1D_data('/mnt/penguin/fung/p2/',xmax,label_plm,frame)
-ppm = rd.load_1D_data('/mnt/penguin/fung/p2/',xmax,label_ppm,frame)
-
-xc = pem[1]
-plt.figure(2)
-
-plt.plot(xc,ppm[3],'bs-', mfc='none')
-
-plt.plot(xc,plm[3],'gs-', mfc='none')
-
-plt.plot(xc,pem[3],'rs-', mfc='none')
-
-pem = rd.load_1D_data('/mnt/penguin/fung/p2/',xmax,label_pem,frame)
-plm = rd.load_1D_data('/mnt/penguin/fung/p2/',xmax,label_plm,frame)
-ppm = rd.load_1D_data('/mnt/penguin/fung/p2/',xmax,label_ppm,frame)
-
-xc = pem[1]
-
-plt.figure(3)
-
-plt.plot(xc,ppm[4],'bs-', mfc='none')
-
-plt.plot(xc,plm[4],'gs-', mfc='none')
-
-plt.plot(xc,pem[4],'rs-', mfc='none')
-
+plt.legend()
 
 plt.show()

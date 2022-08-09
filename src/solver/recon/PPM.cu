@@ -42,12 +42,12 @@ __device__ void flatten(double *r, double *p, double *u)
 			if (dp2f!=0.0 && dp2b!=0.0)
 			{
 				Mf  = 1.0;//fmax(0.0,10.0*Mf);	
-				ddp = 10.0*fmax(0.0,fabs(dp1f/dp2f - 0.5) - 0.125);
+				ddp = 10.0*fmax(0.0,fabs(dp1f/dp2f - 0.5) - 0.25);
 				ddp = Mf * ddp;
 				f = ddp;
 
 				Mb  = 1.0;//fmax(0.0,10.0*Mb);	
-				ddp = 10.0*fmax(0.0,fabs(dp1b/dp2b - 0.5) - 0.125);
+				ddp = 10.0*fmax(0.0,fabs(dp1b/dp2b - 0.5) - 0.25);
 				ddp = Mf * ddp;
 				f = fmax(f, ddp);
 
@@ -63,17 +63,19 @@ __device__ void flatten(double *r, double *p, double *u)
 
 __device__ void adjust_PPM_parameters(int i, double* par)
 {
+	double sL = par[0];
+	double sR = par[2];
+
+	#if recon_flag == 5
 	extern __shared__ double share[];
 	double* tmp = &share[0];
 	int imax = blockDim.x;
 	int is = i + imax*threadIdx.y;
 	double flat = tmp[is];
 
-	double sL = par[0];
-	double sR = par[2];
-
 	sR *= (1.0 - flat);
 	sL *= (1.0 - flat);
+	#endif
 	
 	double t3 = sR+sL;
 	double t2 = t3*t3;

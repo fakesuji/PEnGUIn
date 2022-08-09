@@ -49,10 +49,22 @@ string create_label()
 	label += "_St"+int_to_string(log10(Stokes)*10.0);
 	#endif
 
-	#if recon_flag == 1
-	label += "_PLM";
+	#if recon_flag == 0
+	label += "_VAN";
+	#elif recon_flag == 1
+	label += "_MOC";
 	#elif recon_flag == 2
-	label += "_PPM";
+	label += "_PEM3";
+	#elif recon_flag == 3
+	label += "_PPM3";
+	#elif recon_flag == 4
+	label += "_PEM4";
+	#elif recon_flag == 5
+	label += "_PPM4";
+	#endif
+
+	#if init_flag == 6
+	label += "_CFL"+int_to_string(CFL*100.0);
 	#endif
 
 	#ifdef rev_flag

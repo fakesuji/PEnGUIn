@@ -242,7 +242,7 @@ __device__ Cell update_Cell(double x, double y, double z, Cell Q, Cell D)
 		Q.u = u_old;
 		Q.v = v_old;
 		Q.w = w_old;
-			//printf("Error: negative density at %f %f %f\n",G.get_xc(i),G.get_yc(j),G.get_zc(k));
+		//printf("Error: negative density at %f %f %f\n",G.get_xc(i),G.get_yc(j),G.get_zc(k));
 	}
 	else
 	{
@@ -318,15 +318,17 @@ __global__ void sweepx_inplace(Grid G, Cell* C, Cell* out, double dt)
 		Del.v /= rad_cyl;
 		Del.w /= rad;
 		#endif
-/*
-		if (idx<5 && idy==100) printf("R=%f; Del_r=%e\n",rad,Del.r);
-		if (idx==2 && idy==100) 
+
+		//if (idx<5 && idy==100) printf("R=%f; Del_r=%e\n",rad,Del.r);
+		/*if (idx==2)// && idy==100) 
 		{
 			printf("%f, %f, %f, %f, %f\n",xa[i-2],xa[i-1],xa[i],xa[i+1],xa[i+2]);
 			printf("%e, %e, %e, %e, %e\n",r[i+x_xthd*j-2],r[i+x_xthd*j-1],r[i+x_xthd*j],r[i+x_xthd*j+1],r[i+x_xthd*j+2]);
 			printf("%e, %e, %e, %e, %e\n",u[i+x_xthd*j-2],u[i+x_xthd*j-1],u[i+x_xthd*j],u[i+x_xthd*j+1],u[i+x_xthd*j+2]);
+			printf("%e, %e, %e\n\n",Del.r,Del.p,Del.u);
 		}
-*/
+		*/
+
 		out[ind] = update_Cell(G.get_xc(idx), G.get_yc(idy), G.get_zc(idz), C[ind], Del);
 	}
 	return;
