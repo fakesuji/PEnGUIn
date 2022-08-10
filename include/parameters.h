@@ -31,7 +31,7 @@ const double smallr = 1.0e-14;
 // Geometric parameters
 //=======================================================================
 
-#define recon_flag 1
+#define recon_flag 5
 
 const int std_thd = 1024;
 
@@ -55,7 +55,7 @@ const int zpad = npad;
 const int zpad = 0;
 #endif
 
-const int xres = 64;
+const int xres = 256;
 const int yres = 1;
 const int zres = 1;
 
@@ -116,7 +116,7 @@ const double gamm = gam - 1.0;
 const double gamp = gam + 1.0;
 const double gammfac = gamm/gam/2.0;
 const double gampfac = gamp/gam/2.0;
-const double CFL = 0.4;
+const double CFL = 0.1;
 
 //=======================================================================
 // Dust parameters

@@ -8,6 +8,14 @@ import math
 
 twopi = 2.0*np.pi
 
+def error(a,n):
+	if (n==-1):
+		return np.max(np.abs(a))
+	elif (n==1):
+		return np.sum(np.abs(a))/a.size
+	else:
+		return np.power(np.mean(np.power(a,n)),1.0/n)
+
 def cell_center(xa):
 	N = len(xa)-1
 	xc = np.arange(N,dtype=np.float64)
