@@ -195,8 +195,12 @@ __host__ __device__ double get_u(double x, double y, double z)
 	return A;
 
 	#elif init_flag == 7
-	if (y>=0.25 && y<=0.75) return 0.5;
-	else                    return-0.5;
+	double u;
+	if (y>=0.25 && y<=0.75) u = 0.5;
+	else                    u =-0.5;
+
+	double A = 1.0e-10;
+	return u + A*((2.0*rand()/RAND_MAX)-1.0);
 
 	#elif init_flag == 8
 	if (x<=0.5) return -2.0;
@@ -246,8 +250,8 @@ __host__ __device__ double get_v(double x, double y, double z)
 	return 0.0;
 
 	#elif init_flag == 7
-	double A = 1.0e-6*sin(twopi*x);
-	return A;
+	double A = 1.0e-10;
+	return A*((2.0*rand()/RAND_MAX)-1.0);
 
 	#elif init_flag == 8
 	return 0.0;
@@ -459,6 +463,8 @@ void make_grid(double* a, double* v, double amin, double amax, int res, int pad,
 
 void fill_grid(Grid G)
 {
+	srand(0);
+
 	int ind;
 	for (int i=0; i<G.xarr; i++)
 	for (int j=0; j<G.yarr; j++)

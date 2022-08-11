@@ -10,7 +10,7 @@ __device__ double get_PEM_0(double x, double S, double aB, double eta)
 	}
 	else
 	{
-	        val = exp(eta*log(x));
+	        val = exp(eta*__logf(x));
 	}
 
 	return aB + S*val;
@@ -26,7 +26,7 @@ __device__ double get_PEM_1(double x, double S, double aB, double eta)
 	}
 	if (eta*x>0.001)
 	{
-		val = (1.0-x)*(exp(eta*log(1.0-x))-1.0)/(eta*x)+1.0;
+		val = (1.0-x)*(exp(eta*__logf(1.0-x))-1.0)/(eta*x)+1.0;
 	}
 	else
 	{
