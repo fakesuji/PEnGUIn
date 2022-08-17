@@ -72,6 +72,68 @@ __device__ void get_2nd_VAN_parameters(int i, int geom, double* r, double* dr, d
 
 //=======================================================================================
 
+__device__ void get_2nd_parameters(int i, int geom, double* x, double* dx, double* dv, double* a, double* par)
+{
+	double a0, a1, a2, sL, sR, c1, x0, x1, x2, x3;
+
+	a0 = a[i-1];
+	a1 = a[i];
+	a2 = a[i+1];
+
+	x0 = x[i-1];
+	x1 = x[i];
+	x2 = x[i+1];
+	x3 = x[i+2];
+
+	double B02,B12,B22;
+	double D02;
+
+	if (geom==1)
+	{
+		B02 = (x1*x1*x1-x0*x0*x0)/(x1*x1-x0*x0)/1.5;
+		B12 = (x2*x2*x2-x1*x1*x1)/(x2*x2-x1*x1)/1.5;
+		B22 = (x3*x3*x3-x2*x2*x2)/(x3*x3-x2*x2)/1.5;
+	}	
+	else
+	{
+		B02 = (x1*x1-x0*x0)/(x1-x0)/2.0;
+		B12 = (x2*x2-x1*x1)/(x2-x1)/2.0;
+		B22 = (x3*x3-x2*x2)/(x3-x2)/2.0;
+	}
+
+	D02 = B12-B02;
+
+	c1 = (a1-a0)/D02;
+	sL = c1*(B12-x1);
+
+	//=====================================================
+
+	D02 = B22-B12;
+
+	c1 = (a2-a1)/D02;
+	sR = c1*(x1-B12);
+
+	sL = copysign(fmin(fabs(sL),fabs(a1-a0)),a1-a0);
+	sR = copysign(fmin(fabs(sR),fabs(a2-a1)),a2-a1);
+
+	if (sR*sL<=0.0)
+	{
+		par[0] = 0.0;
+		par[1] = a1;
+		par[2] = 0.0;
+	}
+	else
+	{
+		par[0] = sL;
+		par[1] = a1;
+		par[2] = sR;
+	}
+
+	return;
+}
+
+//=======================================================================================
+
 __device__ void get_3rd_parameters(int i, int geom, double* x, double* dx, double* dv, double* a, double* par)
 {
 	double a0, a1, a2, sL, sR, c1, c2, x0, x1, x2, x3;
@@ -122,27 +184,7 @@ __device__ void get_3rd_parameters(int i, int geom, double* x, double* dx, doubl
 
 	sL = copysign(fmin(fabs(sL),fabs(a1-a0)),a1-a0);
 	sR = copysign(fmin(fabs(sR),fabs(a2-a1)),a2-a1);
-/*
-	#if recon_flag==2 || recon_flag==4
-	double S;
-	if (sR/sL>1.0)
-	{
-		if (geom==1) S = (a2*(0.5*(x3+x2))-a1*(0.5*(x2+x1)))/x2;
-		else         S = (a2-a1);
 
-		S = 0.5*sL*(sqrt(4.0*S/sL+1.0)-1.0);
-		if (sR/S>1.0 && S/sL>1.0) sR = S;
-	}
-	else if (sL/sR>1.0)
-	{
-		if (geom==1) S = (a1*(0.5*(x2+x1))-a0*(0.5*(x1+x0)))/x1;
-		else         S = (a1-a0);
-
-		S = 0.5*sR*(sqrt(4.0*S/sR+1.0)-1.0);
-		if (sL/S>1.0 && S/sR>1.0) sL = S;
-	}
-	#endif
-*/
 	if (sR*sL<=0.0)
 	{
 		par[0] = 0.0;
@@ -189,23 +231,23 @@ __device__ void get_4th_parameters(int i, int geom, double* x, double* dx, doubl
 
 	if (geom==1)
 	{
-		B02 = (x1*x1-x0*x0)/(x1-x0)/2.0;
-		B12 = (x2*x2-x1*x1)/(x2-x1)/2.0;
-		B22 = (x3*x3-x2*x2)/(x3-x2)/2.0;
-		B32 = (x4*x4-x3*x3)/(x4-x3)/2.0;
-		B42 = (x5*x5-x4*x4)/(x5-x4)/2.0;
+		B02 = (x1*x1*x1-x0*x0*x0)/(x1*x1-x0*x0)/1.5;
+		B12 = (x2*x2*x2-x1*x1*x1)/(x2*x2-x1*x1)/1.5;
+		B22 = (x3*x3*x3-x2*x2*x2)/(x3*x3-x2*x2)/1.5;
+		B32 = (x4*x4*x4-x3*x3*x3)/(x4*x4-x3*x3)/1.5;
+		B42 = (x5*x5*x5-x4*x4*x4)/(x5*x5-x4*x4)/1.5;
 
-		B03 = (x1*x1*x1-x0*x0*x0)/(x1-x0)/3.0;
-		B13 = (x2*x2*x2-x1*x1*x1)/(x2-x1)/3.0;
-		B23 = (x3*x3*x3-x2*x2*x2)/(x3-x2)/3.0;
-		B33 = (x4*x4*x4-x3*x3*x3)/(x4-x3)/3.0;
-		B43 = (x5*x5*x5-x4*x4*x4)/(x5-x4)/3.0;
+		B03 = (x1*x1*x1*x1-x0*x0*x0*x0)/(x1*x1-x0*x0)/2.0;
+		B13 = (x2*x2*x2*x2-x1*x1*x1*x1)/(x2*x2-x1*x1)/2.0;
+		B23 = (x3*x3*x3*x3-x2*x2*x2*x2)/(x3*x3-x2*x2)/2.0;
+		B33 = (x4*x4*x4*x4-x3*x3*x3*x3)/(x4*x4-x3*x3)/2.0;
+		B43 = (x5*x5*x5*x5-x4*x4*x4*x4)/(x5*x5-x4*x4)/2.0;
 
-		B04 = (x1*x1*x1*x1-x0*x0*x0*x0)/(x1-x0)/4.0;
-		B14 = (x2*x2*x2*x2-x1*x1*x1*x1)/(x2-x1)/4.0;
-		B24 = (x3*x3*x3*x3-x2*x2*x2*x2)/(x3-x2)/4.0;
-		B34 = (x4*x4*x4*x4-x3*x3*x3*x3)/(x4-x3)/4.0;
-		B44 = (x5*x5*x5*x5-x4*x4*x4*x4)/(x5-x4)/4.0;
+		B04 = (x1*x1*x1*x1*x1-x0*x0*x0*x0*x0)/(x1*x1-x0*x0)/2.5;
+		B14 = (x2*x2*x2*x2*x2-x1*x1*x1*x1*x1)/(x2*x2-x1*x1)/2.5;
+		B24 = (x3*x3*x3*x3*x3-x2*x2*x2*x2*x2)/(x3*x3-x2*x2)/2.5;
+		B34 = (x4*x4*x4*x4*x4-x3*x3*x3*x3*x3)/(x4*x4-x3*x3)/2.5;
+		B44 = (x5*x5*x5*x5*x5-x4*x4*x4*x4*x4)/(x5*x5-x4*x4)/2.5;
 	}	
 	else
 	{
@@ -315,13 +357,15 @@ __device__ void get_CON_parameters(int i, int geom, double* x, double* dx, doubl
 	#elif recon_flag==1
 	get_2nd_MOC_parameters(i, geom, x, dx, dv, a, par);
 	#elif recon_flag==2
-	get_3rd_parameters(i, geom, x, dx, dv, a, par);
+	get_2nd_parameters(i, geom, x, dx, dv, a, par);
 	#elif recon_flag==3
 	get_3rd_parameters(i, geom, x, dx, dv, a, par);
-	adjust_PPM_parameters(i,par);
 	#elif recon_flag==4
-	get_4th_parameters(i, geom, x, dx, dv, a, par);
+	get_3rd_parameters(i, geom, x, dx, dv, a, par);
+	adjust_PPM_parameters(i,par);
 	#elif recon_flag==5
+	get_4th_parameters(i, geom, x, dx, dv, a, par);
+	#elif recon_flag==6
 	get_4th_parameters(i, geom, x, dx, dv, a, par);
 	adjust_PPM_parameters(i,par);
 	#endif
@@ -337,10 +381,12 @@ __device__ double get_CON_aveR(int geom, double x, double* par, double lx, doubl
 	#elif recon_flag==2
 	return get_PEM_aveR(geom, x, par);
 	#elif recon_flag==3
-	return get_PPM_aveR(geom, x, par);
-	#elif recon_flag==4
 	return get_PEM_aveR(geom, x, par);
+	#elif recon_flag==4
+	return get_PPM_aveR(geom, x, par);
 	#elif recon_flag==5
+	return get_PEM_aveR(geom, x, par);
+	#elif recon_flag==6
 	return get_PPM_aveR(geom, x, par);
 	#endif
 }
@@ -354,10 +400,12 @@ __device__ double get_CON_aveL(int geom, double x, double* par, double lx, doubl
 	#elif recon_flag==2
 	return get_PEM_aveL(geom, x, par);
 	#elif recon_flag==3
-	return get_PPM_aveL(geom, x, par);
-	#elif recon_flag==4
 	return get_PEM_aveL(geom, x, par);
+	#elif recon_flag==4
+	return get_PPM_aveL(geom, x, par);
 	#elif recon_flag==5
+	return get_PEM_aveL(geom, x, par);
+	#elif recon_flag==6
 	return get_PPM_aveL(geom, x, par);
 	#endif
 }
@@ -369,13 +417,15 @@ __device__ void get_PRM_parameters(int i, int geom, double* x, double* dx, doubl
 	#elif recon_flag==1
 	get_2nd_MOC_parameters(i, geom, x, dx, dv, a, par);
 	#elif recon_flag==2
-	get_3rd_parameters(i, geom, x, dx, dv, a, par);
+	get_2nd_parameters(i, geom, x, dx, dv, a, par);
 	#elif recon_flag==3
 	get_3rd_parameters(i, geom, x, dx, dv, a, par);
-	adjust_PPM_parameters(i,par);
 	#elif recon_flag==4
-	get_4th_parameters(i, geom, x, dx, dv, a, par);
+	get_3rd_parameters(i, geom, x, dx, dv, a, par);
+	adjust_PPM_parameters(i,par);
 	#elif recon_flag==5
+	get_4th_parameters(i, geom, x, dx, dv, a, par);
+	#elif recon_flag==6
 	get_4th_parameters(i, geom, x, dx, dv, a, par);
 	adjust_PPM_parameters(i,par);
 	#endif
@@ -391,10 +441,12 @@ __device__ double get_PRM_aveR(int geom, double x, double* par, double lx, doubl
 	#elif recon_flag==2
 	return get_PEM_aveR(geom, x, par);
 	#elif recon_flag==3
-	return get_PPM_aveR(geom, x, par);
-	#elif recon_flag==4
 	return get_PEM_aveR(geom, x, par);
+	#elif recon_flag==4
+	return get_PPM_aveR(geom, x, par);
 	#elif recon_flag==5
+	return get_PEM_aveR(geom, x, par);
+	#elif recon_flag==6
 	return get_PPM_aveR(geom, x, par);
 	#endif
 }
@@ -408,10 +460,12 @@ __device__ double get_PRM_aveL(int geom, double x, double* par, double lx, doubl
 	#elif recon_flag==2
 	return get_PEM_aveL(geom, x, par);
 	#elif recon_flag==3
-	return get_PPM_aveL(geom, x, par);
-	#elif recon_flag==4
 	return get_PEM_aveL(geom, x, par);
+	#elif recon_flag==4
+	return get_PPM_aveL(geom, x, par);
 	#elif recon_flag==5
+	return get_PEM_aveL(geom, x, par);
+	#elif recon_flag==6
 	return get_PPM_aveL(geom, x, par);
 	#endif
 }

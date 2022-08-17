@@ -7,131 +7,90 @@ plt.rcParams['text.usetex'] = True
 
 label = 'h50_PEM3'
 xmax = 1024
-frame = 700
+frame = 1001
 
-t = np.zeros(frame)
-amp = np.zeros(frame)
+def get_growth_rates(m,xmax,label):
+	cos_t = np.zeros([m.size,xmax,xmax])
+	sin_t = np.zeros([m.size,xmax,xmax])
+	dat = rd.load_2D_data('/mnt/penguin/fung/p2/',xmax,xmax,label,0)
+	xc = rd.cell_center(dat[1])*np.pi*2.0
 
-cos_t = np.zeros([xmax,xmax])
-sin_t = np.zeros([xmax,xmax])
-dat = rd.load_2D_data('/mnt/penguin/fung/p2/',xmax,xmax,label,0)
-xc = rd.cell_center(dat[1])*np.pi*2.0
+	a_min = 1e-10
+	a_max = 1e-9
 
-for i in range(xmax):
-	sin_t[i,:] = np.sin(xc)
-	cos_t[i,:] = np.cos(xc)
+	for n in range(m.size):
+		for i in range(xmax):
+			sin_t[n,i,:] = np.sin(xc*m[n])
+			cos_t[n,i,:] = np.cos(xc*m[n])	
 
-for i in range(frame):
-	dat = rd.load_2D_data('/mnt/penguin/fung/p2/',xmax,xmax,label,i+1)
-	tmp1 = 2.0*np.sum(dat[3]*sin_t)/xmax/xmax
-	tmp2 = 2.0*np.sum(dat[3]*cos_t)/xmax/xmax
-	t[i] = dat[0]
-	amp[i] = np.sqrt(tmp1*tmp1+tmp2*tmp2)
-	print(t[i],amp[i])
 
-plt.plot(t, amp, label='m=1')
+	start = np.zeros(m.size)
+	end = np.zeros(m.size)
 
-for i in range(xmax):
-	sin_t[i,:] = np.sin(xc*2.0)
-	cos_t[i,:] = np.cos(xc*2.0)
+	pre_amp = np.zeros(m.size)
+	amp = np.zeros(m.size)
 
-for i in range(frame):
-	dat = rd.load_2D_data('/mnt/penguin/fung/p2/',xmax,xmax,label,i+1)
-	tmp1 = 2.0*np.sum(dat[3]*sin_t)/xmax/xmax
-	tmp2 = 2.0*np.sum(dat[3]*cos_t)/xmax/xmax
-	t[i] = dat[0]
-	amp[i] = np.sqrt(tmp1*tmp1+tmp2*tmp2)
-	print(t[i],amp[i])
+	amp_start = np.zeros(m.size)
+	amp_end = np.zeros(m.size)
 
-plt.plot(t, amp, label='m=2')
+	y = np.zeros([m.size,frame])
+	x = np.zeros(frame)
 
-for i in range(xmax):
-	sin_t[i,:] = np.sin(xc*3.0)
-	cos_t[i,:] = np.cos(xc*3.0)
+	t = 0.0
 
-for i in range(frame):
-	dat = rd.load_2D_data('/mnt/penguin/fung/p2/',xmax,xmax,label,i+1)
-	tmp1 = 2.0*np.sum(dat[3]*sin_t)/xmax/xmax
-	tmp2 = 2.0*np.sum(dat[3]*cos_t)/xmax/xmax
-	t[i] = dat[0]
-	amp[i] = np.sqrt(tmp1*tmp1+tmp2*tmp2)
-	print(t[i],amp[i])
+	dat0 = rd.load_2D_data('/mnt/penguin/fung/p2/',xmax,xmax,label,0)
 
-plt.plot(t, amp, label='m=3')
+	for i in range(frame):
+		pre_t = t
+		dat = rd.load_2D_data('/mnt/penguin/fung/p2/',xmax,xmax,label,i)
+		vel = np.sqrt(dat[6]*dat[6] + (dat[5]-dat0[5])*(dat[5]-dat0[5]))
 
-for i in range(xmax):
-	sin_t[i,:] = np.sin(xc*4.0)
-	cos_t[i,:] = np.cos(xc*4.0)
+		t = dat[0]
+		print(i, t)
+		x[i] = t
 
-for i in range(frame):
-	dat = rd.load_2D_data('/mnt/penguin/fung/p2/',xmax,xmax,label,i+1)
-	tmp1 = 2.0*np.sum(dat[3]*sin_t)/xmax/xmax
-	tmp2 = 2.0*np.sum(dat[3]*cos_t)/xmax/xmax
-	t[i] = dat[0]
-	amp[i] = np.sqrt(tmp1*tmp1+tmp2*tmp2)
-	print(t[i],amp[i])
+		for n in range(m.size):
+			pre_amp[n] = amp[n]
 
-plt.plot(t, amp, label='m=4')
+			tmp1 = dat[6]*sin_t[n,:,:]
+			tmp2 = dat[6]*cos_t[n,:,:]
 
-for i in range(xmax):
-	sin_t[i,:] = np.sin(xc*5.0)
-	cos_t[i,:] = np.cos(xc*5.0)
+			tot_sin = np.sum(tmp1,axis=1)/xmax
+			tot_cos = np.sum(tmp2,axis=1)/xmax
+			tot = np.sqrt(tot_sin*tot_sin+tot_cos*tot_cos)
 
-for i in range(frame):
-	dat = rd.load_2D_data('/mnt/penguin/fung/p2/',xmax,xmax,label,i+1)
-	tmp1 = 2.0*np.sum(dat[3]*sin_t)/xmax/xmax
-	tmp2 = 2.0*np.sum(dat[3]*cos_t)/xmax/xmax
-	t[i] = dat[0]
-	amp[i] = np.sqrt(tmp1*tmp1+tmp2*tmp2)
-	print(t[i],amp[i])
+			amp[n] = np.sum(tot)/xmax
+			y[n,i] = amp[n]
 
-plt.plot(t, amp, label='m=5')
+			if (np.max(vel)>1.0e-6 and start[n]==0.0):
+				#start[n] = pre_t + (amp[n]-a_min)*(t-pre_t)/(amp[n]-pre_amp[n])
+				amp_start[n] = amp[n]
+				start[n] = t
+	
+			if (np.max(vel)>1.0e-5 and end[n]==0.0):
+				#end[n] = pre_t + (amp[n]-a_max)*(t-pre_t)/(amp[n]-pre_amp[n])
+				amp_end[n] = amp[n]
+				end[n] = t
 
-for i in range(xmax):
-	sin_t[i,:] = np.sin(xc*6.0)
-	cos_t[i,:] = np.cos(xc*6.0)
+		for n in range(m.size):
+			print(y[n,i])
 
-for i in range(frame):
-	dat = rd.load_2D_data('/mnt/penguin/fung/p2/',xmax,xmax,label,i+1)
-	tmp1 = 2.0*np.sum(dat[3]*sin_t)/xmax/xmax
-	tmp2 = 2.0*np.sum(dat[3]*cos_t)/xmax/xmax
-	t[i] = dat[0]
-	amp[i] = np.sqrt(tmp1*tmp1+tmp2*tmp2)
-	print(t[i],amp[i])
+		print(np.min(vel),np.max(vel))
 
-plt.plot(t, amp, label='m=6')
+		if (np.max(vel)>1.0e-2):
+			break
 
-for i in range(xmax):
-	sin_t[i,:] = np.sin(xc*7.0)
-	cos_t[i,:] = np.cos(xc*7.0)
+	for n in range(m.size):
+		print(start[n],end[n],amp_start[n],amp_end[n],(np.log(amp_end[n]/amp_start[n]))/(end[n]-start[n]))
 
-for i in range(frame):
-	dat = rd.load_2D_data('/mnt/penguin/fung/p2/',xmax,xmax,label,i+1)
-	tmp1 = 2.0*np.sum(dat[3]*sin_t)/xmax/xmax
-	tmp2 = 2.0*np.sum(dat[3]*cos_t)/xmax/xmax
-	t[i] = dat[0]
-	amp[i] = np.sqrt(tmp1*tmp1+tmp2*tmp2)
-	print(t[i],amp[i])
+	for n in range(8):
+		plt.plot(x,y[n,:],label='m='+str(m[n]))
+	plt.yscale('log')
+	plt.legend()
+	plt.show()
 
-plt.plot(t, amp, label='m=7')
-
-for i in range(xmax):
-	sin_t[i,:] = np.sin(xc*8.0)
-	cos_t[i,:] = np.cos(xc*8.0)
-
-for i in range(frame):
-	dat = rd.load_2D_data('/mnt/penguin/fung/p2/',xmax,xmax,label,i+1)
-	tmp1 = 2.0*np.sum(dat[3]*sin_t)/xmax/xmax
-	tmp2 = 2.0*np.sum(dat[3]*cos_t)/xmax/xmax
-	t[i] = dat[0]
-	amp[i] = np.sqrt(tmp1*tmp1+tmp2*tmp2)
-	print(t[i],amp[i])
-
-plt.plot(t, amp, label='m=8')
-
-plt.yscale('log')
-plt.legend()
-plt.show()
+m=np.array([1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0,11.0,12.0,13.0,14.0,15.0,16.0,17.0,18.0,19.0,20.0])#,13.0,14.0,15.0,16.0,17.0,18.0,19.0,20.0,21.0,22.0,23.0,24.0])
+get_growth_rates(m,xmax,label)
 
 #for i in range(0,frame+1):
 #	dat = rd.load_2D_data('/mnt/penguin/fung/p2/',xmax[0],xmax[0],label_pp4,i)

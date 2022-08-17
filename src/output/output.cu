@@ -54,12 +54,14 @@ string create_label()
 	#elif recon_flag == 1
 	label += "_MOC";
 	#elif recon_flag == 2
-	label += "_PEM3";
+	label += "_PEM2";
 	#elif recon_flag == 3
-	label += "_PPM3";
+	label += "_PEM3";
 	#elif recon_flag == 4
-	label += "_PEM4";
+	label += "_PPM3";
 	#elif recon_flag == 5
+	label += "_PEM4";
+	#elif recon_flag == 6
 	label += "_PPM4";
 	#endif
 

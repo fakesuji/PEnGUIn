@@ -66,7 +66,7 @@ __device__ void adjust_PPM_parameters(int i, double* par)
 	double sL = par[0];
 	double sR = par[2];
 
-	#if recon_flag == 5
+	#if recon_flag == 6
 	extern __shared__ double share[];
 	double* tmp = &share[0];
 	int imax = blockDim.x;

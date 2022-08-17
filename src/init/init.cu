@@ -199,8 +199,8 @@ __host__ __device__ double get_u(double x, double y, double z)
 	if (y>=0.25 && y<=0.75) u = 0.5;
 	else                    u =-0.5;
 
-	double A = 1.0e-10;
-	return u + A*((2.0*rand()/RAND_MAX)-1.0);
+	double A = 1.0e-12;
+	return u;// + A*((2.0*rand()/RAND_MAX)-1.0);
 
 	#elif init_flag == 8
 	if (x<=0.5) return -2.0;
@@ -250,8 +250,24 @@ __host__ __device__ double get_v(double x, double y, double z)
 	return 0.0;
 
 	#elif init_flag == 7
-	double A = 1.0e-10;
-	return A*((2.0*rand()/RAND_MAX)-1.0);
+	double A = 1.0e-12;
+	double v = 0.0;
+	double k;
+
+	for (int n=1; n<31; n++)
+	{
+		k = twopi*(double)n;
+		if (y<0.25)
+			//return A*((2.0*rand()/RAND_MAX)-1.0)*(exp(-k*(y+0.25))+exp(-k*(0.25-y)));
+			v += k*sin(k*x)*(exp(-k*(y+0.25))+exp(-k*(0.25-y)));
+		else if (y<0.75)
+			//return A*((2.0*rand()/RAND_MAX)-1.0)*(exp(-k*(y-0.25))+exp(-k*(0.75-y)));
+			v += k*sin(k*x)*(exp(-k*(y-0.25))+exp(-k*(0.75-y)));
+		else
+			//return A*((2.0*rand()/RAND_MAX)-1.0)*(exp(-k*(y-0.75))+exp(-k*(1.25-y)));
+			v += k*sin(k*x)*(exp(-k*(y-0.75))+exp(-k*(1.25-y)));
+	}
+	return A*v;
 
 	#elif init_flag == 8
 	return 0.0;
