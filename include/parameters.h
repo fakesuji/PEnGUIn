@@ -55,8 +55,8 @@ const int zpad = npad;
 const int zpad = 0;
 #endif
 
-const int xres = 720;
-const int yres = 1536;
+const int xres = 720*2;
+const int yres = 1536*2;
 const int zres = 1;
 
 const int xarr = xres + 2*xpad;
@@ -95,7 +95,7 @@ const double frame_omega = 42.5872131567;
 
 const double sav_interval = 0.25*twopi/frame_omega;
 const double sta_time = 0.0;
-const double end_time = 1000.0*twopi/frame_omega;
+const double end_time = 100.0*twopi/frame_omega;
 
 const int prt_interval = 1000;
 const int max_step = 1000000000;
@@ -169,7 +169,7 @@ const double beta_cool = 1.0;                          // in units of dynamical 
 const int n_planet = 1;
 const double planet_mass = 0.0123;
 const double planet_radius = 0.082;
-const double planet_ecc = 0.25;
+const double planet_ecc = 0.0;//25;
 
 const double ramp_time = 10.0*twopi/frame_omega;
 
