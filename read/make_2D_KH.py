@@ -89,8 +89,13 @@ def get_growth_rates(m,xmax,label):
 	plt.legend()
 	plt.show()
 
-m=np.array([1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0,11.0,12.0,13.0,14.0,15.0,16.0,17.0,18.0,19.0,20.0])#,13.0,14.0,15.0,16.0,17.0,18.0,19.0,20.0,21.0,22.0,23.0,24.0])
-get_growth_rates(m,xmax,label)
+#m=np.array([1.0,2.0,3.0,4.0,5.0,6.0,7.0,8.0,9.0,10.0,11.0,12.0,13.0,14.0,15.0,16.0,17.0,18.0,19.0,20.0])#,13.0,14.0,15.0,16.0,17.0,18.0,19.0,20.0,21.0,22.0,23.0,24.0])
+#get_growth_rates(m,xmax,label)
+
+#dat0 = rd.load_2D_data('/mnt/penguin/fung/p2/',xmax,xmax,label,0)
+dat = rd.load_2D_data('/mnt/penguin/fung/p2/',xmax,xmax,label,65)
+plt.pcolormesh(dat[1],dat[2],dat[3])
+plt.show()
 
 #for i in range(0,frame+1):
 #	dat = rd.load_2D_data('/mnt/penguin/fung/p2/',xmax[0],xmax[0],label_pp4,i)

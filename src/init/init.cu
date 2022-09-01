@@ -96,8 +96,18 @@ __host__ __device__ double get_r(double x, double y, double z)
 	return 1.0 + A;
 
 	#elif init_flag == 7
-	if (y>=0.25 && y<=0.75) return 2.0;
-	else                    return 1.0;
+	double r1 = 1.0;
+	double r2 = 2.0;
+	double w = 0.002;
+
+	if (y<=0.5)
+	{
+		return r1*(erf((0.25-y)/w)+1.0)/2.0 + r2*(erf((y-0.25)/w)+1.0)/2.0;
+	}
+	else
+	{
+		return r1*(erf((y-0.75)/w)+1.0)/2.0 + r2*(erf((0.75-y)/w)+1.0)/2.0;
+	}
 
 	#elif init_flag == 8
 	return 1.0;
@@ -195,12 +205,19 @@ __host__ __device__ double get_u(double x, double y, double z)
 	return A;
 
 	#elif init_flag == 7
-	double u;
-	if (y>=0.25 && y<=0.75) u = 0.5;
-	else                    u =-0.5;
+	double u1 = 0.5;
+	double u2 =-0.5;
+	double w = 0.002;
 
-	double A = 1.0e-12;
-	return u;// + A*((2.0*rand()/RAND_MAX)-1.0);
+	if (y<=0.5)
+	{
+		return u1*(erf((0.25-y)/w)+1.0)/2.0 + u2*(erf((y-0.25)/w)+1.0)/2.0;
+	}
+	else
+	{
+		return u1*(erf((y-0.75)/w)+1.0)/2.0 + u2*(erf((0.75-y)/w)+1.0)/2.0;
+	}
+
 
 	#elif init_flag == 8
 	if (x<=0.5) return -2.0;
@@ -250,6 +267,7 @@ __host__ __device__ double get_v(double x, double y, double z)
 	return 0.0;
 
 	#elif init_flag == 7
+/*
 	double A = 1.0e-12;
 	double v = 0.0;
 	double k;
@@ -268,7 +286,8 @@ __host__ __device__ double get_v(double x, double y, double z)
 			v += k*sin(k*x)*(exp(-k*(y-0.75))+exp(-k*(1.25-y)));
 	}
 	return A*v;
-
+*/
+	return 1.0e-10*sin(twopi*x);
 	#elif init_flag == 8
 	return 0.0;
 
@@ -453,7 +472,10 @@ __host__ __device__ Cell init_C(double x0, double x1, double y0, double y1, doub
 void make_grid(double* a, double* v, double amin, double amax, int res, int pad, int geom, int grid)
 {
 	if      (grid==0) linspace(&a[pad], amin, amax, res+1);
-	else if (grid==1) logspace(&a[pad], amin, amax, res+1); 
+	else if (grid==1) logspace(&a[pad], amin, amax, res+1);
+	else if (grid==2) nonuspace(&a[pad], amin, amax, res+1);
+	else if (grid==3) nonuspace_half(&a[pad], amin, amax, res+1);
+	else if (grid==4) nonuspace_mix(&a[pad], amin, amax, res+1);
 
 	for (int i = 0; i<pad; i++)
 	{
