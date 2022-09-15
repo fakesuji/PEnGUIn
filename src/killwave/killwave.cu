@@ -8,7 +8,7 @@
 __device__ double get_ramping_fac(double x)
 {
   //f  = cpow(csin(f*hpi), 2.0);//1.0/(1.0 + 999.0*pow(1.0-f, 8.0)) - 0.001;//
-  double f = sin(hpi*x);
+  double f = __sinf(hpi*x);
   f *= f; 
   return f;
 }

@@ -19,6 +19,25 @@ using namespace std;
 #include "planet.h"
 #include "solver.h"
 
+bool sanity_check()
+{
+	bool sane = true;
+
+	if (xres%x_xdiv!=0) sane = false;
+	if (yres%x_ydiv!=0) sane = false;
+	if (zres%x_zdiv!=0) sane = false;
+
+	if (xres%y_xdiv!=0) sane = false;
+	if (yres%y_ydiv!=0) sane = false;
+	if (zres%y_zdiv!=0) sane = false;
+
+	if (xres%z_xdiv!=0) sane = false;
+	if (yres%z_ydiv!=0) sane = false;
+	if (zres%z_zdiv!=0) sane = false;
+
+	return sane;
+}
+
 void cpy_grid_DevicetoHost(Grid* hst, Grid* dev)
 {
 	for (int n=0; n<ndev; n++)
@@ -107,7 +126,7 @@ void mem_allocation(Grid* hst, Grid* dev)
 
 		cudaMalloc( (void**)&dev[n].C, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(Cell) );
 		cudaMalloc( (void**)&dev[n].T, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(Cell) );
-		cudaMalloc( (void**)&dev[n].F, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(Cell) );
+		//cudaMalloc( (void**)&dev[n].F, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(Cell) );
 
 		cudaMalloc( (void**)&dev[n].fx, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(double) );
 		cudaMalloc( (void**)&dev[n].fy, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(double) );
@@ -186,6 +205,12 @@ void save_check_point(ofstream &check_point, string fname, int &sstep, double cu
 
 int main(int narg, char *args[])
 {
+	if (!sanity_check())
+	{
+		printf("incorrect grid setting.\n")
+		return 1;
+	}
+
 	double sta_time = 0.0;
 	double cur_time = sta_time;
 	double sav_time = 0.0;

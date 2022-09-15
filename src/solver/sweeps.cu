@@ -61,7 +61,7 @@ __global__ void sweepx(Grid G, Cell* C, double dt)
 		Del.v /= rad_cyl;
 		Del.w /= rad;
 		#endif
-		G.F[ind].add(Del);
+		G.T[ind].add(Del);
 	}
 	//if (idx==12 && G.get_j_shf(idx,idy,idz)==17) printf("sweepx: rad=%f azi=%f\n",G.get_xc(idx),G.get_yc(idy));
 
@@ -132,15 +132,15 @@ __global__ void sweepy(Grid G, Cell* C, double dt)
 
 	if (i>=ypad && i<y_ythd-ypad)
 	{
-		G.F[ind].r += Del.r;
-		G.F[ind].p += Del.p;
-		G.F[ind].u += Del.w;
+		G.T[ind].r += Del.r;
+		G.T[ind].p += Del.p;
+		G.T[ind].u += Del.w;
 		#if geomy == 3 || geomy == 4
-		G.F[ind].v += Del.u + (G.get_rot(idx,idz) + rad*frame_omega)*Del.r;
+		G.T[ind].v += Del.u + (G.get_rot(idx,idz) + rad*frame_omega)*Del.r;
 		#else
-		G.F[ind].v += Del.u + G.get_rot(idx,idz)*Del.r;
+		G.T[ind].v += Del.u + G.get_rot(idx,idz)*Del.r;
 		#endif
-		G.F[ind].w += Del.v;
+		G.T[ind].w += Del.v;
 	}
 
 	return;
@@ -205,11 +205,11 @@ __global__ void sweepz(Grid G, Cell* C, double dt)
 		#if geomz == 5
 		Del.w /= rad_cyl;
 		#endif
-		G.F[ind].r += Del.r;
-		G.F[ind].p += Del.p;
-		G.F[ind].u += Del.v;
-		G.F[ind].v += Del.w;
-		G.F[ind].w += Del.u;
+		G.T[ind].r += Del.r;
+		G.T[ind].p += Del.p;
+		G.T[ind].u += Del.v;
+		G.T[ind].v += Del.w;
+		G.T[ind].w += Del.u;
 	}
 
 	return;

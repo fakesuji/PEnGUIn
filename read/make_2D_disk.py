@@ -9,7 +9,7 @@ label = 'h27_p12J_a-10_OA_PPM4'
 xmax = 720
 ymax = 1536
 
-start = 140
+start = 2000
 
 for i in range(4):
 	plt.figure(i)

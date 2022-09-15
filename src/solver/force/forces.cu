@@ -44,10 +44,13 @@ __device__ void star_planet_grav_cyl(double rad, double azi, double z, body p, d
 	double plx = p.x;
 
 	double Rp = sqrt(rad*rad + plx*plx - 2.0*plx*rad*cosfac + z*z + p.rs*p.rs);
+	double rs_fac = 1.0/Rp/Rp/Rp;
+	//double Rp = sqrt(rad*rad + plx*plx - 2.0*plx*rad*cosfac);
+	//double rs_fac = fmax(4.0-3.0*Rp/p.rs, 1.0)/fmax(p.rs*p.rs*p.rs, Rp*Rp*Rp);
 
-	fx = -plm*(rad-plx*cosfac)/(Rp*Rp*Rp) - plm*cosfac/plx/plx;
-	fy = -plm*plx*sinfac/(Rp*Rp*Rp)       + plm*sinfac/plx/plx;
-	fz = -plm*z/(Rp*Rp*Rp);
+	fx = -plm*(rad-plx*cosfac)*rs_fac - plm*cosfac/plx/plx;
+	fy = -plm*plx*sinfac*rs_fac       + plm*sinfac/plx/plx;
+	fz = -plm*z*rs_fac;
 	return;
 }
 

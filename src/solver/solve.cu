@@ -135,7 +135,7 @@ __global__ void update(Grid G, Cell* in, Cell* out, double dt, double div=1.0)
 		vol = G.get_xv(i)*G.get_yv(j)*G.get_zv(k);
 
 		Q.copy(in[ind]);
-		D.copy(G.F[ind]);
+		D.copy(G.T[ind]);
 		D.multiply(div*dt/vol);
 
 		r_min = fmax(Q.r*1.0e-10,smallr);

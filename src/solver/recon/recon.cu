@@ -150,7 +150,17 @@ __device__ void get_3rd_parameters(int i, int geom, double* x, double* dx, doubl
 	double B02,B12,B22,B03,B13,B23;
 	double D02,D12,D03,D13;
 
-	if (geom==1)
+	if (geom==2)
+	{
+		B02 = (x1*x1*x1*x1-x0*x0*x0*x0)/(x1*x1*x1-x0*x0*x0)/(4.0/3.0);
+		B12 = (x2*x2*x2*x2-x1*x1*x1*x1)/(x2*x2*x2-x1*x1*x1)/(4.0/3.0);
+		B22 = (x3*x3*x3*x3-x2*x2*x2*x2)/(x3*x3*x3-x2*x2*x2)/(4.0/3.0);
+
+		B03 = (x1*x1*x1*x1*x1-x0*x0*x0*x0*x0)/(x1*x1*x1-x0*x0*x0)/(5.0/3.0);
+		B13 = (x2*x2*x2*x2*x2-x1*x1*x1*x1*x1)/(x2*x2*x2-x1*x1*x1)/(5.0/3.0);
+		B23 = (x3*x3*x3*x3*x3-x2*x2*x2*x2*x2)/(x3*x3*x3-x2*x2*x2)/(5.0/3.0);
+	}
+	else if (geom==1)
 	{
 		B02 = (x1*x1*x1-x0*x0*x0)/(x1*x1-x0*x0)/1.5;
 		B12 = (x2*x2*x2-x1*x1*x1)/(x2*x2-x1*x1)/1.5;
@@ -229,7 +239,27 @@ __device__ void get_4th_parameters(int i, int geom, double* x, double* dx, doubl
 	double D04,D14,D24;
 
 
-	if (geom==1)
+	if (geom==2)
+	{
+		B02 = (x1*x1*x1*x1-x0*x0*x0*x0)/(x1*x1*x1-x0*x0*x0)/(4.0/3.0);
+		B12 = (x2*x2*x2*x2-x1*x1*x1*x1)/(x2*x2*x2-x1*x1*x1)/(4.0/3.0);
+		B22 = (x3*x3*x3*x3-x2*x2*x2*x2)/(x3*x3*x3-x2*x2*x2)/(4.0/3.0);
+		B32 = (x4*x4*x4*x4-x3*x3*x3*x3)/(x4*x4*x4-x3*x3*x3)/(4.0/3.0);
+		B42 = (x5*x5*x5*x5-x4*x4*x4*x4)/(x5*x5*x5-x4*x4*x4)/(4.0/3.0);
+
+		B03 = (x1*x1*x1*x1*x1-x0*x0*x0*x0*x0)/(x1*x1*x1-x0*x0*x0)/(5.0/3.0);
+		B13 = (x2*x2*x2*x2*x2-x1*x1*x1*x1*x1)/(x2*x2*x2-x1*x1*x1)/(5.0/3.0);
+		B23 = (x3*x3*x3*x3*x3-x2*x2*x2*x2*x2)/(x3*x3*x3-x2*x2*x2)/(5.0/3.0);
+		B33 = (x4*x4*x4*x4*x4-x3*x3*x3*x3*x3)/(x4*x4*x4-x3*x3*x3)/(5.0/3.0);
+		B43 = (x5*x5*x5*x5*x5-x4*x4*x4*x4*x4)/(x5*x5*x5-x4*x4*x4)/(5.0/3.0);
+
+		B04 = (x1*x1*x1*x1*x1*x1-x0*x0*x0*x0*x0*x0)/(x1*x1*x1-x0*x0*x0)/2.0;
+		B14 = (x2*x2*x2*x2*x2*x2-x1*x1*x1*x1*x1*x1)/(x2*x2*x2-x1*x1*x1)/2.0;
+		B24 = (x3*x3*x3*x3*x3*x3-x2*x2*x2*x2*x2*x2)/(x3*x3*x3-x2*x2*x2)/2.0;
+		B34 = (x4*x4*x4*x4*x4*x4-x3*x3*x3*x3*x3*x3)/(x4*x4*x4-x3*x3*x3)/2.0;
+		B44 = (x5*x5*x5*x5*x5*x5-x4*x4*x4*x4*x4*x4)/(x5*x5*x5-x4*x4*x4)/2.0;
+	}
+	else if (geom==1)
 	{
 		B02 = (x1*x1*x1-x0*x0*x0)/(x1*x1-x0*x0)/1.5;
 		B12 = (x2*x2*x2-x1*x1*x1)/(x2*x2-x1*x1)/1.5;
