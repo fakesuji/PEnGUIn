@@ -24,16 +24,20 @@ bool sanity_check()
 	bool sane = true;
 
 	if (xres%x_xdiv!=0) sane = false;
-	if (yres%x_ydiv!=0) sane = false;
-	if (zres%x_zdiv!=0) sane = false;
-
 	if (xres%y_xdiv!=0) sane = false;
-	if (yres%y_ydiv!=0) sane = false;
-	if (zres%y_zdiv!=0) sane = false;
-
 	if (xres%z_xdiv!=0) sane = false;
+
+	#if ndim>1
+	if (yres%x_ydiv!=0) sane = false;
+	if (yres%y_ydiv!=0) sane = false;
 	if (yres%z_ydiv!=0) sane = false;
+	#endif
+
+	#if ndim>2
+	if (zres%x_zdiv!=0) sane = false;
+	if (zres%y_zdiv!=0) sane = false;
 	if (zres%z_zdiv!=0) sane = false;
+	#endif
 
 	return sane;
 }
@@ -207,7 +211,7 @@ int main(int narg, char *args[])
 {
 	if (!sanity_check())
 	{
-		printf("incorrect grid setting.\n")
+		printf("incorrect grid setting.\n");
 		return 1;
 	}
 

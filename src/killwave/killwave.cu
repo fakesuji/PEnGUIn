@@ -62,13 +62,9 @@ __global__ void killwave(Grid G, Cell* C, double dt)
 
 			C_tmp.copy(C[ind]);
 			I_tmp = init_C(rad,azi,pol);
-			#if kill_flag == 2
-			I_tmp.r *= 0.0;
-			I_tmp.p *= 0.0;
-			#endif
 
-			C_tmp.r += f * ( I_tmp.r - C_tmp.r );
-			C_tmp.p += f * ( I_tmp.p - C_tmp.p );
+			//C_tmp.r += f * ( I_tmp.r - C_tmp.r );
+			//C_tmp.p += f * ( I_tmp.p - C_tmp.p );
 			C_tmp.u += f * ( I_tmp.u - C_tmp.u );
 			C_tmp.v += f * ( I_tmp.v - C_tmp.v );
 			C_tmp.w += f * ( I_tmp.w - C_tmp.w );
@@ -94,8 +90,8 @@ __global__ void killwave(Grid G, Cell* C, double dt)
 			C_tmp.copy(C[ind]);
 			I_tmp = init_C(rad,azi,pol);
 
-			C_tmp.r += f * ( I_tmp.r - C_tmp.r );
-			C_tmp.p += f * ( I_tmp.p - C_tmp.p );
+			//C_tmp.r += f * ( I_tmp.r - C_tmp.r );
+			//C_tmp.p += f * ( I_tmp.p - C_tmp.p );
 			C_tmp.u += f * ( I_tmp.u - C_tmp.u );
 			C_tmp.v += f * ( I_tmp.v - C_tmp.v );
 			C_tmp.w += f * ( I_tmp.w - C_tmp.w );

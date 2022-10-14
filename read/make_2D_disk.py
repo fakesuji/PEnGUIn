@@ -5,13 +5,13 @@ from matplotlib.ticker import ScalarFormatter, NullFormatter
 
 plt.rcParams['text.usetex'] = True
 
-label = 'h27_p12J_a-10_OA_PPM4'
-xmax = 720
-ymax = 1536
+label = 'h27_p10E_OA_PPM4'
+xmax = 1008
+ymax = 1632
 
-start = 2000
+start = 1
 
-for i in range(4):
+for i in range(2):
 	plt.figure(i)
 	dat = rd.load_2D_data('/mnt/penguin/fung/p2/',xmax,ymax,label,start+i)
 	plt.pcolormesh(dat[1],dat[2],np.log10(dat[3]))

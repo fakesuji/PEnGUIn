@@ -24,7 +24,7 @@ __global__ void planet_evo(body* planets, double time, double dt)
 	if (planet_ecc==0.0)
 	{
 		rad = planets[n].x;
-		planets[n].y += (planets[n].vy/planets[n].x/rad-frame_omega)*dt;
+		planets[n].y += (planets[n].vy/rad/rad-frame_omega)*dt;
 	}
 	else
 	{
@@ -67,22 +67,28 @@ void evolve_planet(Grid* dev, double time, double dt)
 void init_planet(Grid* G, double time)
 {
 	double e = planet_ecc;
+	double a;
 	for (int i=0; i<ndev; i++)
 	{
 		for (int n=0; n<n_planet; n++)
 		{
+			e = planet_ecc;
+			if (n==0)      a = planet_radius;
+			else if (n==1) a = 2.5;
+			else if (n==2) a = 5.0;
+
 			G[i].planets[n].m = ramp_function(time, ramp_time, planet_mass);
-			G[i].planets[n].x = planet_radius*(1.0-e);
+			G[i].planets[n].x = a*(1.0-e);
 			G[i].planets[n].y = pi;
 			G[i].planets[n].z = hpi;
 
 			G[i].planets[n].vx = 0.0;
-			G[i].planets[n].vy = sqrt((1.0+e)/(1.0-e)/planet_radius)*G[i].planets[n].x;
+			G[i].planets[n].vy = sqrt((1.0+e)/(1.0-e)/a)*G[i].planets[n].x;
 			G[i].planets[n].vz = 0.0;
 			#if ndim==2
-			G[i].planets[n].rs = fmin(sc_h,fmax(sc_h/2.0,pow(planet_mass/3.0,1.0/3.0)/4.0))*planet_radius;
+			G[i].planets[n].rs = fmin(sc_h,fmax(sc_h/2.0,pow(planet_mass/3.0,1.0/3.0)/4.0))*a;
 			#else
-			G[i].planets[n].rs = (pow(planet_mass/3.0,1.0/3.0)/4.0)*planet_radius;
+			G[i].planets[n].rs = (pow(planet_mass/3.0,1.0/3.0)/4.0)*a;
 			#endif
 		}
 	}
