@@ -30,7 +30,7 @@ const double smallr = 1.0e-10;
 // Geometric parameters
 //=======================================================================
 
-#define recon_flag 6
+#define recon_flag 1
 
 const int std_thd = 1024;
 
@@ -62,14 +62,14 @@ const int xarr = xres + 2*xpad;
 const int yarr = yres + 2*ypad;
 const int zarr = zres + 2*zpad;
 
-const int x_xdiv = 24;
+const int x_xdiv = 32;
 const int x_ydiv = 8;
 const int x_zdiv = 1;
 
 const int x_xthd = x_xdiv + 2*xpad;
 
 const int y_xdiv = 8;
-const int y_ydiv = 24;
+const int y_ydiv = 32;
 const int y_zdiv = 1;
 
 const int y_ythd = y_ydiv + 2*ypad;

@@ -74,7 +74,7 @@ void init_planet(Grid* G, double time)
 		{
 			e = planet_ecc;
 			if (n==0)      a = planet_radius;
-			else if (n==1) a = 2.5;
+			else if (n==1) a = 2.236068;
 			else if (n==2) a = 5.0;
 
 			G[i].planets[n].m = ramp_function(time, ramp_time, planet_mass);

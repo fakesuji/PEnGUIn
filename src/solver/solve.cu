@@ -247,14 +247,23 @@ void DS(Grid* dev, double time, double dt)
 	#endif
 	#endif
 
+	#ifdef OrbAdv_flag
+	set_OrbAdv(dev,dt);
+	shift_OrbAdv(dev);
+	advecty(dev,dt);
+	#ifdef dust_flag
+	advecty_dust(dev,dt);
+	#endif
+	#endif
+
 	evolve_planet(dev,time+dt,dt);
 
 	#ifdef visc_flag
-	apply_source_terms(dev, dt, hdt, hdt);
+	apply_source_terms(dev, 0.0, hdt, hdt);
 	viscosity_tensor_evaluation2(dev);
-	apply_source_terms_inplace(dev, dt, hdt, hdt);
+	apply_source_terms_inplace(dev, 0.0, hdt, hdt);
 	#else
-	apply_source_terms_inplace(dev, dt, hdt, hdt);
+	apply_source_terms_inplace(dev, 0.0, hdt, hdt);
 	#endif
 
 
@@ -269,15 +278,6 @@ void solve(Grid* dev, double time, double dt)
 	#endif
 
 	DS(dev,time,dt);
-
-	#ifdef OrbAdv_flag
-	set_OrbAdv(dev,dt);
-	shift_OrbAdv(dev);
-	advecty(dev,dt);
-	#ifdef dust_flag
-	advecty_dust(dev,dt);
-	#endif
-	#endif
 
 	#ifdef kill_flag
 	killwave(dev, dt);
