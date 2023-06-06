@@ -23,11 +23,11 @@ string create_label()
 	{
 		if (planet_mass>=JupiterMass)
 		{
-			label += "_p"+int_to_string(planet_mass/JupiterMass)+"J";
+			label += "_"+int_to_string(n_planet)+"p"+int_to_string(planet_mass/JupiterMass)+"J";
 		}
 		else
 		{
-			label += "_p"+int_to_string(planet_mass/EarthMass)+"E";
+			label += "_"+int_to_string(n_planet)+"p"+int_to_string(planet_mass/EarthMass)+"E";
 		}
 	}
 
@@ -72,6 +72,8 @@ string create_label()
 	#ifdef rev_flag
 	label += "_rev";
 	#endif
+
+	label += "_"+int_to_string(ndev)+"dev";
 
 	printf("label %s assigned. \n\n", label.c_str());
  

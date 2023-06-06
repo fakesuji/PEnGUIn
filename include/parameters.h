@@ -2,9 +2,9 @@
 #define PARAMETERS_H
 
 #define dump_flag
-#define kill_flag 1
+//#define kill_flag 1
 #define OrbAdv_flag
-//#define visc_flag 1
+#define visc_flag 1
 //#define cool_flag
 //#define advec_flag
 
@@ -30,11 +30,11 @@ const double smallr = 1.0e-10;
 // Geometric parameters
 //=======================================================================
 
-#define recon_flag 1
+#define recon_flag 6
 
 const int std_thd = 1024;
 
-#define ndim 2
+#define ndim 3
 
 #if recon_flag>4
 const int npad = 3;
@@ -54,22 +54,22 @@ const int zpad = npad;
 const int zpad = 0;
 #endif
 
-const int xres = 960;
-const int yres = 1632;
-const int zres = 1;
+const int xres = 384;//720;//
+const int yres = 768;//1536;//2016;//1536;//
+const int zres = 24;//64;//48;//
 
 const int xarr = xres + 2*xpad;
 const int yarr = yres + 2*ypad;
 const int zarr = zres + 2*zpad;
 
-const int x_xdiv = 32;
+const int x_xdiv = 24;
 const int x_ydiv = 8;
 const int x_zdiv = 1;
 
 const int x_xthd = x_xdiv + 2*xpad;
 
 const int y_xdiv = 8;
-const int y_ydiv = 32;
+const int y_ydiv = 24;
 const int y_zdiv = 1;
 
 const int y_ythd = y_ydiv + 2*ypad;
@@ -90,12 +90,12 @@ const int ndev = 1;
 // Temporal parameters
 //=======================================================================
 
-const double frame_omega = 1.0;
+const double frame_omega = 23.1815426224;//42.5872131567;
 
-const double sav_interval = 100.0*twopi/frame_omega;
-const double end_time = 10000.0*twopi/frame_omega;
+const double sav_interval = 1.0*twopi/frame_omega;
+const double end_time = 2.0*twopi/frame_omega;
 
-const int prt_interval = 1000;
+const int prt_interval = 100;
 const int max_step = 1000000000;
 
 //=======================================================================
@@ -114,7 +114,7 @@ const double gamm = gam - 1.0;
 const double gamp = gam + 1.0;
 const double gammfac = gamm/gam/2.0;
 const double gampfac = gamp/gam/2.0;
-const double CFL = 0.5;
+const double CFL = 0.3;
 
 //=======================================================================
 // Dust parameters
@@ -142,14 +142,14 @@ const int bound_top = 2;
 // Disk parameters
 //=======================================================================
 
-const double p_beta = 1.0;                             // temperature ~ r^-p_beta
+const double p_beta = 0.33;                             // temperature ~ r^-p_beta
 #if ndim==3
-const double p_alpha = 1.5 - 0.5*p_beta + 1.5;          // midplane density ~ r^-p_alpha (isothermal limit)
+const double p_alpha = 2.0 - 0.5*p_beta + 1.5;          // midplane density ~ r^-p_alpha (isothermal limit)
 #else 
-const double p_alpha = 1.5;                             // surface density ~ r^-p_alpha
+const double p_alpha = 2.0;                             // surface density ~ r^-p_alpha
 #endif 
-const double ss_alpha = 0.1;                            // alpha-viscosity
-const double sc_h = 0.027;                              // scale height at r=1, normalized to that at r = 100
+const double ss_alpha = 0.01;                            // alpha-viscosity
+const double sc_h = 0.033;                              // scale height at r=1, normalized to that at r = 100
 
 #if ndim==3
 const double Sigma_0 = 0.1*MMSN_1AU/(sqrt_hpi*sc_h);    // midplane density at r=1 in units of M_solar/AU^3
@@ -164,9 +164,9 @@ const double beta_cool = 1.0;                          // in units of dynamical 
 // planet parameters
 //=======================================================================
 
-const int n_planet = 3;
-const double planet_mass = 10.0*EarthMass;
-const double planet_radius = 1.0;
+const int n_planet = 1;
+const double planet_mass = 0.00276;
+const double planet_radius = 0.123;
 const double planet_ecc = 0.0;
 
 const double ramp_time = 1.0*twopi/frame_omega;
@@ -175,16 +175,16 @@ const double ramp_time = 1.0*twopi/frame_omega;
 // Grid parameters
 //=======================================================================
 
-const double xmin = 0.4;
-const double xmax = 15.0;
+const double xmin = 0.03;
+const double xmax = 0.4;
 const double ymin = 0.0;
 const double ymax = twopi;
 const double zmin = hpi-4.0*sc_h;
 const double zmax = hpi;
 
-#define geomx 1
-#define geomy 3
-#define geomz 0
+#define geomx 2
+#define geomy 4
+#define geomz 5
 
 const int gridx = 1;
 const int gridy = 0;

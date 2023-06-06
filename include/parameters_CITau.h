@@ -84,16 +84,16 @@ const int z_zthd = z_zdiv + 2*zpad;
 // Geometric parameters
 //=======================================================================
 
-const int ndev = 1;
+const int ndev = 2;
 
 //=======================================================================
 // Temporal parameters
 //=======================================================================
 
-const double frame_omega = 42.5872131567;
+const double frame_omega = 23.1815426224;//42.5872131567;
 
-const double sav_interval = 0.25*twopi/frame_omega;
-const double end_time = 1000.0*twopi/frame_omega;
+const double sav_interval = 10.0*twopi/frame_omega;
+const double end_time = 10000.0*twopi/frame_omega;
 
 const int prt_interval = 1000;
 const int max_step = 1000000000;
@@ -149,7 +149,7 @@ const double p_alpha = 2. - 0.5*p_beta + 1.5;          // midplane density ~ r^-
 const double p_alpha = 2.;                             // surface density ~ r^-p_alpha
 #endif 
 const double ss_alpha = 0.1;                            // alpha-viscosity
-const double sc_h = 0.027;                              // scale height at r=1, normalized to that at r = 100
+const double sc_h = 0.033;                              // scale height at r=1, normalized to that at r = 100
 
 #if ndim==3
 const double Sigma_0 = 0.1*MMSN_1AU/(sqrt_hpi*sc_h);    // midplane density at r=1 in units of M_solar/AU^3
@@ -157,7 +157,7 @@ const double Sigma_0 = 0.1*MMSN_1AU/(sqrt_hpi*sc_h);    // midplane density at r
 const double Sigma_0 = (MMSN_1AU/0.76)*0.05;              // density at r=1 in units of M_solar/AU^2
 #endif
 
-const double kill_width = 20.0;                      // in units of sc_h
+const double kill_width = 5.0;                      // in units of sc_h
 const double beta_cool = 1.0;                          // in units of dynamical time for beta cooling
 
 //=======================================================================
@@ -165,8 +165,8 @@ const double beta_cool = 1.0;                          // in units of dynamical 
 //=======================================================================
 
 const int n_planet = 1;
-const double planet_mass = 0.0123;
-const double planet_radius = 0.082;
+const double planet_mass = 0.00276;
+const double planet_radius = 0.123;
 const double planet_ecc = 0.0;
 
 const double ramp_time = 1.0*twopi/frame_omega;
@@ -175,7 +175,7 @@ const double ramp_time = 1.0*twopi/frame_omega;
 // Grid parameters
 //=======================================================================
 
-const double xmin = 0.02;
+const double xmin = 0.03;
 const double xmax = 0.4;
 const double ymin = 0.0;
 const double ymax = twopi;

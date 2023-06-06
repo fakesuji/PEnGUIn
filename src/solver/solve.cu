@@ -221,6 +221,7 @@ void DS(Grid* dev, double time, double dt)
 
 	apply_source_terms_inplace(dev, 0.0, 0.0, hdt);
 
+	boundx(dev);
 	sweepx_inplace(dev,dt);
 
 	#if ndim>1
@@ -234,6 +235,7 @@ void DS(Grid* dev, double time, double dt)
 	#endif
 
 	#ifdef dust_flag
+	boundx_dust(dev);
 	sweepx_dust_inplace(dev,dt);
 
 	#if ndim>1

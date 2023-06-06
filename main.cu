@@ -226,7 +226,7 @@ int main(int narg, char *args[])
 
 	string label=create_label();
 	//string path =path_to_cwd()+"/binary/";
-	string path = "/mnt/penguin/fung/p2/";
+	string path = "/scratch/fung/";
 	string fname;
 
 	Grid* hst = new Grid[ndev];

@@ -24,7 +24,8 @@ __global__ void planet_evo(body* planets, double time, double dt)
 	if (planet_ecc==0.0)
 	{
 		rad = planets[n].x;
-		planets[n].y += (planets[n].vy/rad/rad-frame_omega)*dt;
+	//	planets[n].y += (planets[n].vy/rad/rad-frame_omega)*dt;
+		planets[n].y = fmod((planets[n].vy/rad/rad-frame_omega)*time+pi,twopi);
 	}
 	else
 	{
@@ -73,10 +74,39 @@ void init_planet(Grid* G, double time)
 		for (int n=0; n<n_planet; n++)
 		{
 			e = planet_ecc;
-			if (n==0)      a = planet_radius;
-			else if (n==1) a = 2.236068;
-			else if (n==2) a = 5.0;
-
+			if (n==0) a = planet_radius;//planet_radius;
+			else if (n==n_planet-1) a = 5.0;
+			else
+			{
+				if (n_planet==3) a = 2.236068;
+				else if (n_planet==4)
+				{
+					if (n==1) a = 1.71;
+					if (n==2) a = 2.924;
+				}
+				else if (n_planet==5)
+				{
+					if (n==1) a = 1.495349;
+					if (n==2) a = 2.2360685;
+					if (n==3) a = 3.3437;
+				}
+				else if (n_planet==6)
+				{
+					if (n==1) a = 1.37973;
+					if (n==2) a = 1.903654;
+					if (n==3) a = 2.62652784;
+					if (n==4) a = 3.6239;
+				}
+				else if (n_planet==7)
+				{
+					if (n==1) a = 1.30766044;
+					if (n==2) a = 1.70997585;
+					if (n==3) a = 2.23606792;
+					if (n==4) a = 2.92401782;
+					if (n==5) a = 3.82362215;
+				}
+			}
+			
 			G[i].planets[n].m = ramp_function(time, ramp_time, planet_mass);
 			G[i].planets[n].x = a*(1.0-e);
 			G[i].planets[n].y = pi;

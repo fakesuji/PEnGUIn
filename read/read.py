@@ -7,8 +7,16 @@ from matplotlib import cm
 import numpy as np
 import math
 import pickle
+import os.path as pat
 
 twopi = 2.0*np.pi
+
+def check_file_exist(path, imax, jmax, label, num):
+	fname = path+'binary_'
+	fname = fname + str(imax)+'x'+str(jmax)+'_'
+	fname = fname + label + '_'
+	fname = fname + frame_num(num)
+	return pat.isfile(fname)
 
 def cell_center(xa):
 	N = len(xa)-1
