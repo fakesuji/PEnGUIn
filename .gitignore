@@ -1,5 +1,10 @@
+binary/
+images/
+read/__pycache__/
+
 # Python files #
 ###################
+*.pkl
 *.pyc
 
 # Compiled source #
