@@ -5,9 +5,31 @@ from matplotlib.colors import ListedColormap
 from matplotlib import cm
 import numpy as np
 import math
+<<<<<<< HEAD
 
 twopi = 2.0*np.pi
 
+=======
+import os.path as pat
+
+twopi = 2.0*np.pi
+
+def check_file_exist(path, imax, jmax, label, num):
+	fname = path+'binary_'
+	fname = fname + str(imax)+'x'+str(jmax)+'_'
+	fname = fname + label + '_'
+	fname = fname + frame_num(num)
+	return pat.isfile(fname)
+
+def error(a,n):
+	if (n==-1):
+		return np.max(np.abs(a))
+	elif (n==1):
+		return np.sum(np.abs(a))/a.size
+	else:
+		return np.power(np.mean(np.power(a,n)),1.0/n)
+
+>>>>>>> methods
 def cell_center(xa):
 	N = len(xa)-1
 	xc = np.arange(N,dtype=np.float64)

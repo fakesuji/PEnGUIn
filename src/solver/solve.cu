@@ -19,16 +19,25 @@ __device__ double lim01(double a)
 __device__ void dimensionless_x(double rL, double r0, double rR, double &x, double &lx, double &ly)
 {
 	x = lim01((r0-rL)/(rR-rL));
+<<<<<<< HEAD
 	#if recon_flag==0
 	//lx = __logf(x);
 	//ly = __logf(1.0-x);
 	#endif
+=======
+	//#if recon_flag==0
+	//lx = __logf(x);
+	//ly = __logf(1.0-x);
+	//#endif
+>>>>>>> methods
 	return;
 }
 
 __device__ double exp_lim(double x)
 {
 	return fmax(1.0+x,1.0e-6);
+	//if (x>0.0) return 1.0+x;
+	//else       return exp(x);
 }
 
 __device__ int jlim(int j, int jmax)
@@ -133,7 +142,7 @@ __global__ void update(Grid G, Cell* in, Cell* out, double dt, double div=1.0)
 		vol = G.get_xv(i)*G.get_yv(j)*G.get_zv(k);
 
 		Q.copy(in[ind]);
-		D.copy(G.F[ind]);
+		D.copy(G.T[ind]);
 		D.multiply(div*dt/vol);
 
 		r_min = fmax(Q.r*1.0e-10,smallr);
@@ -219,6 +228,7 @@ void DS(Grid* dev, double time, double dt)
 
 	apply_source_terms_inplace(dev, 0.0, 0.0, hdt);
 
+	boundx(dev);
 	sweepx_inplace(dev,dt);
 
 	#if ndim>1
@@ -232,6 +242,7 @@ void DS(Grid* dev, double time, double dt)
 	#endif
 
 	#ifdef dust_flag
+	boundx_dust(dev);
 	sweepx_dust_inplace(dev,dt);
 
 	#if ndim>1
@@ -245,14 +256,23 @@ void DS(Grid* dev, double time, double dt)
 	#endif
 	#endif
 
+	#ifdef OrbAdv_flag
+	set_OrbAdv(dev,dt);
+	shift_OrbAdv(dev);
+	advecty(dev,dt);
+	#ifdef dust_flag
+	advecty_dust(dev,dt);
+	#endif
+	#endif
+
 	evolve_planet(dev,time+dt,dt);
 
 	#ifdef visc_flag
-	apply_source_terms(dev, dt, hdt, hdt);
+	apply_source_terms(dev, 0.0, hdt, hdt);
 	viscosity_tensor_evaluation2(dev);
-	apply_source_terms_inplace(dev, dt, hdt, hdt);
+	apply_source_terms_inplace(dev, 0.0, hdt, hdt);
 	#else
-	apply_source_terms_inplace(dev, dt, hdt, hdt);
+	apply_source_terms_inplace(dev, 0.0, hdt, hdt);
 	#endif
 
 
@@ -266,19 +286,7 @@ void solve(Grid* dev, double time, double dt)
 	compute_extinction(dev, 1.0);
 	#endif
 
-	#if mode_flag == 0
 	DS(dev,time,dt);
-	#elif mode_flag == 1
-	#endif
-
-	#ifdef OrbAdv_flag
-	set_OrbAdv(dev,dt);
-	shift_OrbAdv(dev);
-	advecty(dev,dt);
-	#ifdef dust_flag
-	advecty_dust(dev,dt);
-	#endif
-	#endif
 
 	#ifdef kill_flag
 	killwave(dev, dt);

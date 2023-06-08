@@ -154,7 +154,7 @@ struct Grid
 
 	Cell* C;
 	Cell* T;
-	Cell* F;
+	//Cell* F;
 
 	Dust* CD;
 	Dust* TD;

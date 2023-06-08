@@ -9,7 +9,7 @@ __device__ Cell advection(int geom, double* xa, double* dx, double* dv, int npad
 	double q, ql, qr;
 	double par[4];
 
-	#if recon_flag==2
+	#if recon_flag==6
 	extern __shared__ double share[];
 	double* flat = &share[0];
 	int is = i + imax*threadIdx.y;
@@ -85,6 +85,25 @@ __device__ Cell advection(int geom, double* xa, double* dx, double* dv, int npad
 	return Del;
 }
 
+__device__ Cell update_Cell_advect(double x, double y, double z, Cell Q, Cell D)
+{
+	Q.u *= Q.r;
+	Q.v *= Q.r;
+	Q.w *= Q.r;
+
+	Q.add(D);
+	
+	Q.u /= Q.r;
+	Q.v /= Q.r;
+	Q.w /= Q.r;
+
+	#if EOS_flag == 0
+	Q.p = get_cs2(x, y, z)*Q.r;
+	#endif
+
+	return Q;
+}
+
 __global__ void advecty(Grid G, Cell* in, Cell* out, double dt)
 {
 	__shared__ double ya[y_ythd+1], dy[y_ythd], yv[y_ythd];
@@ -147,65 +166,7 @@ __global__ void advecty(Grid G, Cell* in, Cell* out, double dt)
 		Del.u = Del.w;
 		Del.w = tmp;
 
-		out[ind] = update_Cell(G.get_xc(idx), G.get_yc(idy), G.get_zc(idz), in[ind], Del);
-	}
-
-	return;
-}
-
-__global__ void advect_update(Grid G, double dt)
-{
-	int i = threadIdx.x + blockIdx.x*blockDim.x + xpad;
-	int j = threadIdx.y + blockIdx.y*blockDim.y + ypad;
-	int k = threadIdx.z + blockIdx.z*blockDim.z + zpad;
-	double vol, old_r, old_p;
-	Cell Q;
-	Cell D;
-	int ind;
-
-	if (i>=xpad && i<G.xarr-xpad)
-	if (j>=ypad && j<G.yarr-ypad)
-	if (k>=zpad && k<G.zarr-zpad)
-	{
-		ind = i + G.xarr*(j + G.yarr*k);
-		vol = G.get_xv(i)*G.get_yv(j)*G.get_zv(k);
-
-		Q.copy(G.C[ind]);
-		D.copy(G.F[ind]);		
-		D.multiply(dt);
-
-		old_r = Q.r;
-		old_p = Q.p;
-
-		Q.r *= vol;
-		Q.p *= vol;
-		Q.u *= Q.r;
-		Q.v *= Q.r;
-		Q.w *= Q.r;
-
-		Q.add(D);
-
-		Q.w /= Q.r;
-		Q.v /= Q.r;
-		Q.u /= Q.r;
-		Q.p /= vol;
-		Q.r /= vol;
-
-		if (Q.r<=0.0)
-		{
-			Q.r = old_r*smallr;
-		}
-
-		if (Q.p<=0.0)
-		{
-			Q.p = old_p*smallp;
-		}
-
-		#if EOS_flag == 0
-		Q.p = get_cs2(G.get_xc(i),G.get_yc(j),G.get_zc(k))*Q.r;
-		#endif
-
-		G.C[ind].copy(Q);
+		out[ind] = update_Cell_advect(G.get_xc(idx), G.get_yc(idy), G.get_zc(idz), in[ind], Del);
 	}
 
 	return;
@@ -373,7 +334,6 @@ void advecty(Grid* dev, double dt)
 		advecty<<< dim3(ny/y_ydiv,nx/y_xdiv,nz/y_zdiv), dim3(y_ythd,y_xdiv,y_zdiv), 2*sizeof(double)*y_ythd*y_xdiv*y_zdiv, dev[n].stream >>>
 		      (dev[n], dev[n].C, dev[n].T, dt);
 		dev[n].CT_change();
-		//advect_update<<< dim3(nx/x_xdiv,ny,nz), x_xthd, 0, dev[n].stream >>> (dev[n], dt);
 	}
 }
 

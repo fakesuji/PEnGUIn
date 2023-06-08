@@ -61,7 +61,7 @@ __global__ void sweepx(Grid G, Cell* C, double dt)
 		Del.v /= rad_cyl;
 		Del.w /= rad;
 		#endif
-		G.F[ind].add(Del);
+		G.T[ind].add(Del);
 	}
 	//if (idx==12 && G.get_j_shf(idx,idy,idz)==17) printf("sweepx: rad=%f azi=%f\n",G.get_xc(idx),G.get_yc(idy));
 
@@ -132,15 +132,15 @@ __global__ void sweepy(Grid G, Cell* C, double dt)
 
 	if (i>=ypad && i<y_ythd-ypad)
 	{
-		G.F[ind].r += Del.r;
-		G.F[ind].p += Del.p;
-		G.F[ind].u += Del.w;
+		G.T[ind].r += Del.r;
+		G.T[ind].p += Del.p;
+		G.T[ind].u += Del.w;
 		#if geomy == 3 || geomy == 4
-		G.F[ind].v += Del.u + (G.get_rot(idx,idz) + rad*frame_omega)*Del.r;
+		G.T[ind].v += Del.u + (G.get_rot(idx,idz) + rad*frame_omega)*Del.r;
 		#else
-		G.F[ind].v += Del.u + G.get_rot(idx,idz)*Del.r;
+		G.T[ind].v += Del.u + G.get_rot(idx,idz)*Del.r;
 		#endif
-		G.F[ind].w += Del.v;
+		G.T[ind].w += Del.v;
 	}
 
 	return;
@@ -205,11 +205,11 @@ __global__ void sweepz(Grid G, Cell* C, double dt)
 		#if geomz == 5
 		Del.w /= rad_cyl;
 		#endif
-		G.F[ind].r += Del.r;
-		G.F[ind].p += Del.p;
-		G.F[ind].u += Del.v;
-		G.F[ind].v += Del.w;
-		G.F[ind].w += Del.u;
+		G.T[ind].r += Del.r;
+		G.T[ind].p += Del.p;
+		G.T[ind].u += Del.v;
+		G.T[ind].v += Del.w;
+		G.T[ind].w += Del.u;
 	}
 
 	return;
@@ -242,7 +242,7 @@ __device__ Cell update_Cell(double x, double y, double z, Cell Q, Cell D)
 		Q.u = u_old;
 		Q.v = v_old;
 		Q.w = w_old;
-			//printf("Error: negative density at %f %f %f\n",G.get_xc(i),G.get_yc(j),G.get_zc(k));
+		//printf("Error: negative density at %f %f %f\n",G.get_xc(i),G.get_yc(j),G.get_zc(k));
 	}
 	else
 	{
@@ -318,15 +318,23 @@ __global__ void sweepx_inplace(Grid G, Cell* C, Cell* out, double dt)
 		Del.v /= rad_cyl;
 		Del.w /= rad;
 		#endif
+<<<<<<< HEAD
 /*
 		if (idx<5 && idy==100) printf("R=%f; Del_r=%e\n",rad,Del.r);
 		if (idx==10 && idy==100) 
+=======
+
+		//if (idx<5 && idy==100) printf("R=%f; Del_r=%e\n",rad,Del.r);
+		/*if (idx==2)// && idy==100) 
+>>>>>>> methods
 		{
 			printf("%f, %f, %f, %f, %f\n",xa[i-2],xa[i-1],xa[i],xa[i+1],xa[i+2]);
 			printf("%e, %e, %e, %e, %e\n",r[i+x_xthd*j-2],r[i+x_xthd*j-1],r[i+x_xthd*j],r[i+x_xthd*j+1],r[i+x_xthd*j+2]);
 			printf("%e, %e, %e, %e, %e\n",u[i+x_xthd*j-2],u[i+x_xthd*j-1],u[i+x_xthd*j],u[i+x_xthd*j+1],u[i+x_xthd*j+2]);
+			printf("%e, %e, %e\n\n",Del.r,Del.p,Del.u);
 		}
-*/
+		*/
+
 		out[ind] = update_Cell(G.get_xc(idx), G.get_yc(idy), G.get_zc(idz), C[ind], Del);
 	}
 	return;

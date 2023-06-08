@@ -96,8 +96,18 @@ __host__ __device__ double get_r(double x, double y, double z)
 	return 1.0 + A;
 
 	#elif init_flag == 7
-	if (y>=0.25 && y<=0.75) return 2.0;
-	else                    return 1.0;
+	double r1 = 1.0;
+	double r2 = 2.0;
+	double w = 0.002;
+
+	if (y<=0.5)
+	{
+		return r1*(erf((0.25-y)/w)+1.0)/2.0 + r2*(erf((y-0.25)/w)+1.0)/2.0;
+	}
+	else
+	{
+		return r1*(erf((y-0.75)/w)+1.0)/2.0 + r2*(erf((0.75-y)/w)+1.0)/2.0;
+	}
 
 	#elif init_flag == 8
 	return 1.0;
@@ -195,8 +205,19 @@ __host__ __device__ double get_u(double x, double y, double z)
 	return A;
 
 	#elif init_flag == 7
-	if (y>=0.25 && y<=0.75) return 0.5;
-	else                    return-0.5;
+	double u1 = 0.5;
+	double u2 =-0.5;
+	double w = 0.002;
+
+	if (y<=0.5)
+	{
+		return u1*(erf((0.25-y)/w)+1.0)/2.0 + u2*(erf((y-0.25)/w)+1.0)/2.0;
+	}
+	else
+	{
+		return u1*(erf((y-0.75)/w)+1.0)/2.0 + u2*(erf((0.75-y)/w)+1.0)/2.0;
+	}
+
 
 	#elif init_flag == 8
 	if (x<=0.5) return -2.0;
@@ -246,9 +267,32 @@ __host__ __device__ double get_v(double x, double y, double z)
 	return 0.0;
 
 	#elif init_flag == 7
+<<<<<<< HEAD
 	double A = 0.0e-6*sin(4.0*twopi*x);
 	return A;
+=======
+/*
+	double A = 1.0e-12;
+	double v = 0.0;
+	double k;
+>>>>>>> methods
 
+	for (int n=1; n<31; n++)
+	{
+		k = twopi*(double)n;
+		if (y<0.25)
+			//return A*((2.0*rand()/RAND_MAX)-1.0)*(exp(-k*(y+0.25))+exp(-k*(0.25-y)));
+			v += k*sin(k*x)*(exp(-k*(y+0.25))+exp(-k*(0.25-y)));
+		else if (y<0.75)
+			//return A*((2.0*rand()/RAND_MAX)-1.0)*(exp(-k*(y-0.25))+exp(-k*(0.75-y)));
+			v += k*sin(k*x)*(exp(-k*(y-0.25))+exp(-k*(0.75-y)));
+		else
+			//return A*((2.0*rand()/RAND_MAX)-1.0)*(exp(-k*(y-0.75))+exp(-k*(1.25-y)));
+			v += k*sin(k*x)*(exp(-k*(y-0.75))+exp(-k*(1.25-y)));
+	}
+	return A*v;
+*/
+	return 1.0e-10*sin(twopi*x);
 	#elif init_flag == 8
 	return 0.0;
 
@@ -436,6 +480,10 @@ void make_grid(double* a, double* v, double amin, double amax, int res, int pad,
 	else if (grid==1) logspace(&a[pad], amin, amax, res+1);
 	else if (grid==2) nonuspace(&a[pad], amin, amax, res+1);
 	else if (grid==3) nonuspace_half(&a[pad], amin, amax, res+1);
+<<<<<<< HEAD
+=======
+	else if (grid==4) nonuspace_mix(&a[pad], amin, amax, res+1);
+>>>>>>> methods
 
 	for (int i = 0; i<pad; i++)
 	{
@@ -468,6 +516,8 @@ void make_grid(double* a, double* v, double amin, double amax, int res, int pad,
 
 void fill_grid(Grid G)
 {
+	srand(0);
+
 	int ind;
 	for (int i=0; i<G.xarr; i++)
 	for (int j=0; j<G.yarr; j++)

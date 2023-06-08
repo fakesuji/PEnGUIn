@@ -146,7 +146,7 @@ __device__ Cell riemann(int geom, double* xa, double* dx, double* dv, double rad
 	Cell flux;
 	double pres, uprs;
 
-	#if recon_flag==2
+	#if recon_flag==6
 	flatten(r, p, u);
 	__syncthreads();
 	#endif

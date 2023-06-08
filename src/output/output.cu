@@ -23,11 +23,11 @@ string create_label()
 	{
 		if (planet_mass>=JupiterMass)
 		{
-			label += "_p"+int_to_string(planet_mass/JupiterMass)+"J";
+			label += "_"+int_to_string(n_planet)+"p"+int_to_string(planet_mass/JupiterMass)+"J";
 		}
 		else
 		{
-			label += "_p"+int_to_string(planet_mass/EarthMass)+"E";
+			label += "_"+int_to_string(n_planet)+"p"+int_to_string(planet_mass/EarthMass)+"E";
 		}
 	}
 
@@ -49,15 +49,31 @@ string create_label()
 	label += "_St"+int_to_string(log10(Stokes)*10.0);
 	#endif
 
-	#if recon_flag == 1
-	label += "_PLM";
+	#if recon_flag == 0
+	label += "_VAN";
+	#elif recon_flag == 1
+	label += "_MOC";
 	#elif recon_flag == 2
-	label += "_PPM";
+	label += "_PEM2";
+	#elif recon_flag == 3
+	label += "_PEM3";
+	#elif recon_flag == 4
+	label += "_PPM3";
+	#elif recon_flag == 5
+	label += "_PEM4";
+	#elif recon_flag == 6
+	label += "_PPM4";
+	#endif
+
+	#if init_flag == 6
+	label += "_CFL"+int_to_string(CFL*100.0);
 	#endif
 
 	#ifdef rev_flag
 	label += "_rev";
 	#endif
+
+	label += "_"+int_to_string(ndev)+"dev";
 
 	printf("label %s assigned. \n\n", label.c_str());
  

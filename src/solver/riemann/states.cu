@@ -9,6 +9,7 @@ __device__ void set_state(int i, int geom, double* xa, double* dx, double* dv, d
 	double ql, qr;
 	double r0, p0, u0;
 	double p_, u_, cs;
+	double hdt = 0.5*dt;
 
 	/////////////////////////////////////////////////////////
 
@@ -19,8 +20,14 @@ __device__ void set_state(int i, int geom, double* xa, double* dx, double* dv, d
 	xl = xa[i];
 	xr = xa[i+1];
 
+<<<<<<< HEAD
 	tmp = fmin(u_par[1]-u_par[0],0.0);
 	tmp = xl - tmp*dt + sqrt(gam*p[i]/r[i])*dt;
+=======
+	cs = sqrt(gam*p[i]/r[i]);
+	tmp = fmin(u[i],0.0);
+	tmp = xl - tmp*dt + cs*dt;
+>>>>>>> methods
 	dimensionless_x(xl,tmp,xr,q,ql,qr);
 
 	double rmin, pmin;
@@ -43,14 +50,27 @@ __device__ void set_state(int i, int geom, double* xa, double* dx, double* dv, d
 	cs = sqrt(gam*p0/r0);
 
 	tmp = xl - dis + cs*dt;
+<<<<<<< HEAD
 	dimensionless_x(xl,tmp,xr,q1,ql,qr);
 
 	u_ = -0.5*dt*get_slopeL(geom,0.0,q1,u_par)/(xr-xl);
 	p_ = -0.5*dt*get_slopeL(geom,0.0,q1,p_par)/(xr-xl)/r0;
+=======
+	dimensionless_x(xl,tmp,xr,q,ql,qr);
+
+	u_ = get_PRM_aveL(geom, q, u_par, ql, qr);
+	p_ = get_CON_aveL(geom, q, p_par, ql, qr);
+
+	u_ = 2.0*(u_-u0)/(cs*dt);
+	p_ = 2.0*(p_-p0)/(cs*dt);
+
+	u_ *= -hdt;
+	p_ *= -hdt;
+>>>>>>> methods
 	
 	S.rr = r0*exp_lim(u_);
 	S.pr = p0*exp_lim(gam*u_);
-	S.ur = u0 + p_ + us;
+	S.ur = u0 + p_/r0 + us;
 
 	if (print) printf(" ur=%e\n r0=%e, p0=%e, u0=%e\n u_=%e, p_=%e\n",ur,r0,p0,u0,u_,p_);
 
@@ -71,8 +91,14 @@ __device__ void set_state(int i, int geom, double* xa, double* dx, double* dv, d
 	xl = xa[i-1];
 	xr = xa[i];
 
+<<<<<<< HEAD
 	tmp = fmax(u_par[1]+u_par[2],0.0);
 	tmp = xr - tmp*dt - sqrt(gam*p[i-1]/r[i-1])*dt;
+=======
+	cs = sqrt(gam*p[i-1]/r[i-1]);
+	tmp = fmax(u[i-1],0.0);
+	tmp = xr - tmp*dt - cs*dt;
+>>>>>>> methods
 	dimensionless_x(xl,tmp,xr,q,ql,qr);
 
 	rmin = r[i-1]*1.0e-10;
@@ -94,14 +120,27 @@ __device__ void set_state(int i, int geom, double* xa, double* dx, double* dv, d
 	cs = sqrt(gam*p0/r0);
 
 	tmp = xr - dis - cs*dt;
+<<<<<<< HEAD
 	dimensionless_x(xl,tmp,xr,q1,ql,qr);
 
 	u_ = -0.5*dt*get_slopeR(geom,1.0,q1,u_par)/(xr-xl);
 	p_ = -0.5*dt*get_slopeR(geom,1.0,q1,p_par)/(xr-xl)/r0;
+=======
+	dimensionless_x(xl,tmp,xr,q,ql,qr);
+
+	u_ = get_PRM_aveR(geom, q, u_par, ql, qr);
+	p_ = get_CON_aveR(geom, q, p_par, ql, qr);
+
+	u_ = 2.0*(u0-u_)/(cs*dt);
+	p_ = 2.0*(p0-p_)/(cs*dt);
+
+	u_ *= -hdt;
+	p_ *= -hdt;
+>>>>>>> methods
 
 	S.rl = r0*exp_lim(u_);
 	S.pl = p0*exp_lim(gam*u_);
-	S.ul = u0 + p_ + us;
+	S.ul = u0 + p_/r0 + us;
 
 	if (print) printf(" ul=%e\n r0=%e, p0=%e, u0=%e\n u_=%e, p_=%e\n",ul,r0,p0,u0,u_,p_);
 

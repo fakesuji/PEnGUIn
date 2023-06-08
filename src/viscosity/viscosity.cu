@@ -85,6 +85,13 @@ __global__ void viscous_forces(Grid G, Cell* C)
 	nu1 = get_nu(r[1],G.get_yc(j),G.get_zc(k));
 	nu2 = get_nu(r[2],G.get_yc(j),G.get_zc(k));
 
+	#if ndim>2
+	for (int n=0; n<3; n++)
+	{
+		z[n] *= r[1];
+	}
+	#endif
+
 	for (int n=0; n<s; n++)
 	{
 		if      (n<3)  ind = G.get_ind(i+n-1,j,k);
@@ -163,13 +170,13 @@ __global__ void viscous_forces(Grid G, Cell* C)
 	double sxz = nr[1]*(dudz + dwdx);
 
 	double fz;
-	fz  = 2.0*dndz*dwdz + 2.0*nr[1]*d2wdz2;
+	fz  = 0.0;//2.0*dndz*dwdz + 2.0*nr[1]*d2wdz2;
 
-	fx += dndz*(dudz + dwdx) + nr[1]*(d2udz2 + d2wdxz);
-	fz += dndx*(dudz + dwdx) + nr[1]*(d2udz2 + d2wdxz) + sxz/r[1];
+	//fx += dndz*(dudz + dwdx) + nr[1]*(d2udz2 + d2wdxz);
+	//fz += dndx*(dudz + dwdx) + nr[1]*(d2udz2 + d2wdxz) + sxz/r[1];
 
-	fy += dndz*(dvdz + dwdy) + nr[1]*(d2vdz2 + d2wdyz); 
-	fz += dndy*(dvdz + dwdy) + nr[1]*(d2vdyz + d2wdy2);
+	//fy += dndz*(dvdz + dwdy) + nr[1]*(d2vdz2 + d2wdyz); 
+	//fz += dndy*(dvdz + dwdy) + nr[1]*(d2vdyz + d2wdy2);
 
 	#endif
 
