@@ -105,6 +105,8 @@ struct Cell
 struct body
 {
 	double m;
+	double a;
+	double e;
 
 	double x;
 	double y;
