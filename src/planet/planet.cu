@@ -55,7 +55,7 @@ __global__ void planet_evo(body* planets, double time, double dt)
 	return;
 }
 
-__host__ __device__ double true_anomaly(double n, double e, double t)
+__host__ __device__ double ecc_anomaly(double n, double e, double t)
 {
 	double l = fmod(n*t,twopi);
 	double D = -e*sin(l);
@@ -69,9 +69,18 @@ __host__ __device__ double true_anomaly(double n, double e, double t)
 	int count = 0;
 
 	double x, dx, d2x, eps, step;
+	double esinu, ecosu;
 
 	do
 	{
+		sincos(l-D, &esinu, &ecosu);
+		esinu *= e;
+		ecosu *= e;
+    
+        	x   = D   + esinu;
+        	dx  = 1.0 - ecosu;
+        	d2x = -esinu;
+
 		eps = 2.0*x*d2x/dx/dx;
         
 	        if (fabs(eps)<1.0)
@@ -88,14 +97,7 @@ __host__ __device__ double true_anomaly(double n, double e, double t)
         
 	}while (fabs(step)>tor || count < 10);
 
-	double u, cosu, sinu;
-	u = l-D;
-	sincos(u, &sinu, &cosu);
-
-	double efac = sqrt(1.0-e*e);
-	double B = e/(1.0+efac);
-
-	return u + 2.0*atan(B*sinu/(1.0-B*cosu));
+	return l-D;
 }
 
 __host__ __device__ void orbit_solution(body* planet, double t)
@@ -103,15 +105,19 @@ __host__ __device__ void orbit_solution(body* planet, double t)
 	double a = (*planet).a;
 	double e = (*planet).e;
 	double n = sqrt(1.0/a/a/a);
+	double efac = sqrt(1.0-e*e);
+	double B = e/(1.0+efac);
+
+	double u, cosu, sinu;
+	u = ecc_anomaly(n,e,t);
+	sincos(u, &sinu, &cosu);
 
 	double f, ecosf, esinf;
-	f = true_anomaly(n,e,t);
+	f = u + 2.0*atan(B*sinu/(1.0-B*cosu));
 	sincos(f, &esinf, &ecosf);
 
 	esinf *= e;
 	ecosf *= e;
-
-	double efac = sqrt(1.0-e*e);
 
 	(*planet).m  = ramp_function(t, ramp_time, planet_mass);
 	(*planet).x  = a*efac*efac/(1.0+ecosf);
@@ -153,35 +159,35 @@ void init_planet(Grid* G, double time)
 		{
 			e = planet_ecc;
 			if (n==0) a = planet_radius;
-			else if (n==n_planet-1) a = 5.0;
+			else if (n==n_planet-1) a = 5.0*planet_radius;
 			else
 			{
-				if (n_planet==3) a = 2.236068;
+				if (n_planet==3) a = 2.236068*planet_radius;
 				else if (n_planet==4)
 				{
-					if (n==1) a = 1.71;
-					if (n==2) a = 2.924;
+					if (n==1) a = 1.71*planet_radius;
+					if (n==2) a = 2.924*planet_radius;
 				}
 				else if (n_planet==5)
 				{
-					if (n==1) a = 1.495349;
-					if (n==2) a = 2.2360685;
-					if (n==3) a = 3.3437;
+					if (n==1) a = 1.495349*planet_radius;
+					if (n==2) a = 2.2360685*planet_radius;
+					if (n==3) a = 3.3437*planet_radius;
 				}
 				else if (n_planet==6)
 				{
-					if (n==1) a = 1.37973;
-					if (n==2) a = 1.903654;
-					if (n==3) a = 2.62652784;
-					if (n==4) a = 3.6239;
+					if (n==1) a = 1.37973*planet_radius;
+					if (n==2) a = 1.903654*planet_radius;
+					if (n==3) a = 2.62652784*planet_radius;
+					if (n==4) a = 3.6239*planet_radius;
 				}
 				else if (n_planet==7)
 				{
-					if (n==1) a = 1.30766044;
-					if (n==2) a = 1.70997585;
-					if (n==3) a = 2.23606792;
-					if (n==4) a = 2.92401782;
-					if (n==5) a = 3.82362215;
+					if (n==1) a = 1.30766044*planet_radius;
+					if (n==2) a = 1.70997585*planet_radius;
+					if (n==3) a = 2.23606792*planet_radius;
+					if (n==4) a = 2.92401782*planet_radius;
+					if (n==5) a = 3.82362215*planet_radius;
 				}
 			}
 			
