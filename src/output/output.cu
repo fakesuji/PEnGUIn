@@ -73,7 +73,8 @@ string create_label()
 	label += "_rev";
 	#endif
 
-	label += "_"+int_to_string(ndev)+"dev";
+	//label += "_"+int_to_string(ndev)+"dev";
+	//label += "_movie";
 
 	printf("label %s assigned. \n\n", label.c_str());
  

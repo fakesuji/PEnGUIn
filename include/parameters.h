@@ -92,8 +92,8 @@ const int ndev = 1;
 
 const double frame_omega = 23.1815426224;//42.5872131567;
 
-const double sav_interval = 0.25*twopi/frame_omega;
-const double end_time = 1000.0*twopi/frame_omega;
+const double sav_interval = 0.01*twopi/frame_omega;
+const double end_time = 90.0*twopi/frame_omega;
 
 const int prt_interval = 100;
 const int max_step = 1000000000;
@@ -175,8 +175,8 @@ const double ramp_time = 1.0*twopi/frame_omega;
 // Grid parameters
 //=======================================================================
 
-const double xmin = 0.035;
-const double xmax = 1.0;
+const double xmin = 0.02;
+const double xmax = 0.6;
 const double ymin = 0.0;
 const double ymax = twopi;
 const double zmin = hpi-4.0*sc_h;

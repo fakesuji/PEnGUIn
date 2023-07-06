@@ -143,8 +143,8 @@ void evolve_planet(Grid* dev, double time, double dt)
 	for (int n=0; n<ndev; n++)
 	{
 		cudaSetDevice(n);
-		//planet_evo<<< 1, n_planet, 0, dev[n].stream >>> (dev[n].planets, time+dt, dt);
-		planet_ana<<< 1, n_planet, 0, dev[n].stream >>> (dev[n].planets, time+dt);
+		//planet_evo<<< 1, n_planet, 0, dev[n].stream >>> (dev[n].planets, time, dt);
+		planet_ana<<< 1, n_planet, 0, dev[n].stream >>> (dev[n].planets, time);
 	}
 	return;
 }

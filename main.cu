@@ -242,8 +242,10 @@ int main(int narg, char *args[])
 	{
 		fname = args[1];
 		sstep = atoi(args[2]);
+		if ( atoi(args[2]) < 0 ) sstep = -sstep;
 		sta_time = load_grid(hst,fname);
 		cur_time = sta_time;
+		printf("restarting from t = %f.\n",cur_time);
 		sstep++;
 	}
 	else
