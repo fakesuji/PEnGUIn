@@ -6,6 +6,7 @@
 #define OrbAdv_flag
 #define visc_flag 1
 #define cool_flag
+#define twobd_flag 1
 //#define advec_flag
 
 //=======================================================================
