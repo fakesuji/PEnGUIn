@@ -1,5 +1,8 @@
 #include "parameters.h"
 #include "structs.h"
+#include <iostream>
+#include <fstream>
+#include <sstream>
 
 __host__ __device__ double ramp_function(double t, double tau, double val)
 {
@@ -24,7 +27,6 @@ __global__ void planet_evo(body* planets, double time, double dt)
 	if (planet_ecc==0.0)
 	{
 		rad = planets[n].x;
-	//	planets[n].y += (planets[n].vy/rad/rad-frame_omega)*dt;
 		planets[n].y = fmod((planets[n].vy/rad/rad-frame_omega)*time+pi,twopi);
 	}
 	else
@@ -130,10 +132,56 @@ __host__ __device__ void orbit_solution(body* planet, double t)
 	return;
 }
 
+__host__ __device__ void two_body_solution(body* planet, double t)
+{
+	double a = planet[0].a;
+	double e = planet[0].e;
+	double n = sqrt(1.0/a/a/a);
+	double efac = sqrt(1.0-e*e);
+	double B = e/(1.0+efac);
+
+	double u, cosu, sinu;
+	u = ecc_anomaly(n,e,t);
+	sincos(u, &sinu, &cosu);
+
+	double f, ecosf, esinf;
+	f = u + 2.0*atan(B*sinu/(1.0-B*cosu));
+	sincos(f, &esinf, &ecosf);
+
+	esinf *= e;
+	ecosf *= e;
+
+	double reduced_r = a*efac*efac/(1.0+ecosf);
+	double reduced_p = f-fmod(frame_omega*t,twopi)+pi;
+	double mp = ramp_function(t, ramp_time, planet_mass);
+	
+	planet[0].m  = 1.0/ (1.0+mp);
+	planet[0].x  = reduced_r * mp / (1.0+mp);
+	planet[0].y  = fmod(reduced_p+pi,twopi);
+	planet[0].z  = hpi;
+    	planet[0].vx = n*a*esinf/efac * mp / (1.0+mp);
+    	planet[0].vy = n*(1.0+ecosf)*(1.0+ecosf)/efac/efac/efac;
+	planet[0].vz = 0.0;
+
+	planet[1].m  = mp/ (1.0+mp);
+	planet[1].x  = reduced_r * 1.0 / (1.0+mp);
+	planet[1].y  = reduced_p;
+	planet[1].z  = hpi;
+    	planet[1].vx = n*a*esinf/efac * 1.0 / (1.0+mp);
+    	planet[1].vy = n*(1.0+ecosf)*(1.0+ecosf)/efac/efac/efac;
+	planet[1].vz = 0.0;
+
+	return;
+}
+
 __global__ void planet_ana(body* planets, double t)
 {
+	#if twobd_flag == 1
+	two_body_solution(planets, t);
+	#else
 	int i = threadIdx.x;
 	orbit_solution(&planets[i],t);
+	#endif
 
 	return;
 }
@@ -144,13 +192,40 @@ void evolve_planet(Grid* dev, double time, double dt)
 	{
 		cudaSetDevice(n);
 		//planet_evo<<< 1, n_planet, 0, dev[n].stream >>> (dev[n].planets, time, dt);
+		#if twobd_flag == 1
+		planet_ana<<< 1, 1, 0, dev[n].stream >>> (dev[n].planets, time);
+		#else
 		planet_ana<<< 1, n_planet, 0, dev[n].stream >>> (dev[n].planets, time);
+		#endif
 	}
 	return;
 }
 
 void init_planet(Grid* G, double time)
 {
+	printf("planet initialization begins...\n");
+
+	#if twobd_flag == 1
+	double e = planet_ecc;
+	double a = planet_radius;
+	for (int i=0; i<ndev; i++)
+	{	
+		G[i].planets[0].a = a;
+		G[i].planets[0].e = e;
+
+		G[i].planets[1].a = a;
+		G[i].planets[1].e = e;
+
+		two_body_solution(G[i].planets, time);
+
+		G[i].planets[0].rs = 0.0;
+		#if ndim==2
+		G[i].planets[1].rs = fmin(sc_h,fmax(sc_h/2.0,pow(planet_mass/3.0,1.0/3.0)/4.0))*a;
+		#else
+		G[i].planets[1].rs = (pow(planet_mass/3.0,1.0/3.0)/4.0)*a;
+		#endif
+	}
+	#else
 	double e = planet_ecc;
 	double a;
 	for (int i=0; i<ndev; i++)
@@ -206,6 +281,7 @@ void init_planet(Grid* G, double time)
 			G[i].planets[n].vy = sqrt((1.0+e)/(1.0-e)/a)*G[i].planets[n].x;
 			G[i].planets[n].vz = 0.0;
 */
+
 			#if ndim==2
 			G[i].planets[n].rs = fmin(sc_h,fmax(sc_h/2.0,pow(planet_mass/3.0,1.0/3.0)/4.0))*a;
 			#else
@@ -213,5 +289,9 @@ void init_planet(Grid* G, double time)
 			#endif
 		}
 	}
+	#endif
+
+	printf("planet initialized.\n");
+
 	return;
 }
