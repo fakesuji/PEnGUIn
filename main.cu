@@ -131,8 +131,7 @@ int main(int narg, char *args[])
 	ofstream check_point;
 
 	string label=create_label();
-	//string path =path_to_cwd()+"/binary/";
-	string path = "/mnt/penguin/fung/2023/";
+	string path = "/scratch/fung/";
 	string fname;
 
 	Grid* hst = new Grid[ndev];
