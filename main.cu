@@ -86,8 +86,63 @@ void cpy_grid_HosttoDevice(Grid* hst, Grid* dev)
 	return;
 }
 
-void mem_allocation(Grid* hst, Grid* dev)
+void init_grid_dimensions(Grid* G)
 {
+	for (int n=0; n<ndev; n++)
+	{
+		G[n].xres = xres/ndev;
+		G[n].xarr = G[n].xres + 2*xpad;
+		G[n].xbgn = G[n].xres*n;
+
+		G[n].yres = yres;
+		G[n].yarr = G[n].yres + 2*ypad;
+		G[n].ybgn = 0;
+
+		G[n].zres = zres;
+		G[n].zarr = G[n].zres + 2*zpad;
+		G[n].zbgn = 0;
+	}
+	return;
+}
+
+void save_check_point(ofstream &check_point, string fname, int &sstep, double cur_time, Grid* hst)
+{
+	open_binary_file(check_point,fname);
+	write_check_point(check_point, cur_time, hst);
+	close_output_file(check_point);
+	return;
+}
+
+int main(int narg, char *args[])
+{
+	if (!sanity_check())
+	{
+		printf("incorrect grid setting.\n");
+		return 1;
+	}
+
+	double sta_time = 0.0;
+	double cur_time = sta_time;
+	double sav_time = 0.0;
+	double dt = end_time-cur_time;
+	int nstep = 0;
+	int sstep = 0;
+	int tmp;
+	ofstream check_point;
+
+	string label=create_label();
+	//string path =path_to_cwd()+"/binary/";
+	string path = "/scratch/fung/";
+	string fname;
+
+	Grid* hst = new Grid[ndev];
+	Grid* dev = new Grid[ndev];
+
+	init_grid_dimensions(hst);
+	init_grid_dimensions(dev);
+
+	///////////////////////////////////////////////////////////
+	
 	for (int n=0; n<ndev; n++)
 	{
 		cudaSetDevice(n);
@@ -178,72 +233,19 @@ void mem_allocation(Grid* hst, Grid* dev)
 		cudaMalloc( (void**)&dev[n].planets, n_planet*sizeof(body) );
 	}
 	for (int n=0; n<ndev; n++) cudaStreamSynchronize(dev[n].stream);
-	return;
-}
 
-void init_grid_dimensions(Grid* G)
-{
-	for (int n=0; n<ndev; n++)
-	{
-		G[n].xres = xres/ndev;
-		G[n].xarr = G[n].xres + 2*xpad;
-		G[n].xbgn = G[n].xres*n;
-
-		G[n].yres = yres;
-		G[n].yarr = G[n].yres + 2*ypad;
-		G[n].ybgn = 0;
-
-		G[n].zres = zres;
-		G[n].zarr = G[n].zres + 2*zpad;
-		G[n].zbgn = 0;
-	}
-}
-
-void save_check_point(ofstream &check_point, string fname, int &sstep, double cur_time, Grid* hst)
-{
-	open_binary_file(check_point,fname);
-	write_check_point(check_point, cur_time, hst);
-	close_output_file(check_point);
-	return;
-}
-
-int main(int narg, char *args[])
-{
-	if (!sanity_check())
-	{
-		printf("incorrect grid setting.\n");
-		return 1;
-	}
-
-	double sta_time = 0.0;
-	double cur_time = sta_time;
-	double sav_time = 0.0;
-	double dt = end_time-cur_time;
-	int nstep = 0;
-	int sstep = 0;
-	int tmp;
-	ofstream check_point;
-
-	string label=create_label();
-	//string path =path_to_cwd()+"/binary/";
-	string path = "/scratch/fung/";
-	string fname;
-
-	Grid* hst = new Grid[ndev];
-	Grid* dev = new Grid[ndev];
-
-	init_grid_dimensions(hst);
-	init_grid_dimensions(dev);
-	mem_allocation(hst, dev);
-
+	///////////////////////////////////////////////////////////
+	
 	init(hst);
 	
 	if (narg==3) 
 	{
 		fname = args[1];
 		sstep = atoi(args[2]);
+		if ( atoi(args[2]) < 0 ) sstep = -sstep;
 		sta_time = load_grid(hst,fname);
 		cur_time = sta_time;
+		printf("restarting from t = %f.\n",cur_time);
 		sstep++;
 	}
 	else
@@ -303,7 +305,9 @@ int main(int narg, char *args[])
 		cur_time += dt;
 		sav_time += dt;
 		nstep++;
+		#ifndef silence_flag
 		if (nstep%prt_interval==0) print = true;
+		#endif
 		if (nstep>=max_step) {contu = false; print = true; savep = true;}
 
 		////////////////////////////////////////////////////////////////////////////////////
@@ -341,6 +345,90 @@ int main(int narg, char *args[])
 			dt = old_dt;
 		}
 	}
+
+	///////////////////////////////////////////////////////////
+	for (int n=0; n<ndev; n++) cudaStreamSynchronize(dev[n].stream);
+	for (int n=0; n<ndev; n++)
+	{
+		cudaSetDevice(n);
+
+		cudaFreeHost(hst[n].xa);
+		cudaFreeHost(hst[n].xv);
+
+		cudaFreeHost(hst[n].ya);
+		cudaFreeHost(hst[n].yv);
+
+		cudaFreeHost(hst[n].za);
+		cudaFreeHost(hst[n].zv);
+
+		cudaFreeHost(hst[n].C);
+
+		#ifdef dust_flag
+		cudaFreeHost(hst[n].CD);
+		#endif
+
+		cudaFreeHost(hst[n].orb_shf);
+		cudaFreeHost(hst[n].planets);
+		cudaFreeHost(hst[n].dt);
+
+
+		cudaFree(dev[n].xa);
+		cudaFree(dev[n].xv);
+
+		cudaFree(dev[n].ya);
+		cudaFree(dev[n].yv);
+
+		cudaFree(dev[n].za);
+		cudaFree(dev[n].zv);
+
+		cudaFree(dev[n].dt);
+		cudaFree(dev[n].Buff);
+
+		cudaFree(dev[n].C);
+		cudaFree(dev[n].T);
+		//cudaFree(dev[n].F);
+
+		cudaFree(dev[n].fx);
+		cudaFree(dev[n].fy);
+		cudaFree(dev[n].fz);
+
+		#ifdef dust_flag
+		cudaFree(dev[n].CD);
+		cudaFree(dev[n].TD);
+
+		cudaFree(dev[n].fx_d);
+		cudaFree(dev[n].fy_d);
+		cudaFree(dev[n].fz_d);
+		#endif
+
+		#ifdef visc_flag
+		cudaFree(dev[n].vis_tensor);
+		#endif
+
+		#ifdef RadPres_flag
+		cudaFree(dev[n].ext);
+		#endif
+
+		cudaFree(dev[n].BuffL);
+		cudaFree(dev[n].BuffR);
+
+		#ifdef dust_flag
+		cudaFree(dev[n].BuffLD);
+		cudaFree(dev[n].BuffRD);
+		#endif
+
+		cudaFree(dev[n].orb_rot);
+		cudaFree(dev[n].orb_res);
+		cudaFree(dev[n].orb_shf);
+		cudaFree(dev[n].orb_inc);
+
+		cudaFree(dev[n].shfL);
+		cudaFree(dev[n].shfR);
+
+		cudaFree(dev[n].planets);
+	}
+
+	///////////////////////////////////////////////////////////
 
 	return 0;
 }

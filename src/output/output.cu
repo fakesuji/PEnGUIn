@@ -73,7 +73,8 @@ string create_label()
 	label += "_rev";
 	#endif
 
-	label += "_"+int_to_string(ndev)+"dev";
+	//label += "_"+int_to_string(ndev)+"dev";
+//	label += "_test";
 
 	printf("label %s assigned. \n\n", label.c_str());
  
@@ -204,7 +205,13 @@ double load_grid(Grid* G, string fname)
 
 	double start_time;
 	start_point.read((char*)&start_time, sizeof(double));
-	start_point.seekg((1+xres+1+yres+1+zres+1)*sizeof(double), ios::beg);
+	if (ndim>2) 
+		start_point.seekg((1+xres+1+yres+1+zres+1)*sizeof(double), ios::beg);
+	else if (ndim>1) 
+		start_point.seekg((1+xres+1+yres+1)*sizeof(double), ios::beg);
+	else
+		start_point.seekg((1+xres+1)*sizeof(double), ios::beg);
+
 	
 	double tmp;
 	for (int k=zpad; k<zres+zpad; k++)
@@ -234,6 +241,7 @@ double load_grid(Grid* G, string fname)
 		G[n].write_u(i,j,k,tmp);	
 	}
 
+	if (ndim>1) 
 	for (int k=zpad; k<zres+zpad; k++)
 	for (int j=ypad; j<yres+ypad; j++)
 	for (int n=0; n<ndev; n++)
@@ -243,6 +251,7 @@ double load_grid(Grid* G, string fname)
 		G[n].write_v(i,j,k,tmp);	
 	}
 
+	if (ndim>2) 
 	for (int k=zpad; k<zres+zpad; k++)
 	for (int j=ypad; j<yres+ypad; j++)
 	for (int n=0; n<ndev; n++)

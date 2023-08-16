@@ -114,11 +114,11 @@ __global__ void update(Grid G, Cell* in, Cell* out, double dt, double div=1.0)
 	int i = threadIdx.x + blockIdx.x*blockDim.x + xpad;
 	int j = threadIdx.y + blockIdx.y*blockDim.y + ypad;
 	int k = threadIdx.z + blockIdx.z*blockDim.z + zpad;
-	double vol, r_min, p_min;
+	double vol;
 	Cell Q;
 	Cell D;
 	int ind;
-
+/*
 	double fx;
 	#if ndim>1
 	double fy;
@@ -126,7 +126,7 @@ __global__ void update(Grid G, Cell* in, Cell* out, double dt, double div=1.0)
 	#if ndim>2
 	double fz;
 	#endif
-
+*/
 	if (i>=xpad && i<G.xarr-xpad)
 	if (j>=ypad && j<G.yarr-ypad)
 	if (k>=zpad && k<G.zarr-zpad)
@@ -138,9 +138,7 @@ __global__ void update(Grid G, Cell* in, Cell* out, double dt, double div=1.0)
 		D.copy(G.T[ind]);
 		D.multiply(div*dt/vol);
 
-		r_min = fmax(Q.r*1.0e-10,smallr);
-		p_min = fmax(Q.p*1.0e-10,smallp);
-
+/*
 		fx = G.fx[ind];
 		Q.u += 0.5*fx*dt;
 		#if ndim>1
@@ -151,7 +149,7 @@ __global__ void update(Grid G, Cell* in, Cell* out, double dt, double div=1.0)
 		fz = G.fz[ind];
 		Q.w += 0.5*fz*dt;
 		#endif
-
+*/
 		Q.p = get_energy(Q.r,Q.p,Q.u,Q.v,Q.w);
 		Q.p *= Q.r;
 		Q.u *= Q.r;
@@ -163,7 +161,7 @@ __global__ void update(Grid G, Cell* in, Cell* out, double dt, double div=1.0)
 		Q.u /= Q.r;
 		Q.v /= Q.r;
 		Q.w /= Q.r;
-
+/*
 		Q.u += 0.5*fx*dt;
 		#if ndim>1
 		Q.v += 0.5*fy*dt;
@@ -171,23 +169,28 @@ __global__ void update(Grid G, Cell* in, Cell* out, double dt, double div=1.0)
 		#if ndim>2
 		Q.w += 0.5*fz*dt;
 		#endif
-
-		if (Q.r<r_min)
+*/
+		if (Q.r<0.0)
 		{
-			Q.r = r_min;
-			Q.p = p_min;
+			Q.r = smallr;
+			Q.p = get_cs2(G.get_xc(i),G.get_yc(j),G.get_zc(k))*Q.r;
 			Q.u = in[ind].u;
 			Q.v = in[ind].v;
 			Q.w = in[ind].w;
 			//printf("Error: negative density at %f %f %f\n",G.get_xc(i),G.get_yc(j),G.get_zc(k));
 		}
+		else if (Q.p<0.0)
+		{
+			Q.p = get_cs2(G.get_xc(i),G.get_yc(j),G.get_zc(k))*Q.r;
+		}
 		else
 		{
 			#if EOS_flag == 2
 			#if internal_e_flag==0
-			Q.p = fmax(Q.p*gamm - gamm*Q.r*(Q.u*Q.u+Q.v*Q.v+Q.w*Q.w)/2.0,p_min);
+			Q.p = Q.p*gamm - gamm*Q.r*(Q.u*Q.u+Q.v*Q.v+Q.w*Q.w)/2.0;
+			if (Q.p<0.0) Q.p = get_cs2(G.get_xc(i),G.get_yc(j),G.get_zc(k))*Q.r;
 			#else
-			Q.p = fmax(Q.p*gamm,p_min);
+			Q.p = Q.p*gamm;
 			#endif
 			#elif EOS_flag == 0
 			Q.p = get_cs2(G.get_xc(i),G.get_yc(j),G.get_zc(k))*Q.r;

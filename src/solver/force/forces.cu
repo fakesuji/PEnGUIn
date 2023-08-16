@@ -26,8 +26,11 @@ __device__ void star_planet_grav(double rad, double azi, double pol, body p, dou
 	double plm = p.m;
 	double plx = p.x;
 
-	double Rp = sqrt(rad*rad + plx*plx - 2.0*plx*rad*cosfac*sinpol);
-	double rs_fac = fmax(4.0-3.0*Rp/p.rs, 1.0)/fmax(p.rs*p.rs*p.rs, Rp*Rp*Rp);
+	//double Rp = sqrt(rad*rad + plx*plx - 2.0*plx*rad*cosfac*sinpol);
+	//double rs_fac = fmax(4.0-3.0*Rp/p.rs, 1.0)/fmax(p.rs*p.rs*p.rs, Rp*Rp*Rp);
+
+	double Rp = sqrt(rad*rad + plx*plx - 2.0*plx*rad*cosfac*sinpol + p.rs*p.rs);
+	double rs_fac = 1.0/Rp/Rp/Rp;
 
 	fx = -plm*(rad-plx*cosfac*sinpol)*rs_fac - plm*sinpol*cosfac/plx/plx;
 	fy = -plm*plx*sinfac*rs_fac              + plm*sinpol*sinfac/plx/plx;
@@ -50,6 +53,54 @@ __device__ void star_planet_grav_cyl(double rad, double azi, double z, body p, d
 
 	fx = -plm*(rad-plx*cosfac)*rs_fac - plm*cosfac/plx/plx;
 	fy = -plm*plx*sinfac*rs_fac       + plm*sinfac/plx/plx;
+	fz = -plm*z*rs_fac;
+	return;
+}
+
+//====================================================================
+
+__device__ void star_planet_grav_inertial(double rad, double azi, double pol, body p, double dt, double &fx, double &fy, double &fz)
+{
+	double cosfac, sinfac;
+	sincos(azi-(p.y+dt*p.vy), &sinfac, &cosfac);
+	double cospol, sinpol;
+	#if ndim==3
+	sincos(pol, &sinpol, &cospol);
+	#else
+	cospol = 0.0;
+	sinpol = 1.0;
+	#endif
+
+	double plm = p.m;
+	double plx = p.x;
+
+	//double Rp = sqrt(rad*rad + plx*plx - 2.0*plx*rad*cosfac*sinpol);
+	//double rs_fac = fmax(4.0-3.0*Rp/p.rs, 1.0)/fmax(p.rs*p.rs*p.rs, Rp*Rp*Rp);
+
+	double Rp = sqrt(rad*rad + plx*plx - 2.0*plx*rad*cosfac*sinpol + p.rs*p.rs);
+	double rs_fac = 1.0/Rp/Rp/Rp;
+
+	fx = -plm*(rad-plx*cosfac*sinpol)*rs_fac;
+	fy = -plm*plx*sinfac*rs_fac;
+	fz =  plm*plx*cosfac*cospol*rs_fac;
+	return;
+}
+
+__device__ void star_planet_grav_cyl_inertial(double rad, double azi, double z, body p, double dt, double &fx, double &fy, double &fz)
+{
+	double cosfac, sinfac;
+	sincos(azi-(p.y+dt*p.vy), &sinfac, &cosfac);
+
+	double plm = p.m;
+	double plx = p.x;
+
+	double Rp = sqrt(rad*rad + plx*plx - 2.0*plx*rad*cosfac + z*z + p.rs*p.rs);
+	double rs_fac = 1.0/Rp/Rp/Rp;
+	//double Rp = sqrt(rad*rad + plx*plx - 2.0*plx*rad*cosfac);
+	//double rs_fac = fmax(4.0-3.0*Rp/p.rs, 1.0)/fmax(p.rs*p.rs*p.rs, Rp*Rp*Rp);
+
+	fx = -plm*(rad-plx*cosfac)*rs_fac;
+	fy = -plm*plx*sinfac*rs_fac;
 	fz = -plm*z*rs_fac;
 	return;
 }
@@ -140,6 +191,15 @@ __device__ double get_gx(double rad, double azi, double pol, body *planet)
 		#endif
 
 	#elif geomx==1
+		#if twobd_flag == 1
+		gx = 0.0;
+		double gx_tmp, gy_tmp, gz_tmp;
+		for (int m=0; m<n_planet; m++)
+		{
+			star_planet_grav_cyl_inertial(rad, azi, pol, planet[m], 0.0, gx_tmp, gy_tmp, gz_tmp);
+			gx += gx_tmp;
+		}
+		#else
 		double dis = sqrt(rad*rad+pol*pol);
 		gx = -rad/dis/dis/dis;
 		double gx_tmp, gy_tmp, gz_tmp;
@@ -148,8 +208,18 @@ __device__ double get_gx(double rad, double azi, double pol, body *planet)
 			star_planet_grav_cyl(rad, azi, pol, planet[m], 0.0, gx_tmp, gy_tmp, gz_tmp);
 			gx += gx_tmp;
 		}
+		#endif
 
 	#elif geomx==2
+		#if twobd_flag == 1
+		gx = 0.0;
+		double gx_tmp, gy_tmp, gz_tmp;
+		for (int m=0; m<n_planet; m++)
+		{
+			star_planet_grav_inertial(rad, azi, pol, planet[m], 0.0, gx_tmp, gy_tmp, gz_tmp);
+			gx += gx_tmp;
+		}
+		#else
 		gx = -1.0/rad/rad;
 		double gx_tmp, gy_tmp, gz_tmp;
 		for (int m=0; m<n_planet; m++)
@@ -157,6 +227,7 @@ __device__ double get_gx(double rad, double azi, double pol, body *planet)
 			star_planet_grav(rad, azi, pol, planet[m], 0.0, gx_tmp, gy_tmp, gz_tmp);
 			gx += gx_tmp;
 		}
+		#endif
 	#endif
 	return gx;
 }
@@ -179,7 +250,11 @@ __device__ double get_gy(double rad, double azi, double pol, body *planet)
 		double gx_tmp, gy_tmp, gz_tmp;
 		for (int m=0; m<n_planet; m++)
 		{
+			#if twobd_flag == 1
+			star_planet_grav_cyl_inertial(rad, azi, pol, planet[m], 0.0, gx_tmp, gy_tmp, gz_tmp);
+			#else
 			star_planet_grav_cyl(rad, azi, pol, planet[m], 0.0, gx_tmp, gy_tmp, gz_tmp);
+			#endif
 			gy += gy_tmp;
 		}
 
@@ -188,7 +263,11 @@ __device__ double get_gy(double rad, double azi, double pol, body *planet)
 		double gx_tmp, gy_tmp, gz_tmp;
 		for (int m=0; m<n_planet; m++)
 		{
+			#if twobd_flag == 1
+			star_planet_grav_inertial(rad, azi, pol, planet[m], 0.0, gx_tmp, gy_tmp, gz_tmp);
+			#else
 			star_planet_grav(rad, azi, pol, planet[m], 0.0, gx_tmp, gy_tmp, gz_tmp);
+			#endif
 			gy += gy_tmp;
 		}
 	#endif
@@ -210,6 +289,15 @@ __device__ double get_gz(double rad, double azi, double pol, body *planet)
 		#endif
 
 	#elif geomx==1
+		#if twobd_flag == 1
+		gz = 0.0;
+		double gx_tmp, gy_tmp, gz_tmp;
+		for (int m=0; m<n_planet; m++)
+		{
+			star_planet_grav_cyl_inertial(rad, azi, pol, planet[m], 0.0, gx_tmp, gy_tmp, gz_tmp);
+			gz += gz_tmp;
+		}
+		#else
 		double dis = sqrt(rad*rad+pol*pol);
 		gz = -pol/dis/dis/dis;
 		double gx_tmp, gy_tmp, gz_tmp;
@@ -218,8 +306,19 @@ __device__ double get_gz(double rad, double azi, double pol, body *planet)
 			star_planet_grav_cyl(rad, azi, pol, planet[m], 0.0, gx_tmp, gy_tmp, gz_tmp);
 			gz += gz_tmp;
 		}
+		#endif
 
 	#elif geomx==2
+		#if twobd_flag == 1
+		gz = 0.0;
+		double gx_tmp, gy_tmp, gz_tmp;
+		for (int m=0; m<n_planet; m++)
+		{
+			star_planet_grav_inertial(rad, azi, pol, planet[m], 0.0, gx_tmp, gy_tmp, gz_tmp);
+			gz += gz_tmp;
+		}
+		if (pol < zmin) {gz *= -1.0;}
+		#else
 		gz = 0.0;
 		double gx_tmp, gy_tmp, gz_tmp;
 		for (int m=0; m<n_planet; m++)
@@ -228,6 +327,7 @@ __device__ double get_gz(double rad, double azi, double pol, body *planet)
 			gz += gz_tmp;
 		}
 		if (pol < zmin) {gz *= -1.0;}
+		#endif
 	#endif
 
 	return gz;
@@ -251,6 +351,20 @@ __device__ void get_grav(double rad, double azi, double pol,
 		#endif
 
 	#elif geomx==1
+		#if twobd_flag == 1
+		gx = 0.0;
+		gy = 0.0;
+		gz = 0.0;
+
+		double gx_tmp, gy_tmp, gz_tmp;
+		for (int m=0; m<n_planet; m++)
+		{
+			star_planet_grav_cyl_inertial(rad, azi, pol, planet[m], 0.0, gx_tmp, gy_tmp, gz_tmp);
+			gx += gx_tmp;
+			gy += gy_tmp;
+			gz += gz_tmp;
+		}
+		#else
 		double dis = sqrt(rad*rad+pol*pol);
 		gx = -rad/dis/dis/dis;
 		gy = 0.0;
@@ -264,8 +378,24 @@ __device__ void get_grav(double rad, double azi, double pol,
 			gy += gy_tmp;
 			gz += gz_tmp;
 		}
+		#endif
 
 	#elif geomx==2
+		#if twobd_flag == 1
+		gx = 0.0;
+		gy = 0.0;
+		gz = 0.0;
+
+		double gx_tmp, gy_tmp, gz_tmp;
+		for (int m=0; m<n_planet; m++)
+		{
+			star_planet_grav_inertial(rad, azi, pol, planet[m], 0.0, gx_tmp, gy_tmp, gz_tmp);
+			gx += gx_tmp;
+			gy += gy_tmp;
+			gz += gz_tmp;
+		}
+		if (pol < zmin) {gz *= -1.0;}
+		#else
 		gx = -1.0/rad/rad;
 		gy = 0.0;
 		gz = 0.0;
@@ -279,6 +409,7 @@ __device__ void get_grav(double rad, double azi, double pol,
 			gz += gz_tmp;
 		}
 		if (pol < zmin) {gz *= -1.0;}
+		#endif
 	#endif
 	return;
 }
