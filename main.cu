@@ -131,7 +131,6 @@ int main(int narg, char *args[])
 	ofstream check_point;
 
 	string label=create_label();
-	//string path =path_to_cwd()+"/binary/";
 	string path = "/scratch/fung/";
 	string fname;
 
