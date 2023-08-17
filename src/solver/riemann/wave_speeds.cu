@@ -152,7 +152,9 @@ __device__ void get_pm_um_iso(State &S, double &pm, double &um)
 
 	if ( (isnan(pm) || isnan(um)) && !isnan(S.rl) && !isnan(S.pl) && !isnan(S.ul) && !isnan(S.rr) && !isnan(S.pr) && !isnan(S.ur) )
 	{
+		#ifndef silence_flag
 		printf("Error: isothermal riemann solver error, %e, %e, %e, %e, %e, %e\n %e, %e, %e, %e, %e\n", S.rl, S.pl, S.ul, S.rr, S.pr, S.ur, pm,um,b,c,sqrt(b*b+c));
+		#endif
 		pm = 0.0;
 		um = 0.5 * (S.ur + S.ul);
 	}
