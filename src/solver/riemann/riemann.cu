@@ -34,53 +34,6 @@ __device__ void check_flux(Cell &flux, int geom, double* r, double* xa, double* 
 	flux.u *= gfac;
 	flux.v *= gfac;
 	flux.w *= gfac;
-
-/*
-	int imax = blockDim.x;
-	int i = threadIdx.x;
-
-	double vol;
-
-	if (i>=npad && i<imax-npad+1)
-	{
-		if (flux.r>0.0)
-		{
-			vol = 0.95*get_volume_dev(geom, xa[i-1], dx[i-1]);
-			if (flux.r*dt>r[i-1]*vol)
-			{
-				//flux.r = r[i-1]*vol/dt;
-				//flux.p *= flux.r/old_flux;
-				//flux.u *= flux.r/old_flux;
-				//flux.v *= flux.r/old_flux;
-				//flux.w *= flux.r/old_flux;
-				flux.r = 0.0;
-				flux.p = 0.0;
-				flux.u = 0.0;
-				flux.v = 0.0;
-				flux.w = 0.0;
-				printf("Error: flux too high; consider lowering the Courant number.\n");
-			}
-		}
-		else if (flux.r<0.0) 
-		{
-			vol = 0.95*get_volume_dev(geom, xa[i], dx[i]);
-			if (-flux.r*dt>r[i]*vol)
-			{
-				//flux.r = -r[i]*vol/dt;
-				//flux.p *= flux.r/old_flux;
-				//flux.u *= flux.r/old_flux;
-				//flux.v *= flux.r/old_flux;
-				//flux.w *= flux.r/old_flux;
-				flux.r = 0.0;
-				flux.p = 0.0;
-				flux.u = 0.0;
-				flux.v = 0.0;
-				flux.w = 0.0;
-				printf("Error: flux too high; consider lowering the Courant number.\n");
-			}
-		}
-	}	
-*/
 	return;
 }
 
@@ -160,11 +113,13 @@ __device__ Cell riemann(int geom, double* xa, double* dx, double* dv, double rad
 		HLLC_fluxes(S, pm, sl, sm, sr, flux, pres, uprs);
 
 		if (isnan(flux.r) && !isnan(u[i-1]*u[i]*u[i+1]*u[i-2]*p[i-1]*p[i]*p[i+1]*p[i-2]*r[i-1]*r[i]*r[i+1]*r[i-2]))
-		{		
+		{
+			#ifndef silence_flag		
 			printf("Error: flux nan, %e| %e, %e, %e, %e, %e|\n %e, %e, %e, %e|\n %e, %e, %e, %e|\n",
 			pm,sl,S.ul,sm,S.ur,sr,
 			r[i-2],r[i-1],r[i],r[i+1],
 			p[i-2],p[i-1],p[i],p[i+1]);
+			#endif
 			set_state(i, geom, xa, dx, dv, rad, r, p, u, v, w, dt/rad, us, S, true);
 		}
 	}

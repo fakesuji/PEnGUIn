@@ -2,6 +2,9 @@ __device__ void set_state(int i, int geom, double* xa, double* dx, double* dv, d
                           double* r, double* p, double* u, double* v, double* w, double dt, double us, State &S,
                           bool print=false)
 {
+	#ifdef silence_flag
+	print=false;
+	#endif
 	double r_par[4], p_par[4], u_par[4];
 
 	double ul, ur;
