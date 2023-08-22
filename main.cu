@@ -134,8 +134,11 @@ int main(int narg, char *args[])
 	string path = "/scratch/fung/";
 	string fname;
 
-	Grid* hst = new Grid[ndev];
-	Grid* dev = new Grid[ndev];
+	Grid* hst;
+	Grid* dev;
+
+	cudaMallocHost( (void**)&hst, ndev*sizeof(Grid) );
+	cudaMallocHost( (void**)&dev, ndev*sizeof(Grid) );
 
 	init_grid_dimensions(hst);
 	init_grid_dimensions(dev);
@@ -426,6 +429,9 @@ int main(int narg, char *args[])
 
 		cudaFree(dev[n].planets);
 	}
+
+	cudaFreeHost(hst);
+	cudaFreeHost(dev);
 
 	///////////////////////////////////////////////////////////
 
