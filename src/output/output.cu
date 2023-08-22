@@ -74,7 +74,7 @@ string create_label()
 	#endif
 
 	//label += "_"+int_to_string(ndev)+"dev";
-	label += "_test";
+	//label += "_test";
 
 	printf("label %s assigned. \n\n", label.c_str());
  

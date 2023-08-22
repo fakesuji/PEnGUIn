@@ -7,6 +7,10 @@ __device__ Dust dust_flux(int i, int geom, double* xa, double* dx, double* dv,
                           double* r, double* u, double* v, double* w, double dt, double us,
                           bool print=false)
 {
+	#ifdef silence_flag
+	print=false;
+	#endif
+
 	Dust F;
 	State S;
 

@@ -7,6 +7,7 @@
 #define visc_flag 1
 #define cool_flag
 #define twobd_flag 1
+//#define silence_flag
 //#define advec_flag
 
 //=======================================================================
@@ -56,8 +57,8 @@ const int zpad = 0;
 #endif
 
 const int xres = 960;//720;//
-const int yres = 1536;//1128;
-const int zres = 1;//24
+const int yres = 1536;//1128;//
+const int zres = 1;//24;//
 
 const int xarr = xres + 2*xpad;
 const int yarr = yres + 2*ypad;
@@ -85,7 +86,7 @@ const int z_zthd = z_zdiv + 2*zpad;
 // Geometric parameters
 //=======================================================================
 
-const int ndev = 1;
+const int ndev = 2;
 
 //=======================================================================
 // Temporal parameters
@@ -94,9 +95,9 @@ const int ndev = 1;
 const double frame_omega = 15.0568536075;//
 
 const double sav_interval = 1.0*twopi/frame_omega;
-const double end_time = 2000.0*twopi/frame_omega;
+const double end_time = 4000.0*twopi/frame_omega;
 
-const int prt_interval = 1000;
+const int prt_interval = 10000;
 const int max_step = 1000000000;
 
 //=======================================================================
@@ -149,7 +150,7 @@ const double p_alpha = 2.0 - 0.5*p_beta + 1.5;          // midplane density ~ r^
 #else 
 const double p_alpha = 2.0;                             // surface density ~ r^-p_alpha
 #endif 
-const double ss_alpha = 0.03;                            // alpha-viscosity
+const double ss_alpha = 0.01;                            // alpha-viscosity
 const double sc_h = 0.035;                              // scale height at r=1, normalized to that at r = 100
 
 #if ndim==3

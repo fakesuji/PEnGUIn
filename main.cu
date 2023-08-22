@@ -304,7 +304,9 @@ int main(int narg, char *args[])
 		cur_time += dt;
 		sav_time += dt;
 		nstep++;
+		#ifndef silence_flag
 		if (nstep%prt_interval==0) print = true;
+		#endif
 		if (nstep>=max_step) {contu = false; print = true; savep = true;}
 
 		////////////////////////////////////////////////////////////////////////////////////
