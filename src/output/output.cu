@@ -29,6 +29,7 @@ string create_label()
 		{
 			label += "_"+int_to_string(n_planet)+"p"+int_to_string(planet_mass/EarthMass)+"E";
 		}
+		label += "_e000";
 	}
 
 	#if visc_flag == 1
@@ -74,126 +75,97 @@ string create_label()
 	#endif
 
 	//label += "_"+int_to_string(ndev)+"dev";
-	//label += "_test";
+	//label += "_video";
 
 	printf("label %s assigned. \n\n", label.c_str());
  
 	return label;
 }
 
-void write_grid_val(ofstream &ofile, Grid* G)
+
+void restructure_data(double* data, Grid* G, int data_type)
 {
-	double tmp;
+	int ii, jj, kk, glo_idx,loc_idx;
 
 	for (int k=zpad; k<zres+zpad; k++)
 	for (int j=ypad; j<yres+ypad; j++)
 	for (int n=0; n<ndev; n++)
 	for (int i=xpad; i<G[n].xres+xpad; i++)
 	{
-		tmp = G[n].get_r(i,j,k);
-		ofile.write((char*)&tmp, sizeof(double));		
+		ii = i + G[n].xbgn - xpad;
+		jj = j - ypad;
+		kk = k - zpad;
+		glo_idx = ii + xres*(jj + yres*kk);
+		loc_idx = i + G[n].xarr*(j + G[n].yarr*kk);
+		if      (data_type==0) data[glo_idx] = G[n].C[loc_idx].r;
+		else if (data_type==1) data[glo_idx] = G[n].C[loc_idx].p;
+		else if (data_type==2) data[glo_idx] = G[n].C[loc_idx].u;
+		else if (data_type==3) data[glo_idx] = G[n].C[loc_idx].v;
+		else if (data_type==4) data[glo_idx] = G[n].C[loc_idx].w;
+		#ifdef dust_flag
+		else if (data_type==5) data[glo_idx] = G[n].D[loc_idx].r;
+		else if (data_type==6) data[glo_idx] = G[n].D[loc_idx].u;
+		else if (data_type==7) data[glo_idx] = G[n].D[loc_idx].v;
+		else if (data_type==8) data[glo_idx] = G[n].D[loc_idx].w;
+		#endif
+		//data[glo_idx] = 0.0;
 	}
-
-	for (int k=zpad; k<zres+zpad; k++)
-	for (int j=ypad; j<yres+ypad; j++)
-	for (int n=0; n<ndev; n++)
-	for (int i=xpad; i<G[n].xres+xpad; i++)
-	{
-		tmp = G[n].get_p(i,j,k);
-		ofile.write((char*)&tmp, sizeof(double));		
-	}
-
-	for (int k=zpad; k<zres+zpad; k++)
-	for (int j=ypad; j<yres+ypad; j++)
-	for (int n=0; n<ndev; n++)
-	for (int i=xpad; i<G[n].xres+xpad; i++)
-	{
-		tmp = G[n].get_u(i,j,k);
-		ofile.write((char*)&tmp, sizeof(double));		
-	}
-
-	#if ndim>1
-	for (int k=zpad; k<zres+zpad; k++)
-	for (int j=ypad; j<yres+ypad; j++)
-	for (int n=0; n<ndev; n++)
-	for (int i=xpad; i<G[n].xres+xpad; i++)
-	{
-		tmp = G[n].get_v(i,j,k);
-		ofile.write((char*)&tmp, sizeof(double));		
-	}
-	#endif
-
-	#if ndim>2
-	for (int k=zpad; k<zres+zpad; k++)
-	for (int j=ypad; j<yres+ypad; j++)
-	for (int n=0; n<ndev; n++)
-	for (int i=xpad; i<G[n].xres+xpad; i++)
-	{
-		tmp = G[n].get_w(i,j,k);
-		ofile.write((char*)&tmp, sizeof(double));		
-	}
-	#endif
-
-	#ifdef dust_flag
-
-	for (int k=zpad; k<zres+zpad; k++)
-	for (int j=ypad; j<yres+ypad; j++)
-	for (int n=0; n<ndev; n++)
-	for (int i=xpad; i<G[n].xres+xpad; i++)
-	{
-		tmp = G[n].get_r_dust(i,j,k);
-		ofile.write((char*)&tmp, sizeof(double));		
-	}
-
-	for (int k=zpad; k<zres+zpad; k++)
-	for (int j=ypad; j<yres+ypad; j++)
-	for (int n=0; n<ndev; n++)
-	for (int i=xpad; i<G[n].xres+xpad; i++)
-	{
-		tmp = G[n].get_u_dust(i,j,k);
-		ofile.write((char*)&tmp, sizeof(double));		
-	}
-
-	#if ndim>1
-	for (int k=zpad; k<zres+zpad; k++)
-	for (int j=ypad; j<yres+ypad; j++)
-	for (int n=0; n<ndev; n++)
-	for (int i=xpad; i<G[n].xres+xpad; i++)
-	{
-		tmp = G[n].get_v_dust(i,j,k);
-		ofile.write((char*)&tmp, sizeof(double));		
-	}
-	#endif
-
-	#if ndim>2
-	for (int k=zpad; k<zres+zpad; k++)
-	for (int j=ypad; j<yres+ypad; j++)
-	for (int n=0; n<ndev; n++)
-	for (int i=xpad; i<G[n].xres+xpad; i++)
-	{
-		tmp = G[n].get_w_dust(i,j,k);
-		ofile.write((char*)&tmp, sizeof(double));		
-	}
-	#endif
-
-	#endif
-
 	return;
 }
 
-void write_check_point(ofstream &ofile, double simtime, Grid* glo)
+void write_check_point(ofstream &ofile, double simtime, Grid* G)
 {
+	size_t memsize= xres*yres*zres*sizeof(double);
+	double* tmp = new double[xres*yres*zres];
+
 	ofile.write((char*)&simtime, sizeof(double));
 
-	for (int i=xpad; i<xres+xpad+1; i++) ofile.write((char*)&glo[0].xa[i], sizeof(double));
-	if (ndim>1) 
-	for (int i=ypad; i<yres+ypad+1; i++) ofile.write((char*)&glo[0].ya[i], sizeof(double));
-	if (ndim>2) 
-	for (int i=zpad; i<zres+zpad+1; i++) ofile.write((char*)&glo[0].za[i], sizeof(double));
+	ofile.write((char*)&G[0].xa[xpad], sizeof(double)*(xres+1));
+	#if ndim>1
+	ofile.write((char*)&G[0].ya[ypad], sizeof(double)*(yres+1));
+	#endif
+	#if ndim>2
+	ofile.write((char*)&G[0].za[zpad], sizeof(double)*(zres+1));
+	#endif
 
-	//////////////////////////////////////////////
+	restructure_data(tmp, G, 0);
+	ofile.write((char*)&tmp[0],memsize);
 
-	write_grid_val(ofile, glo);
+	restructure_data(tmp, G, 1);
+	ofile.write((char*)&tmp[0],memsize);
+
+	restructure_data(tmp, G, 2);
+	ofile.write((char*)&tmp[0],memsize);
+
+	#if ndim>1
+	restructure_data(tmp, G, 3);
+	ofile.write((char*)&tmp[0],memsize);
+	#endif
+
+	#if ndim>2
+	restructure_data(tmp, G, 4);
+	ofile.write((char*)&tmp[0],memsize);
+	#endif
+
+	#ifdef dust_flag
+	restructure_data(tmp, G, 5);
+	ofile.write((char*)&tmp[0],memsize);
+
+	restructure_data(tmp, G, 6);
+	ofile.write((char*)&tmp[0],memsize);
+
+	#if ndim>1
+	restructure_data(tmp, G, 7);
+	ofile.write((char*)&tmp[0],memsize);
+	#endif
+
+	#if ndim>1
+	restructure_data(tmp, G, 8);
+	ofile.write((char*)&tmp[0],memsize);
+	#endif
+	#endif
+
+	delete[] tmp;
 
 	return;
 }

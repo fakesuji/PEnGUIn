@@ -44,6 +44,8 @@ bool sanity_check()
 
 void cpy_grid_DevicetoHost(Grid* hst, Grid* dev)
 {
+	
+	//for (int n=0; n<ndev; n++) cudaStreamSynchronize(dev[n].stream);
 	for (int n=0; n<ndev; n++)
 	{
 		cudaSetDevice(n);
@@ -56,7 +58,12 @@ void cpy_grid_DevicetoHost(Grid* hst, Grid* dev)
 		cudaMemcpyAsync( hst[n].orb_shf, dev[n].orb_shf, dev[n].xarr*dev[n].zarr*sizeof(int), cudaMemcpyDeviceToHost, dev[n].stream );
 		cudaMemcpyAsync( hst[n].planets, dev[n].planets, n_planet*sizeof(body), cudaMemcpyDeviceToHost, dev[n].stream );
 	}
-	for (int n=0; n<ndev; n++) cudaStreamSynchronize(dev[n].stream);
+	for (int n=0; n<ndev; n++) 
+	{
+		cudaSetDevice(n);
+		cudaDeviceSynchronize();
+		//cudaStreamSynchronize(dev[n].stream);
+	}
 	return;
 }
 
@@ -104,7 +111,7 @@ void init_grid_dimensions(Grid* G)
 	}
 	return;
 }
-
+/*
 void save_check_point(ofstream &check_point, string fname, int &sstep, double cur_time, Grid* hst)
 {
 	open_binary_file(check_point,fname);
@@ -112,7 +119,7 @@ void save_check_point(ofstream &check_point, string fname, int &sstep, double cu
 	close_output_file(check_point);
 	return;
 }
-
+*/
 int main(int narg, char *args[])
 {
 	if (!sanity_check())
@@ -253,8 +260,10 @@ int main(int narg, char *args[])
 	else
 	{
 		fname = path+"binary_"+label+"_"+frame_num(sstep);
+		check_point.open(fname.c_str(), ios::out | ios::binary);
+		write_check_point(check_point, cur_time, hst);
+		check_point.close();
 		#ifdef dump_flag
-		save_check_point(check_point, fname, sstep, cur_time, hst);
 		sstep++;
 		#endif
 	}
@@ -333,12 +342,16 @@ int main(int narg, char *args[])
 
 		if (savep)
 		{
+			printf("Check point!\n");	
+			//printf("  Current time %f | End time %f | Time step %e\n", cur_time, end_time, dt);
+
 			cpy_grid_DevicetoHost(hst, dev);
 			fname = path+"binary_"+label+"_"+frame_num(sstep);
-			save_check_point(check_point, fname, sstep, cur_time, hst);
 
-			printf("Check point!\n");
-			//printf("  Current time %f | End time %f | Time step %e\n", cur_time, end_time, dt);
+			check_point.open(fname.c_str(), ios::out | ios::binary);
+			write_check_point(check_point, cur_time, hst);
+			check_point.close();
+
 			printf("  %s is saved. \n\n", fname.c_str());
 
 			sstep++;
