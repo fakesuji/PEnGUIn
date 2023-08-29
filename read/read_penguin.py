@@ -9,9 +9,16 @@ import os.path as pat
 
 twopi = 2.0*np.pi
 
-def check_file_exist(path, imax, jmax, label, num):
+def check_file_exist_2D(path, imax, jmax, label, num):
 	fname = path+'binary_'
 	fname = fname + str(imax)+'x'+str(jmax)+'_'
+	fname = fname + label + '_'
+	fname = fname + frame_num(num)
+	return pat.isfile(fname)
+
+def check_file_exist_3D(path, imax, jmax, kmax, label, num):
+	fname = path+'binary_'
+	fname = fname + str(imax)+'x'+str(jmax)+'x'+str(kmax)+'_'
 	fname = fname + label + '_'
 	fname = fname + frame_num(num)
 	return pat.isfile(fname)
