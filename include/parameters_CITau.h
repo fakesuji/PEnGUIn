@@ -5,7 +5,9 @@
 //#define kill_flag 1
 #define OrbAdv_flag
 #define visc_flag 1
-//#define cool_flag
+#define cool_flag
+#define twobd_flag 1
+//#define silence_flag
 //#define advec_flag
 
 //=======================================================================
@@ -54,9 +56,9 @@ const int zpad = npad;
 const int zpad = 0;
 #endif
 
-const int xres = 720;
-const int yres = 1536;
-const int zres = 1;
+const int xres = 1296;//864;//
+const int yres = 2160;//1440;//
+const int zres = 1;//24;//
 
 const int xarr = xres + 2*xpad;
 const int yarr = yres + 2*ypad;
@@ -90,19 +92,19 @@ const int ndev = 2;
 // Temporal parameters
 //=======================================================================
 
-const double frame_omega = 23.1815426224;//42.5872131567;
+const double frame_omega = 15.0568536075;//
 
-const double sav_interval = 10.0*twopi/frame_omega;
-const double end_time = 10000.0*twopi/frame_omega;
+const double sav_interval = 1.0*twopi/frame_omega;
+const double end_time = 4000.0*twopi/frame_omega;
 
-const int prt_interval = 1000;
+const int prt_interval = 10000;
 const int max_step = 1000000000;
 
 //=======================================================================
 // Hydro parameters
 //=======================================================================
 
-#define EOS_flag 0
+#define EOS_flag 2                         // 0:isothermal 1:isentropic 2:adiabatic
 #define internal_e_flag 1
 
 #if EOS_flag == 0
@@ -114,7 +116,7 @@ const double gamm = gam - 1.0;
 const double gamp = gam + 1.0;
 const double gammfac = gamm/gam/2.0;
 const double gampfac = gamp/gam/2.0;
-const double CFL = 0.5;
+const double CFL = 0.3;
 
 //=======================================================================
 // Dust parameters
@@ -129,7 +131,7 @@ const double Stokes = 0.01;
 
 #define init_flag 2
 
-const int bound_lft = 0;
+const int bound_lft = 1;
 const int bound_rgh = 0;
 
 const int bound_bak = 3;
@@ -144,12 +146,12 @@ const int bound_top = 2;
 
 const double p_beta = 0.33;                             // temperature ~ r^-p_beta
 #if ndim==3
-const double p_alpha = 2. - 0.5*p_beta + 1.5;          // midplane density ~ r^-p_alpha (isothermal limit)
+const double p_alpha = 2.0 - 0.5*p_beta + 1.5;          // midplane density ~ r^-p_alpha (isothermal limit)
 #else 
-const double p_alpha = 2.;                             // surface density ~ r^-p_alpha
+const double p_alpha = 2.0;                             // surface density ~ r^-p_alpha
 #endif 
-const double ss_alpha = 0.1;                            // alpha-viscosity
-const double sc_h = 0.033;                              // scale height at r=1, normalized to that at r = 100
+const double ss_alpha = 0.01;                            // alpha-viscosity
+const double sc_h = 0.035;                              // scale height at r=1, normalized to that at r = 100
 
 #if ndim==3
 const double Sigma_0 = 0.1*MMSN_1AU/(sqrt_hpi*sc_h);    // midplane density at r=1 in units of M_solar/AU^3
@@ -157,16 +159,21 @@ const double Sigma_0 = 0.1*MMSN_1AU/(sqrt_hpi*sc_h);    // midplane density at r
 const double Sigma_0 = (MMSN_1AU/0.76)*0.05;              // density at r=1 in units of M_solar/AU^2
 #endif
 
-const double kill_width = 5.0;                      // in units of sc_h
-const double beta_cool = 1.0;                          // in units of dynamical time for beta cooling
+const double kill_width = 1.0;                      // in units of sc_h
+const double beta_cool = 0.01;                          // in units of dynamical time for beta cooling
 
 //=======================================================================
 // planet parameters
 //=======================================================================
 
+#if twobd_flag==1
+const int n_planet = 2;
+#else 
 const int n_planet = 1;
-const double planet_mass = 0.00276;
-const double planet_radius = 0.123;
+#endif
+
+const double planet_mass = 0.0026;
+const double planet_radius = 0.164;
 const double planet_ecc = 0.0;
 
 const double ramp_time = 1.0*twopi/frame_omega;
@@ -175,8 +182,8 @@ const double ramp_time = 1.0*twopi/frame_omega;
 // Grid parameters
 //=======================================================================
 
-const double xmin = 0.03;
-const double xmax = 0.4;
+const double xmin = 0.045;
+const double xmax = 1.64;
 const double ymin = 0.0;
 const double ymax = twopi;
 const double zmin = hpi-4.0*sc_h;
