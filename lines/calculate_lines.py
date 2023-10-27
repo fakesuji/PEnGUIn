@@ -1,3 +1,10 @@
+"""
+Author:  Cory Padgett
+Advisor: Dr. Jeffrey Fung
+Email:   cpadge4@clemson.edu
+"""
+
+#imports
 import functions as f
 import numpy as np
 import matplotlib.pyplot as plt
