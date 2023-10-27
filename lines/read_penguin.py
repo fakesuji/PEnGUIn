@@ -39,6 +39,17 @@ def cell_center(xa):
 		xc[i] = (xa[i+1]+xa[i])/2.0
 	return xc
 
+def cell_center_2D(xa):
+    x, y = np.shape(xa)
+    Nx = x-1
+    Ny = y-1
+    xc = np.zeros((Nx,Ny),dtype=np.float64)
+
+    for i in range(Nx):
+        for j in range(Ny):
+            xc[i,j] = (xa[i+1,j+1]+xa[i,j])/2.0
+    return xc
+
 def frame_num(i):
 	snum = str(i)
 	if len(snum)==1:   snum = '0000'+snum

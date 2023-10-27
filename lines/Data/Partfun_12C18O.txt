@@ -1,3 +1,7 @@
+# Partition function for "12C18O (28)".
+# Temperature range: 1-9000K.
+#T,K           Q(T)
+
    1                 1.0155
    2                 1.2171
    3                 1.5440
