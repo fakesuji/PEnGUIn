@@ -144,11 +144,11 @@ const int bound_top = 2;
 // Disk parameters
 //=======================================================================
 
-const double p_beta = 0.33;                             // temperature ~ r^-p_beta
+const double p_beta = 1.0;                             // temperature ~ r^-p_beta
 #if ndim==3
-const double p_alpha = 2.0 - 0.5*p_beta + 1.5;          // midplane density ~ r^-p_alpha (isothermal limit)
+const double p_alpha = 1.0 - 0.5*p_beta + 1.5;          // midplane density ~ r^-p_alpha (isothermal limit)
 #else 
-const double p_alpha = 2.0;                             // surface density ~ r^-p_alpha
+const double p_alpha = 1.0;                             // surface density ~ r^-p_alpha
 #endif 
 const double ss_alpha = 0.01;                            // alpha-viscosity
 const double sc_h = 0.035;                              // scale height at r=1, normalized to that at r = 100
