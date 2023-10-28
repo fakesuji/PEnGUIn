@@ -10,6 +10,9 @@ import numpy as np
 import read_penguin as r
 
 
+#-------------------------------------------------------------------------------------------------------
+#constants
+#-------------------------------------------------------------------------------------------------------
 #general constants
 PLANCK     = 6.626068 * 10**(-27)      #erg s       Planck’s Constant
 BOLTZ      = 0.6950348                 #cm^-1 K^-1  Boltzman’s Constant
@@ -32,22 +35,85 @@ MASS_PLANET = 11.6 * MASS_JUP   #g
 INCLIN  = np.radians(71.0)      #radians
 T0      = 2770           #K
 ALPHA   = -0.33          #
-N0      = 1.0E19
-BETA    = -2.0
+N0      = 1.0E19         #
+BETA    = -2.0           #
 R_IN    = 0.048          #au
 R_OUT   = 0.898          #au
 B       = 8.8            #km/s
 B_CGS   = B * 100000     #cm/s
 INNER   = 0.13
 OUTER   = 0.19
-DENS_FACTOR = 9E19
+DENS_FACTOR = 9.0E19
 
 
 #arrays
 k_vel      = np.linspace(-300,300,601)
 
 
+
+#-------------------------------------------------------------------------------------------------------
+#functions
+#-------------------------------------------------------------------------------------------------------
+#loading data ------------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------
+def dir_check(run_name, analysis_name, file_name, dim):
+    #checks if directory exists
+    if os.path.isdir("Plots/" + str(run_name) + "/" + str(analysis_name) + "/"):
+        print("Dir exists!")
+    #makes directory if not
+    else:
+        if os.path.isdir("Plots/" + str(run_name) + "/"):
+            print("Dir analysis exists!")
+        else:
+            os.mkdir("Plots/" + str(run_name) + "/")
+        os.mkdir("Plots/" + str(run_name) + "/" + str(analysis_name) + "/")
+
+        if dim=='2D':
+            for i in range(2,14):
+                #makes all the sub directories
+                os.mkdir("Plots/" + str(run_name) + "/" + str(analysis_name) + "/" + str(file_name[i]) + "/")
+            print("Dir made!")
+        if dim=='3D':
+            for i in range(3,14):
+                #makes all the sub directories
+                os.mkdir("Plots/" + str(run_name) + "/" + str(analysis_name) + "/" + str(file_name[i]) + "/")
+            print("Dir made!")
+    return
+
+
+def load_spec_data():
+    #loads the spectrum data and thermal data
+    file = open("Data/high_J.txt","r+")
+    vel_j  = []
+    ein_j  = []
+    eng_j  = []
+    g1j    = []
+    g0j    = []
+
+    for line in file:
+        co_data = line.split()
+        vel_j.append(float(co_data[1]))
+        ein_j.append(float(co_data[2]))
+        eng_j.append(float(co_data[3]))
+        g1j.append(float(co_data[8]))
+        g0j.append(float(co_data[9]))
+    file.close()
+    print("Spectrum Data Loaded")
+
+    file = open("Data/Partfun_12C16O.txt","r+")
+    temp  = []
+    part  = []
+
+    for line in file:
+        part_data = line.split()
+        temp.append(float(part_data[0]))
+        part.append(float(part_data[1]))
+    file.close()
+    return vel_j, ein_j, eng_j, g1j, g0j, temp, part
+
+
 def load_circular_2d():
+    #circular slab model
     x_len   = 1296
     y_len   = 2160
     lengths = x_len, y_len
@@ -76,12 +142,10 @@ def load_circular_2d():
     return grids, lengths, data
 
 
-def load_PEnGUIn_2d(LABEL, k):
+def load_PEnGUIn_2d(LABEL, IMAX, JMAX, k):
+    #loads 2d PEnGUIN data frame
     LOAD_PATH  = "/scratch/cpadge4/"
     SAVE_PATH  = "/scratch1/cpadge4/"
-
-    IMAX  = 1200
-    JMAX  = 2160
 
     exist = r.check_file_exist_2D(LOAD_PATH, IMAX, JMAX, LABEL, k)
 
@@ -124,13 +188,11 @@ def load_PEnGUIn_2d(LABEL, k):
         return grids, lengths, data
 
                         
-def load_PEnGUIn_3d(LABEL, k, DENS_FACTOR):
+def load_PEnGUIn_3d(LABEL, IMAX, JMAX, KMAX, k):
+    #loads 3d PEnGUIN data frame
     LOAD_PATH  = "/scratch/cpadge4/"
     SAVE_PATH  = "/scratch1/cpadge4/"
 
-    IMAX  = 624
-    JMAX  = 1152
-    KMAX  = 24
 
     exist = r.check_file_exist_3D(LOAD_PATH, IMAX, JMAX, KMAX, LABEL, k)
 
@@ -174,18 +236,18 @@ def load_PEnGUIn_3d(LABEL, k, DENS_FACTOR):
         return grids, lengths, data
 
 
-def cal_mass_disk(density):
-    dens_mass = np.sum(np.trapz(density)) * MOL * H_MASS * H_CO_RATIO / MASS_JUP
-    return dens_mass
-    
-
+#-------------------------------------------------------------------------------------------------------
+#velocity calculations ---------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------
 def denorm_vel_2D(r_vel, t_vel):
+    #denormalizes 2d velocity data to km/s
     r_vel = r_vel * np.sqrt(G * MASS_STAR / (AU_CM))/100000
     t_vel = t_vel * np.sqrt(G * MASS_STAR / (AU_CM))/100000
     return r_vel, t_vel
 
 
 def denorm_vel_3D(r_vel, t_vel, p_vel):
+    #denormalizes 3d velocity data to km/s
     r_vel = r_vel * np.sqrt(G * MASS_STAR / (AU_CM))/100000
     t_vel = t_vel * np.sqrt(G * MASS_STAR / (AU_CM))/100000
     p_vel = p_vel * np.sqrt(G * MASS_STAR / (AU_CM))/100000
@@ -193,35 +255,42 @@ def denorm_vel_3D(r_vel, t_vel, p_vel):
 
 
 def incvel_2D(r_vel, t_vel, theta, run_type, roll_num):
+    #inclines 2d velocity data to viewing geometry
     if run_type=="run_rotate":
         r_vel = np.roll(r_vel, roll_num, axis=1)
         t_vel = np.roll(t_vel, roll_num, axis=1)
 
-    vel_y  = (r_vel * np.sin(theta) + (t_vel * np.cos(theta)))
-    vzp = vel_y * np.sin(INCLIN)
+    vel_y = (r_vel * np.sin(theta) + (t_vel * np.cos(theta)))
+    vzp   =  vel_y * np.sin(INCLIN)
     return vzp
 
 
 def incvel_3D(r_vel, t_vel, p_vel, theta, run_type, roll_num):
+    #inclines 2d velocity data to viewing geometry
     if run_type=="run_rotate":
         r_vel = np.roll(r_vel, roll_num, axis=1)
         t_vel = np.roll(t_vel, roll_num, axis=1)
         p_vel = np.roll(p_vel, roll_num, axis=1)
 
-    vel_y  = (r_vel * np.sin(theta) * np.sin(np.pi/2) +
-           (p_vel * np.sin(theta) * np.cos(np.pi/2) + t_vel * np.cos(theta) * np.sin(np.pi/2)))
-    vel_z  = (r_vel * np.cos(np.pi/2) - p_vel * np.sin(np.pi/2))
-    vzp = vel_y * np.sin(INCLIN) + vel_z * np.cos(INCLIN)
+    vel_y = (r_vel * np.sin(theta) * np.sin(np.pi/2) +
+            (p_vel * np.sin(theta) * np.cos(np.pi/2) + t_vel * np.cos(theta) * np.sin(np.pi/2)))
+    vel_z = (r_vel * np.cos(np.pi/2) - p_vel * np.sin(np.pi/2))
+    vzp   =  vel_y * np.sin(INCLIN) + vel_z * np.cos(INCLIN)
     return r_vel, t_vel, p_vel, vzp
 
 
+#-------------------------------------------------------------------------------------------------------
+#flux and line density calculations --------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------
 def flux_cal(density, vel_j, ein_j, eng_j, g1j, g0j, temp, part_func):
+    #calculates the flux of the disk for given transition lines
     constant1 = 1 / (8 * B_CGS * (np.pi)**(3./2.))
-    x,y = np.shape(density)
-    optical_t = np.zeros((len(g0j),x,y))
+    x, y      = np.shape(density)
+    optical_t = np.zeros((len(g0j), x, y))
     flux_dens = np.zeros((np.shape(density)))
 
     for i in range(len(g0j)):
+        #loops through the different transitions
         opt_depth        = (density / part_func)  * np.exp(-eng_j[i] / (BOLTZ * temp)) * (ein_j[i] * g0j[i]**2 / (g1j[i] * vel_j[i]**3)) * constant1
         optical_t[i,:,:] = opt_depth.astype(float)
         planck_func      = (2 * PLANCK * C * vel_j[i]**3) / (np.exp((PLANCK * C * vel_j[i])/(BOLTZ_CGS * temp)) - 1)
@@ -230,12 +299,14 @@ def flux_cal(density, vel_j, ein_j, eng_j, g1j, g0j, temp, part_func):
 
 
 def flux_cal_norm(density, vel_j, ein_j, eng_j, g1j, g0j, temp, part_func):
+    #calculates the flux of the disk for given normalized transition lines
     constant1 = 1 / (8 * B_CGS * (np.pi)**(3./2.))
-    x,y = np.shape(density)
-    optical_t = np.zeros((len(g0j),x,y))
+    x, y      = np.shape(density)
+    optical_t = np.zeros((len(g0j), x, y))
     flux_dens = np.zeros((np.shape(density)))
 
     for i in range(len(g0j)):
+        #loops through the different transitions
         opt_depth        = (density / part_func)  * np.exp(-eng_j[i] / (BOLTZ * temp)) * (ein_j[i] * g0j[i]**2 / (g1j[i] * vel_j[i]**3)) * constant1
         optical_t[i,:,:] = opt_depth.astype(float)
         planck_func      = (2 * PLANCK * C * vel_j[i]**3) / (np.exp((PLANCK * C * vel_j[i])/(BOLTZ_CGS * temp)) - 1)
@@ -245,16 +316,22 @@ def flux_cal_norm(density, vel_j, ein_j, eng_j, g1j, g0j, temp, part_func):
 
 
 def int_j_cal(flux_dens, radius, k_vel, vzp):
+    #line density calculation
     int_j = np.zeros(np.shape(k_vel))
     constant2 = 1 / (B_CGS * np.sqrt(np.pi))
 
     flux_radius = flux_dens * radius**2 * AU_KM
     for i in range(len(k_vel)):
+        #loops through the test speeds
         int_j[i] = np.sum(flux_radius * constant2 * np.exp(-(k_vel[i] - vzp)**2 / B**2))
     return int_j
 
 
+#-------------------------------------------------------------------------------------------------------
+#thermal calculations ----------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------
 def part_func_1D(temp, part, y_len):
+    #generates 1d partion function grid from 1d radial temperatures
     part_func = np.zeros((np.shape(temp)))
     for i in range(0, y_len-1):
         if temp[i,0] > 8999.0:
@@ -265,6 +342,7 @@ def part_func_1D(temp, part, y_len):
 
 
 def part_func_2D(temp, part, x_len, y_len):
+    #generates 2d partion function grid from 1d radial, azimuthal temperatures
     part_func = np.zeros((np.shape(temp)))
     for i in range(0,y_len-1):
         for j in range(0,x_len-1):
@@ -275,72 +353,10 @@ def part_func_2D(temp, part, x_len, y_len):
     return part_func
 
 
-def dir_check(run_name, analysis_name, file_name, dim):
-    #checks if directory exists
-    if os.path.isdir("Plots/run_" + str(run_name) + "/" + str(analysis_name) + "/"):
-        print("Dir exists!")
-    #makes directory if not
-    else:
-        if os.path.isdir("Plots/run_" + str(run_name) + "/"):
-            print("Dir analysis exists!")
-        else:
-            os.mkdir("Plots/run_" + str(run_name) + "/")
-        os.mkdir("Plots/run_" + str(run_name) + "/" + str(analysis_name) + "/")
-
-        if dim=='2D':
-            for i in range(2,14):
-                #makes all the sub directories
-                os.mkdir("Plots/run_" + str(run_name) + "/" + str(analysis_name) + "/" + str(file_name[i]) + "/")
-            print("Dir made!")
-        if dim=='3D':
-            for i in range(3,14):
-                #makes all the sub directories
-                os.mkdir("Plots/run_" + str(run_name) + "/" + str(analysis_name) + "/" + str(file_name[i]) + "/")
-            print("Dir made!")
-    return
-
-
-def load_spec_data():
-    file = open("Data/high_J.txt","r+")
-    vel_j  = []
-    ein_j  = []
-    eng_j  = []
-    g1j    = []
-    g0j    = []
-
-    for line in file:
-        co_data = line.split()
-        vel_j.append(float(co_data[1]))
-        ein_j.append(float(co_data[2]))
-        eng_j.append(float(co_data[3]))
-        g1j.append(float(co_data[8]))
-        g0j.append(float(co_data[9]))
-    file.close()
-    print("Spectrum Data Loaded")
-
-    file = open("Data/Partfun_12C16O.txt","r+")
-    temp  = []
-    part  = []
-
-    for line in file:
-        part_data = line.split()
-        temp.append(float(part_data[0]))
-        part.append(float(part_data[1]))
-    file.close()
-    return vel_j, ein_j, eng_j, g1j, g0j, temp, part
-
-
-def make_dim_match(x, y, mapible):
-    x_shape = np.shape(x)
-    y_shape = np.shape(y)
-    m_shape = np.shape(mapible)
-    
-    if m_shape == (x_shape, y_shape):
-        print("Dim Match!")
-    else:
-        xm_len = m_shape[0]
-        ym_len = m_shape[1]
-        
-        x = x[:xm_len]
-        y = y[:ym_len]
-    return x, y
+#-------------------------------------------------------------------------------------------------------
+#misc functions ----------------------------------------------------------------------------------------
+#-------------------------------------------------------------------------------------------------------
+def cal_mass_disk(density):
+    #returns mass estimate of disk in Mj
+    dens_mass = np.sum(np.trapz(density)) * MOL * H_MASS * H_CO_RATIO / MASS_JUP
+    return dens_mass
