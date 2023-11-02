@@ -39,6 +39,7 @@ BETA    = -2.0           #
 R_IN    = 0.048          #au
 B       = 8.8            #km/s
 B_CGS   = B * 100000     #cm/s
+DENS_FACTOR = 9.0E19
 
 
 #-------------------------------------------------------------------------------------------------------
@@ -59,11 +60,11 @@ def plot_line(parameters, k_vel, int_j):
     plt.xlabel("Velocity [km/s]")
     plt.ylabel("Normalized Flux")
     if run_type == "run_stationary":
-        plt.title("Stationary Line Density at orbit " + str(k))
-        plt.savefig("Plots/run_" + str(run_name) + "/" + str(analysis_name) + "/" + "Line Density" + "/line_" + str(k) + ".png")
+        plt.title("Stationary Line Density at Orbit " + str(k))
+        plt.savefig("Plots/" + str(run_name) + "/" + str(analysis_name) + "/" + "Line Density" + "/line_" + str(k) + ".png")
     if run_type == "run_rotate":
-        plt.title("Rotational Line Density at orbit " + str(orbit_num) + " and frame " + str(frame))
-        plt.savefig("Plots/run_" + str(run_name) + "/" + str(analysis_name) + "/" + "Line Density" + "/line_obs_" + str(orbit_num) + "_" + str(frame) + ".png")
+        plt.title("Rotational Line Density at Orbit " + str(orbit_num) + " and Frame " + str(frame))
+        plt.savefig("Plots/" + str(run_name) + "/" + str(analysis_name) + "/" + "Line Density" + "/line_obs_" + str(orbit_num) + "_" + str(frame) + ".png")
     plt.close()
     return
 
@@ -83,11 +84,11 @@ def plot_line_obs(parameters, k_vel, int_j):
     plt.xlabel("Velocity [km/s]")
     plt.ylabel("Normalized Flux")
     if run_type == "run_stationary":
-        plt.title("Stationary Line Density at orbit " + str(k))
-        plt.savefig("Plots/run_" + str(run_name) + "/" + str(analysis_name) + "/" + "Line Density" + "/line_obs_" + str(k) + ".png")
+        plt.title("Stationary Line Density at Orbit " + str(k))
+        plt.savefig("Plots/" + str(run_name) + "/" + str(analysis_name) + "/" + "Line Density" + "/line_obs_" + str(k) + ".png")
     if run_type == "run_rotate":
-        plt.title("Rotational Line Density at orbit " + str(orbit_num) + " and frame " + str(frame))
-        plt.savefig("Plots/run_" + str(run_name) + "/" + str(analysis_name) + "/" + "Line Density" + "/line_obs_" + str(orbit_num) + "_" + str(frame) + ".png")
+        plt.title("Rotational Line Density at Orbit " + str(orbit_num) + " and Frame " + str(frame))
+        plt.savefig("Plots/" + str(run_name) + "/" + str(analysis_name) + "/" + "Line Density" + "/line_obs_" + str(orbit_num) + "_" + str(frame) + ".png")
     plt.close()
     return
 
@@ -113,11 +114,11 @@ def plot_line_seg(parameters, varibles):
     plt.xlabel("Velocity [km/s]")
     plt.ylabel("Normalized Flux")
     if run_type == "run_stationary":
-        plt.title("Stationary Line Density at orbit " + str(k))
-        plt.savefig("Plots/run_" + str(run_name) + "/" + str(analysis_name) + "/" + "Line Density" + "/line_obs_segs_" + str(k) + ".png")
+        plt.title("Stationary Line Density at Orbit " + str(k))
+        plt.savefig("Plots/" + str(run_name) + "/" + str(analysis_name) + "/" + "Line Density" + "/line_obs_segs_" + str(k) + ".png")
     if run_type == "run_rotate":
-        plt.title("Rotational Line Density at orbit " + str(orbit_num) + " and frame " + str(frame))
-        plt.savefig("Plots/run_" + str(run_name) + "/" + str(analysis_name) + "/" + "Line Density" + "/line_obs_segs" + str(orbit_num) + "_" + str(frame) + ".png")
+        plt.title("Rotational Line Density at Orbit " + str(orbit_num) + " and Frame " + str(frame))
+        plt.savefig("Plots/" + str(run_name) + "/" + str(analysis_name) + "/" + "Line Density" + "/line_obs_segs" + str(orbit_num) + "_" + str(frame) + ".png")
     plt.close()
     return
 
@@ -145,11 +146,11 @@ def plot_line_obs_seg(parameters, varibles):
     plt.xlabel("Velocity [km/s]")
     plt.ylabel("Normalized Flux")
     if run_type == "run_stationary":
-        plt.title("Stationary Line Density at orbit " + str(k))
-        plt.savefig("Plots/run_" + str(run_name) + "/" + str(analysis_name) + "/" + "Line Density" + "/line_obs_segs_" + str(k) + ".png")
+        plt.title("Stationary Line Density at Orbit " + str(k))
+        plt.savefig("Plots/" + str(run_name) + "/" + str(analysis_name) + "/" + "Line Density" + "/line_obs_segs_" + str(k) + ".png")
     if run_type == "run_rotate":
-        plt.title("Rotational Line Density at orbit " + str(orbit_num) + " and frame " + str(frame))
-        plt.savefig("Plots/run_" + str(run_name) + "/" + str(analysis_name) + "/" + "Line Density" + "/line_obs_segs" + str(orbit_num) + "_" + str(frame) + ".png")
+        plt.title("Rotational Line Density at Orbit " + str(orbit_num) + " and Frame " + str(frame))
+        plt.savefig("Plots/" + str(run_name) + "/" + str(analysis_name) + "/" + "Line Density" + "/line_obs_segs" + str(orbit_num) + "_" + str(frame) + ".png")
     plt.close()
     return
 
@@ -160,20 +161,31 @@ def plot_line_obs_seg(parameters, varibles):
 def plot_vel(parameters, radius, theta, vel, vel_type):
     #Polar velocity plot
     run_type, run_name, analysis_name, time, k, frame, orbit_num = parameters
+    
+    if vel_type == "X Velocity":
+        v_type = "x"
+        vel_min = -15
+        vel_max =  15
+        
+    if vel_type == "Y Velocity":
+        v_type = "y"
+        vel  = vel - np.sqrt(G * MASS_STAR / (radius * AU_CM))/100000
+        vel_min = 0
+        vel_max = 150
 
     fig, ax = plt.subplots(subplot_kw={'projection': 'polar'}, figsize=(6,5))
     ax.grid(False)
-    plt.pcolormesh(theta, radius, vel)
+    plt.pcolormesh(theta, radius, vel, vmin = vel_min, vmax = vel_max)
     ax.set_rmax(0.3)
     ax.set_rticks([0.1, 0.2, 0.3])  # Less radial ticks
     ax.set_rlabel_position(-22.5)   # Move radial labels away from plotted line
     plt.colorbar(label="[km/s]")
     if run_type == "run_stationary":
-        ax.set_title("PEnGUIn " + vel_type + " Velocities at time " + str(time) + " and Orbit " + str(k))
-        plt.savefig("Plots/run_" + str(run_name) + "/" + str(analysis_name) + "/" + vel_type + "/vel_" + str(k) + ".png")
+        ax.set_title("PEnGUIn " + vel_type + " Velocities at Time " + str(time) + " and Orbit " + str(k))
+        plt.savefig("Plots/" + str(run_name) + "/" + str(analysis_name) + "/" + vel_type + "/" + v_type + "_vel_" + str(k) + ".png")
     if run_type == "run_rotate":
-        ax.set_title("PEnGUIn " + vel_type + " Velocities at time " + str(time) + ",\n Orbit " + str(orbit_num) + ", and Frame " + str(frame))
-        plt.savefig("Plots/run_" + str(run_name) + "/" + str(analysis_name) + "/" + vel_type + "/vel_" + str(orbit_num) + "_" + str(frame) + ".png")
+        ax.set_title("PEnGUIn " + vel_type + " Velocities at Time " + str(time) + ",\n Orbit " + str(orbit_num) + ", and Frame " + str(frame))
+        plt.savefig("Plots/" + str(run_name) + "/" + str(analysis_name) + "/" + vel_type + "/" + v_type + "_vel_" + str(orbit_num) + "_" + str(frame) + ".png")
     plt.close()
     return
 
@@ -184,7 +196,7 @@ def plot_pol_dens(parameters, radius, theta, radius_1, radius_2, density):
 
     fig, ax = plt.subplots(subplot_kw={'projection': 'polar'}, figsize=(6,5))
     ax.grid(False)
-    plt.pcolormesh(theta, radius, np.log10(density), vmin=15, vmax=20)
+    plt.pcolormesh(theta, radius, np.log10(density), vmin=-4, vmax=0)
     plt.plot(theta[:,0], radius_1, color='k', linestyle='dotted')     #plot visual inner gap boundary
     plt.plot(theta[:,0], radius_2, color='k', linestyle='dotted')     #plot visual outer gap boundary
     ax.set_rmax(0.3)
@@ -192,11 +204,11 @@ def plot_pol_dens(parameters, radius, theta, radius_1, radius_2, density):
     ax.set_rlabel_position(-22.5)   # Move radial labels away from plotted line
     plt.colorbar(label="[log(cm-2)]")
     if run_type == "run_stationary":
-        ax.set_title("Calculated PEnGUIn Densities at time " + str(time) + " and Orbit " + str(k))
-        plt.savefig("Plots/run_" + str(run_name) + "/" + str(analysis_name) + "/" + "Polar Density" + "/pol_dens_" + str(k) + ".png")
+        ax.set_title("Calculated PEnGUIn Densities at Time " + str(time) + " and Orbit " + str(k))
+        plt.savefig("Plots/" + str(run_name) + "/" + str(analysis_name) + "/" + "Polar Density" + "/pol_dens_" + str(k) + ".png")
     if run_type == "run_rotate":
-        ax.set_title("Calculated PEnGUIn Densities at time " + str(time) + ",\n Orbit " + str(orbit_num) + ", and Frame " + str(frame))
-        plt.savefig("Plots/run_" + str(run_name) + "/" + str(analysis_name) + "/" + "Polar Density" + "/pol_dens_" + str(orbit_num) + "_" + str(frame) + ".png")
+        ax.set_title("Calculated PEnGUIn Densities at Time " + str(time) + ",\n Orbit " + str(orbit_num) + ", and Frame " + str(frame))
+        plt.savefig("Plots/" + str(run_name) + "/" + str(analysis_name) + "/" + "Polar Density" + "/pol_dens_" + str(orbit_num) + "_" + str(frame) + ".png")
     plt.close()
     return
 
@@ -215,11 +227,11 @@ def plot_pol_vzp(parameters, radius, theta, radius_1, radius_2, vzp):
     ax.set_rlabel_position(-22.5)  # Move radial labels away from plotted line
     plt.colorbar(label="[km/s]")
     if run_type == "run_stationary":
-        ax.set_title("Projected PEnGUIn Velocities at time " + str(time) + " and Orbit " + str(k))
-        plt.savefig("Plots/run_" + str(run_name) + "/" + str(analysis_name) + "/" + "Proj-Pol Velocity" + "/pol_vzp_" + str(k) + ".png")
+        ax.set_title("Projected PEnGUIn Velocities at Time " + str(time) + " and Orbit " + str(k))
+        plt.savefig("Plots/" + str(run_name) + "/" + str(analysis_name) + "/" + "Proj-Pol Velocity" + "/pol_vzp_" + str(k) + ".png")
     if run_type == "run_rotate":
-        ax.set_title("Projected PEnGUIn Velocities at time " + str(time) + ",\n Orbit " + str(orbit_num) + ", and Frame " + str(frame))
-        plt.savefig("Plots/run_" + str(run_name) + "/" + str(analysis_name) + "/" + "Proj-Pol Velocity" + "/pol_vzp_" + str(orbit_num) + "_" + str(frame) + ".png")
+        ax.set_title("Projected PEnGUIn Velocities at Time " + str(time) + ",\n Orbit " + str(orbit_num) + ", and Frame " + str(frame))
+        plt.savefig("Plots/" + str(run_name) + "/" + str(analysis_name) + "/" + "Proj-Pol Velocity" + "/pol_vzp_" + str(orbit_num) + "_" + str(frame) + ".png")
     plt.close()
     return
 
@@ -238,11 +250,11 @@ def plot_pol_temp(parameters, radius, theta, radius_1, radius_2, temp):
     ax.set_rlabel_position(-22.5)  # Move radial labels away from plotted line
     plt.colorbar(label="[log10(k)]")
     if run_type == "run_stationary":
-        ax.set_title("Surface Temperatures at time " + str(time) + " and Orbit " + str(k))
-        plt.savefig("Plots/run_" + str(run_name) + "/" + str(analysis_name) + "/" + "Temperatures" + "/temp_" + str(k) + ".png")
+        ax.set_title("Surface Temperatures at Time " + str(time) + " and Orbit " + str(k))
+        plt.savefig("Plots/" + str(run_name) + "/" + str(analysis_name) + "/" + "Temperatures" + "/temp_" + str(k) + ".png")
     if run_type == "run_rotate":
-        ax.set_title("Surface Temperatures at time " + str(time) + ",\n Orbit " + str(orbit_num) + ", and Frame " + str(frame))
-        plt.savefig("Plots/run_" + str(run_name) + "/" + str(analysis_name) + "/" + "Temperatures" + "/temp_" + str(orbit_num) + "_" + str(frame) + ".png")
+        ax.set_title("Surface Temperatures at Time " + str(time) + ",\n Orbit " + str(orbit_num) + ", and Frame " + str(frame))
+        plt.savefig("Plots/" + str(run_name) + "/" + str(analysis_name) + "/" + "Temperatures" + "/temp_" + str(orbit_num) + "_" + str(frame) + ".png")
     plt.close()
     return
 
@@ -267,7 +279,7 @@ def plot_line_obs_dens_vzp(parameters, varibles):
 
     cset0 = axs[0].plot(k_vel, int_j,     label="PEnGUIn")
     axs[0].plot(k_vel,         int_j_obs, label="CI Tau Observed")
-    cset1 = axs[1].pcolormesh(radius, theta, np.log10(density), vmin=15, vmax=20)
+    cset1 = axs[1].pcolormesh(radius, theta, np.log10(density), vmin=-4, vmax=0)
     cset2 = axs[2].pcolormesh(radius, theta, vzp, vmin=-150, vmax=150)
 
     axs[0].set_xlabel("Velocities [km/s]")
@@ -290,11 +302,11 @@ def plot_line_obs_dens_vzp(parameters, varibles):
     fig.colorbar(cset1, ax=axs[1], label="[log(cm-2)]")
     fig.colorbar(cset2, ax=axs[2], label="[km/s]")
     if run_type == "run_stationary":
-        axs[0].set_title("Stationary Line Density at orbit " + str(k), fontsize=15)
-        plt.savefig("Plots/run_" + str(run_name) + "/" + str(analysis_name) + "/" + "Multi Plot" + "/line_obs_dens_vzp_" + str(k) + ".png")
+        axs[0].set_title("Stationary Line Density", fontsize=15)
+        plt.savefig("Plots/" + str(run_name) + "/" + str(analysis_name) + "/" + "Multi Plot" + "/line_obs_dens_vzp_" + str(k) + ".png")
     if run_type == "run_rotate":
-        axs[0].set_title("Rotational Line Density at orbit " + str(orbit_num) + " and frame " + str(frame), fontsize=15)
-        plt.savefig("Plots/run_" + str(run_name) + "/" + str(analysis_name) + "/" + "Multi Plot" + "/line_obs_dens_vzp_" + str(orbit_num) + "_" + str(frame) + ".png")
+        axs[0].set_title("Rotational Line Density", fontsize=15)
+        plt.savefig("Plots/" + str(run_name) + "/" + str(analysis_name) + "/" + "Multi Plot" + "/line_obs_dens_vzp_" + str(orbit_num) + "_" + str(frame) + ".png")
     plt.close()
     return
                      
@@ -323,7 +335,7 @@ def plot_line_obs_dens_seg(parameters, varibles, lines):
         fig.suptitle('Orbit ' +str(orbit_num) + ' at Frame ' + str(frame) + ' at Time ' + str(time), fontsize=16)    #k-frame_start
 
     ax0.grid(False)
-    cset0 = ax0.pcolormesh(theta, radius, np.log10(np.transpose(density)), vmin=15, vmax=20)
+    cset0 = ax0.pcolormesh(theta, radius, np.log10(np.transpose(density)), vmin=-4, vmax=0)
     ax0.set_ylim(0,0.3)
     ax0.set_title("Calculated PEnGUIn Densities", fontsize=15)
     ax0.plot(theta[:,0], radius_1, color = 'k', linestyle = 'dotted')     #plot visual inner gap boundary
@@ -341,11 +353,11 @@ def plot_line_obs_dens_seg(parameters, varibles, lines):
 
     fig.colorbar(cset0, ax=ax0, label="[log(cm-2)]")
     if run_type == "run_stationary":
-        ax1.set_title("Stationary Line Density at orbit " + str(k), fontsize=15)
-        plt.savefig("Plots/run_" + str(run_name) + "/" + str(analysis_name) + "/" + "Multi Plot" + "/line_obs_dens_" + str(k) + ".png")
+        ax1.set_title("Stationary Line Density", fontsize=15)
+        plt.savefig("Plots/" + str(run_name) + "/" + str(analysis_name) + "/" + "Multi Plot" + "/line_obs_dens_" + str(k) + ".png")
     if run_type == "run_rotate":
-        ax1.set_title("Rotational Line Density at orbit " + str(orbit_num) + " and frame " + str(frame), fontsize=15)
-        plt.savefig("Plots/run_" + str(run_name) + "/" + str(analysis_name) + "/" + "Multi Plot" + "/line_obs_dens_" + str(orbit_num) + "_" + str(frame) + ".png")
+        ax1.set_title("Rotational Line Density", fontsize=15)
+        plt.savefig("Plots/" + str(run_name) + "/" + str(analysis_name) + "/" + "Multi Plot" + "/line_obs_dens_" + str(orbit_num) + "_" + str(frame) + ".png")
     plt.close()
     return
 
@@ -373,7 +385,7 @@ def plot_line_dens_seg(parameters, varibles, lines):
         fig.suptitle('Orbit ' +str(orbit_num) + ' at Frame ' + str(frame) + ' at Time ' + str(time), fontsize=16)
 
     ax0.grid(False)
-    cset0 = ax0.pcolormesh(theta, radius, np.log10(np.transpose(density)), vmin=15, vmax=20)
+    cset0 = ax0.pcolormesh(theta, radius, np.log10(np.transpose(density)), vmin=-4, vmax=0)
     ax0.set_ylim(0,0.3)
     ax0.set_title("Calculated PEnGUIn Densities", fontsize=15)
     ax0.plot(theta[:,0], radius_1, color='k', linestyle='dotted')     #plot visual inner gap boundary
@@ -390,11 +402,11 @@ def plot_line_dens_seg(parameters, varibles, lines):
 
     fig.colorbar(cset0, ax=ax0, label="[log(cm-2)]")
     if run_type == "run_stationary":
-        ax1.set_title("Stationary Line Density at orbit " + str(k), fontsize=15)
-        plt.savefig("Plots/run_" + str(run_name) + "/" + str(analysis_name) + "/" + "Multi Plot" + "/line_dens_" + str(k) + ".png")
+        ax1.set_title("Stationary Line Density", fontsize=15)
+        plt.savefig("Plots/" + str(run_name) + "/" + str(analysis_name) + "/" + "Multi Plot" + "/line_dens_" + str(k) + ".png")
     if run_type == "run_rotate":
-        ax1.set_title("Rotational Line Density at orbit " + str(orbit_num) + " and frame " + str(frame), fontsize=15)
-        plt.savefig("Plots/run_" + str(run_name) + "/" + str(analysis_name) + "/" + "Multi Plot" + "/line_dens_" + str(orbit_num) + "_" + str(frame) + ".png")
+        ax1.set_title("Rotational Line Density", fontsize=15)
+        plt.savefig("Plots/" + str(run_name) + "/" + str(analysis_name) + "/" + "Multi Plot" + "/line_dens_" + str(orbit_num) + "_" + str(frame) + ".png")
     plt.close()
     return
 
@@ -422,7 +434,7 @@ def plot_line_obs_dens_wo_gap(parameters, varibles, lines):
         fig.suptitle('Orbit ' +str(orbit_num) + ' at Frame ' + str(frame) + ' at Time ' + str(time), fontsize=16)
 
     ax0.grid(False)
-    cset0 = ax0.pcolormesh(theta, radius, np.log10(density), vmin=15, vmax=20)
+    cset0 = ax0.pcolormesh(theta, radius, np.log10(density), vmin=-4, vmax=0)
     ax0.set_ylim(0,0.3)
     ax0.set_title("Calculated PEnGUIn Densities", fontsize=15)
     ax0.plot(theta[:,0], radius_1, color = 'k', linestyle = 'dotted')     #plot visual inner gap boundary
@@ -439,10 +451,10 @@ def plot_line_obs_dens_wo_gap(parameters, varibles, lines):
     fig.colorbar(cset0, ax=ax0, label="[log(cm-2)]")
     if run_type == "run_stationary":
         ax1.set_title("Stationary Line Density at orbit " + str(k), fontsize=15)
-        plt.savefig("Plots/run_" + str(run_name) + "/" + str(analysis_name) + "/" + "Multi Plot" + "/line_dens_wo_gap_" + str(k) + ".png")
+        plt.savefig("Plots/" + str(run_name) + "/" + str(analysis_name) + "/" + "Multi Plot" + "/line_dens_wo_gap_" + str(k) + ".png")
     if run_type == "run_rotate":
         ax1.set_title("Rotational Line Density at orbit " + str(orbit_num) + " and frame " + str(frame), fontsize=15)
-        plt.savefig("Plots/run_" + str(run_name) + "/" + str(analysis_name) + "/" + "Multi Plot" + "/line_dens_wo_gap_" + str(orbit_num) + "_" + str(frame) + ".png")
+        plt.savefig("Plots/" + str(run_name) + "/" + str(analysis_name) + "/" + "Multi Plot" + "/line_dens_wo_gap_" + str(orbit_num) + "_" + str(frame) + ".png")
     plt.close()
     return
 
@@ -465,7 +477,7 @@ def plot_line_dens(parameters, varibles):
         fig.suptitle('Orbit ' +str(orbit_num) + ' at Frame ' + str(frame) + ' at Time ' + str(time), fontsize=16)
 
     ax0.grid(False)
-    cset0 = ax0.pcolormesh(theta, radius, np.log10(density), vmin=15, vmax=20)
+    cset0 = ax0.pcolormesh(theta, radius, np.log10(density), vmin=-4, vmax=0)
     ax0.set_ylim(0,0.3)
     ax0.set_title("Calculated PEnGUIn Densities", fontsize=15)
     ax0.plot(theta[:,0], radius_1, color = 'k', linestyle = 'dotted')     #plot visual inner gap boundary
@@ -480,10 +492,10 @@ def plot_line_dens(parameters, varibles):
     fig.colorbar(cset0, ax=ax0, label="[log(cm-2)]")
     if run_type == "run_stationary":
         ax1.set_title("Stationary Line Density at orbit " + str(k), fontsize=15)
-        plt.savefig("Plots/run_" + str(run_name) + "/" + str(analysis_name) + "/" + "Multi Plot" + "/line_dens_" + str(k) + ".png")
+        plt.savefig("Plots/" + str(run_name) + "/" + str(analysis_name) + "/" + "Multi Plot" + "/line_dens_" + str(k) + ".png")
     if run_type == "run_rotate":
         ax1.set_title("Rotational Line Density at orbit " + str(orbit_num) + " and frame " + str(frame), fontsize=15)
-        plt.savefig("Plots/run_" + str(run_name) + "/" + str(analysis_name) + "/" + "Multi Plot" + "/line_dens_" + str(orbit_num) + "_" + str(frame) + ".png")
+        plt.savefig("Plots/" + str(run_name) + "/" + str(analysis_name) + "/" + "Multi Plot" + "/line_dens_" + str(orbit_num) + "_" + str(frame) + ".png")
     plt.close()
     return
 
@@ -507,7 +519,7 @@ def plot_line_obs_dens(parameters, varibles):
         fig.suptitle('Orbit ' +str(orbit_num) + ' at Frame ' + str(frame) + ' at Time ' + str(time), fontsize=16)    #k-frame_start
 
     ax0.grid(False)
-    cset0 = ax0.pcolormesh(theta, radius, np.log10(density), vmin=15, vmax=20)
+    cset0 = ax0.pcolormesh(theta, radius, np.log10(density), vmin=-4, vmax=0)
     ax0.set_ylim(0,0.3)
     ax0.set_title("Calculated PEnGUIn Densities", fontsize=15)
     ax0.plot(theta[:,0], radius_1, color = 'k', linestyle = 'dotted')     #plot visual inner gap boundary
@@ -523,10 +535,10 @@ def plot_line_obs_dens(parameters, varibles):
     fig.colorbar(cset0, ax=ax0, label="[log(cm-2)]")
     if run_type == "run_stationary":
         ax1.set_title("Stationary Line Density at orbit " + str(k), fontsize=15)
-        plt.savefig("Plots/run_" + str(run_name) + "/" + str(analysis_name) + "/" + "Multi Plot" + "/line_obs_dens_" + str(k) + ".png")
+        plt.savefig("Plots/" + str(run_name) + "/" + str(analysis_name) + "/" + "Multi Plot" + "/line_obs_dens_" + str(k) + ".png")
     if run_type == "run_rotate":
         ax1.set_title("Rotational Line Density at orbit " + str(orbit_num) + " and frame " + str(frame), fontsize=15)
-        plt.savefig("Plots/run_" + str(run_name) + "/" + str(analysis_name) + "/" + "Multi Plot" + "/line_obs_dens_" + str(orbit_num) + "_" + str(frame) + ".png")
+        plt.savefig("Plots/" + str(run_name) + "/" + str(analysis_name) + "/" + "Multi Plot" + "/line_obs_dens_" + str(orbit_num) + "_" + str(frame) + ".png")
     plt.close()
     return
 
@@ -536,10 +548,10 @@ def plot_line_obs_dens(parameters, varibles):
 #-------------------------------------------------------------------------------------------------------
 def plot_col_dens(parameters, varibles, params2):
     run_type, run_name, analysis_name, time, k, frame, orbit_num = parameters
-    radius, density, temp, part_func, dens_factor     = varibles
-    vel_j, ein_j, eng_j, g1j, g0j                     = params2
+    radius, density, temp, part_func     = varibles
+    vel_j, ein_j, eng_j, g1j, g0j        = params2
     
-    removed = np.transpose(density)
+    removed = np.transpose(density) * DENS_FACTOR
     removed[400:500,1050:1110] = removed[400:500,1050:1110] - removed[400:500,1050:1110]
     
     constant1 = 1 / (8*B*100000*(np.pi)**(3./2.))
@@ -549,27 +561,27 @@ def plot_col_dens(parameters, varibles, params2):
     N0_simulated = N0 * 100.0
     N_detected  = N0_detected  * (radius/R_IN)**BETA
     N_simulated = N0_simulated * (radius/R_IN)**BETA
-    N_factor    = dens_factor  * (radius/R_IN)**BETA
+    N_factor    = DENS_FACTOR  * (radius/R_IN)**BETA
     thick_dense_P42 = part_func /( np.exp(-eng_j[0]  / (BOLTZ * temp)) * (ein_j[0]  * g0j[0]**2  / (g1j[0]  * vel_j[0]**3))  * constant1)
     thick_dense_P20 = part_func /( np.exp(-eng_j[-1] / (BOLTZ * temp)) * (ein_j[-1] * g0j[-1]**2  / (g1j[-1] * vel_j[-1]**3)) * constant1)
 
 
     fig, ax =plt.subplots()
     ax.plot(radius, np.log10(dens),                 color='b', label="AVG PEnGUIn")
-    ax.plot(radius, np.log10(N_detected),      color="g", label="detected")
-    ax.plot(radius, np.log10(N_simulated),     color="orange", label="simulated")
-    ax.plot(radius, np.log10(thick_dense_P42[0,:]), color="r", linestyle="dotted", label="Optically Thick P42 Sur")
-    ax.plot(radius, np.log10(thick_dense_P20[0,:]), color="r", linestyle="dashed", label="Optically Thick P20 Sur")
+    ax.plot(radius, np.log10(N_detected),           color="g", label="Detected")
+    ax.plot(radius, np.log10(N_simulated),          color="orange", label="Simulated")
+    ax.plot(radius, np.log10(thick_dense_P42[0,:]), color="r",  linestyle="dotted", label="Optically Thick P42 Sur")
+    ax.plot(radius, np.log10(thick_dense_P20[0,:]), color="r",  linestyle="dashed", label="Optically Thick P20 Sur")
     plt.legend()
-    plt.title("Column Density at time " + str(time) + " and orbit " +str(k))
+    plt.title("Column Density at Time " + str(time) + " and Orbit " +str(k))
     plt.xlabel("Radius [au]")
     plt.ylabel("Column Density [log(cm-2)]")
     plt.xlim(R_IN, 0.35)
     plt.ylim(16,24)
     if run_type == "run_stationary":
-        plt.savefig("Plots/run_" + str(run_name) + "/" + str(analysis_name) + "/" + "Col Dens" + "/col_dens_" + str(k) + ".png")
+        plt.savefig("Plots/" + str(run_name) + "/" + str(analysis_name) + "/" + "Col Dens" + "/col_dens_" + str(k) + ".png")
     if run_type == "run_rotate":
-        plt.savefig("Plots/run_" + str(run_name) + "/" + str(analysis_name) + "/" + "Col Dens" + "/col_dens_" + str(orbit_num) + "_" + str(frame) + ".png")
+        plt.savefig("Plots/" + str(run_name) + "/" + str(analysis_name) + "/" + "Col Dens" + "/col_dens_" + str(orbit_num) + "_" + str(frame) + ".png")
     plt.close()
     return
 
@@ -590,9 +602,9 @@ def plot_opt_depth(parameters, varibles):
     plt.ylabel("Optical Depth")
     plt.title("Optical Depth Average at time " + str(time))
     if run_type == "run_stationary":
-        plt.savefig("Plots/run_" + str(run_name) + "/" + str(analysis_name) + "/" + "Optical Depth" + "/optical_" + str(k) + ".png")
+        plt.savefig("Plots/" + str(run_name) + "/" + str(analysis_name) + "/" + "Optical Depth" + "/optical_" + str(k) + ".png")
     if run_type == "run_rotate":
-        plt.savefig("Plots/run_" + str(run_name) + "/" + str(analysis_name) + "/" + "Optical Depth" + "/optical_" + str(orbit_num) + "_" + str(frame) + ".png")
+        plt.savefig("Plots/" + str(run_name) + "/" + str(analysis_name) + "/" + "Optical Depth" + "/optical_" + str(orbit_num) + "_" + str(frame) + ".png")
     plt.close()
     return
 
@@ -613,8 +625,8 @@ def plot_opt_depth_all(parameters, varibles):
     plt.ylabel("Optical Depth")
     plt.title("Optical Depth Average at time " + str(time))
     if run_type == "run_stationary":
-        plt.savefig("Plots/run_" + str(run_name) + "/" + str(analysis_name) + "/" + "Optical Depth" + "/optical_" + str(k) + ".png")
+        plt.savefig("Plots/" + str(run_name) + "/" + str(analysis_name) + "/" + "Optical Depth" + "/optical_" + str(k) + ".png")
     if run_type == "run_rotate":
-        plt.savefig("Plots/run_" + str(run_name) + "/" + str(analysis_name) + "/" + "Optical Depth" + "/optical_" + str(orbit_num) + "_" + str(frame) + ".png")
+        plt.savefig("Plots/" + str(run_name) + "/" + str(analysis_name) + "/" + "Optical Depth" + "/optical_" + str(orbit_num) + "_" + str(frame) + ".png")
     plt.close()
     return

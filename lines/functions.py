@@ -69,12 +69,12 @@ def dir_check(run_name, analysis_name, file_name, dim):
         os.mkdir("Plots/" + str(run_name) + "/" + str(analysis_name) + "/")
 
         if dim=='2D':
-            for i in range(2,14):
+            for i in range(len(file_name)):
                 #makes all the sub directories
                 os.mkdir("Plots/" + str(run_name) + "/" + str(analysis_name) + "/" + str(file_name[i]) + "/")
             print("Dir made!")
         if dim=='3D':
-            for i in range(3,14):
+            for i in range(len(file_name)):
                 #makes all the sub directories
                 os.mkdir("Plots/" + str(run_name) + "/" + str(analysis_name) + "/" + str(file_name[i]) + "/")
             print("Dir made!")
@@ -183,7 +183,7 @@ def load_PEnGUIn_2d(LABEL, IMAX, JMAX, k):
         r_vel, t_vel  = denorm_vel_2D(r_vel, t_vel)
 
         temp = np.round(((density / pressure)) * (G * MASS_STAR / AU_CM) * 2.3 / R )
-        density = density  * DENS_FACTOR
+        density = density
         data = time, pressure, density, temp, r_vel, t_vel
         return grids, lengths, data
 
@@ -231,7 +231,7 @@ def load_PEnGUIn_3d(LABEL, IMAX, JMAX, KMAX, k):
         r_vel, t_vel, p_vel  = denorm_vel_3D(r_vel, t_vel, p_vel)
 
         temp = np.round(((density / pressure)) * (G * MASS_STAR / AU_CM) * 2.3 / R )
-        density = density  * DENS_FACTOR
+        density = density
         data = time, pressure, density, temp, r_vel, t_vel, p_vel
         return grids, lengths, data
 
