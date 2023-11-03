@@ -29,7 +29,7 @@ string create_label()
 		{
 			label += "_"+int_to_string(n_planet)+"p"+int_to_string(planet_mass/EarthMass)+"E";
 		}
-		label += "_e000";
+		label += "_e" +int_to_string(planet_ecc*1000.0);
 	}
 
 	#if visc_flag == 1

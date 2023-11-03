@@ -1,13 +1,13 @@
 #!/bin/bash
 #
-#PBS -l select=1:ncpus=2:mem=64gb
-#PBS -l walltime=72:00:00
-#PBS -o ../logfile/run_3.15.out
+#PBS -l select=1:ncpus=2:mem=128gb
+#PBS -l walltime=16:00:00
+#PBS -o ../logfile/h35_2p636E_e30.out
 #PBS -j oe
 
 cd $PBS_O_WORKDIR
 module load anaconda3/2022.05-gcc/9.5.0
 echo "Loaded"
 
-python cal_lines.py
+python calculate_lines.py
 echo "Completed"
