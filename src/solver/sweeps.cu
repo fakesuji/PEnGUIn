@@ -665,7 +665,7 @@ __global__ void apply_source_terms(Grid G, Cell* in, Dust* in_d, Cell* out, Dust
 			T.u = C.u + fx*mdt + gx*mdt;
 			T.v = C.v + fy*mdt + gy*mdt;
 			T.w = C.w + fz*mdt + gz*mdt;
-			#ifdef cool_flag
+			#if cool_flag > 0
 			T.p = get_p_cool(xc,yc,zc,T.p,T.r,mdt);
 			#endif
 
@@ -692,7 +692,7 @@ __global__ void apply_source_terms(Grid G, Cell* in, Dust* in_d, Cell* out, Dust
 		out[ind].v = C.v + fy*dt + gy*dt;
 		out[ind].w = C.w + fz*dt + gz*dt;
 		out[ind].r = in[ind].r;
-		#ifdef cool_flag
+		#if cool_flag > 0
 		out[ind].p = get_p_cool(xc,yc,zc,in[ind].p,in[ind].r,dt);
 		#else
 		out[ind].p = in[ind].p;
