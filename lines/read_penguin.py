@@ -39,6 +39,17 @@ def cell_center(xa):
 		xc[i] = (xa[i+1]+xa[i])/2.0
 	return xc
 
+def cell_center_2D(xa):
+    x, y = np.shape(xa)
+    Nx = x-1
+    Ny = y-1
+    xc = np.zeros((Nx,Ny),dtype=np.float64)
+
+    for i in range(Nx):
+        for j in range(Ny):
+            xc[i,j] = (xa[i+1,j+1]+xa[i,j])/2.0
+    return xc
+
 def frame_num(i):
 	snum = str(i)
 	if len(snum)==1:   snum = '0000'+snum
@@ -59,7 +70,7 @@ def ceil_2pow(val):
 
 def bin_locate(val,arr):
 	L = len(arr)-1
-	if val<arr[0] or val>arr[L]: return None
+	if (val<arr[0]).all() or (val>arr[L]).all(): return None
 	if val==arr[L]: return L
 
 	N = ceil_2pow(L)//2
@@ -132,6 +143,42 @@ def interpolate_2D(p,x,y,z):
 
 	val = Q1*z[jc1,ic1] + Q2*z[jc1,ic] + Q3*z[jc,ic] + Q4*z[jc,ic1]
 	return val
+
+"""def interpolate_3D(p,x,y,z):
+	ic = bin_locate(p[0],x)
+	jc = bin_locate(p[1],y)
+    kc = bin_locate(p[2],z)
+    if ic==None or jc==None or kc==None: return None
+	
+	if ic==len(x)-1: 
+		A = 0.0
+		ic1 = ic
+	else:
+		A = (p[0]-x[ic])/(x[ic+1]-x[ic])
+		ic1 = ic+1
+
+	if jc==len(y)-1:
+		B = 0.0
+		jc1 = jc
+	else:	
+		B = (p[1]-y[jc])/(y[jc+1]-y[jc])
+		jc1 = jc+1
+        
+    if kc==len(z)-1:
+		C = 0.0
+		kc1 = kc
+	else:	
+		C = (p[2]-z[kc])/(z[kc+1]-z[kc])
+		kc1 = kc+1
+
+	Q1 = A*B
+	Q2 = (1.0-A)*B
+	Q3 = (1.0-A)*(1.0-B)
+	Q4 = A*(1.0-B)
+
+	val = Q1*z[jc1,ic1] + Q2*z[jc1,ic] + Q3*z[jc,ic] + Q4*z[jc,ic1]
+	return val
+"""
 
 def load_1D_data(path, imax, label, num):
 	fname = path+'binary_'

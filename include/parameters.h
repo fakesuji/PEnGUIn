@@ -56,9 +56,9 @@ const int zpad = npad;
 const int zpad = 0;
 #endif
 
-const int xres = 960;//720;//
-const int yres = 1536;//1128;//
-const int zres = 1;//24;//
+const int xres = 1200;
+const int yres = 2160;
+const int zres = 1;
 
 const int xarr = xres + 2*xpad;
 const int yarr = yres + 2*ypad;
@@ -92,9 +92,9 @@ const int ndev = 2;
 // Temporal parameters
 //=======================================================================
 
-const double frame_omega = 15.0568536075;//
+const double frame_omega = 1.0;//15.0568536075;//
 
-const double sav_interval = 1.0*twopi/frame_omega;
+const double sav_interval = 10.0*twopi/frame_omega;
 const double end_time = 4000.0*twopi/frame_omega;
 
 const int prt_interval = 10000;
@@ -144,11 +144,11 @@ const int bound_top = 2;
 // Disk parameters
 //=======================================================================
 
-const double p_beta = 0.33;                             // temperature ~ r^-p_beta
+const double p_beta = 1.0;                             // temperature ~ r^-p_beta
 #if ndim==3
-const double p_alpha = 2.0 - 0.5*p_beta + 1.5;          // midplane density ~ r^-p_alpha (isothermal limit)
+const double p_alpha = 1.0 - 0.5*p_beta + 1.5;          // midplane density ~ r^-p_alpha (isothermal limit)
 #else 
-const double p_alpha = 2.0;                             // surface density ~ r^-p_alpha
+const double p_alpha = 1.0;                             // surface density ~ r^-p_alpha
 #endif 
 const double ss_alpha = 0.01;                            // alpha-viscosity
 const double sc_h = 0.035;                              // scale height at r=1, normalized to that at r = 100
@@ -172,9 +172,9 @@ const int n_planet = 2;
 const int n_planet = 1;
 #endif
 
-const double planet_mass = 0.0026;
-const double planet_radius = 0.164;
-const double planet_ecc = 0.1;
+const double planet_mass = 0.002;
+const double planet_radius = 1.0;
+const double planet_ecc = 0.03;
 
 const double ramp_time = 1.0*twopi/frame_omega;
 
@@ -182,8 +182,8 @@ const double ramp_time = 1.0*twopi/frame_omega;
 // Grid parameters
 //=======================================================================
 
-const double xmin = 0.025;
-const double xmax = 1.4;
+const double xmin = 0.3;
+const double xmax = 10.0;
 const double ymin = 0.0;
 const double ymax = twopi;
 const double zmin = hpi-4.0*sc_h;
