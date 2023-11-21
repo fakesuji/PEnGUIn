@@ -5,7 +5,7 @@
 //#define kill_flag 1
 #define OrbAdv_flag
 #define visc_flag 1
-#define cool_flag
+#define cool_flag 1
 #define twobd_flag 1
 //#define silence_flag
 //#define advec_flag

@@ -38,8 +38,12 @@ string create_label()
 	label += "_ah"+int_to_string(log10(ss_alpha)*10.0);
 	#endif
 
-	#ifdef cool_flag
+	#if cool_flag == 1
 	label += "_b"+int_to_string(log10(beta_cool)*10.0);
+	#elif cool_flag == 2
+	label += "_c"+int_to_string(log10(beta_cool)*10.0);
+	#elif cool_flag == 3
+	label += "_d"+int_to_string(log10(beta_cool)*10.0);
 	#endif
 	
 	#ifdef OrbAdv_flag
