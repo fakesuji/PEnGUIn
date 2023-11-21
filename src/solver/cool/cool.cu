@@ -1,7 +1,11 @@
-__device__ double get_tc(double rad)
+__device__ double get_tc(double rad, double p, double r)
 {
 	double tc;
+	#if cool_flag == 1
 	tc = pow(rad,1.5)*beta_cool;
+	#elif cool_flag > 1
+	tc = beta_cool*(1.0/r)*(sqrt(p/r)/sc_h);
+	#endif
 
 	return tc;
 }
@@ -18,7 +22,7 @@ __device__ double get_p_cool(double xc, double yc, double zc, double p, double r
 	rad_cyl = xc * sin(zc);
 	#endif
 
-	double tc = get_tc(rad_cyl);
+	double tc = get_tc(rad_cyl,p,r);
 
 	double e  = p/r;
 	double e0 = get_cs2(xc,yc,zc);
