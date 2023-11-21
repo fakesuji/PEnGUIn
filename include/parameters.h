@@ -151,10 +151,10 @@ const double p_alpha = 1.0 - 0.5*p_beta + 1.5;          // midplane density ~ r^
 const double p_alpha = 1.0;                             // surface density ~ r^-p_alpha
 #endif 
 const double ss_alpha = 0.01;                            // alpha-viscosity
-const double sc_h = 0.035;                              // scale height at r=1, normalized to that at r = 100
+const double sc_h = 0.035;                              // scale height at r = planet_radius
 
 #if ndim==3
-const double Sigma_0 = 0.1*MMSN_1AU/(sqrt_hpi*sc_h);    // midplane density at r=1 in units of M_solar/AU^3
+const double Sigma_0 = 0.1*MMSN_1AU/(sqrt_hpi*sc_h);    // midplane density at r=1 in units M_solar/AU^3
 #else 
 const double Sigma_0 = (MMSN_1AU/0.76)*0.05;              // density at r=1 in units of M_solar/AU^2
 #endif
