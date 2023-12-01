@@ -11,6 +11,12 @@
 //#define advec_flag
 
 //=======================================================================
+// Save path
+//=======================================================================
+
+const char path_for_dump[]="/mnt/penguin/fung/2023/";
+
+//=======================================================================
 // Constants
 //=======================================================================
 
@@ -56,13 +62,19 @@ const int zpad = npad;
 const int zpad = 0;
 #endif
 
-const int xres = 1200;
-const int yres = 2160;
+const int xres = 600;
+const int yres = 1080;
 const int zres = 1;
 
 const int xarr = xres + 2*xpad;
 const int yarr = yres + 2*ypad;
 const int zarr = zres + 2*zpad;
+
+//=======================================================================
+// Domain division parameters
+//=======================================================================
+
+const int ndev = 1;
 
 const int x_xdiv = 24;
 const int x_ydiv = 8;
@@ -83,28 +95,22 @@ const int z_zdiv = 24;
 const int z_zthd = z_zdiv + 2*zpad;
 
 //=======================================================================
-// Geometric parameters
-//=======================================================================
-
-const int ndev = 2;
-
-//=======================================================================
 // Temporal parameters
 //=======================================================================
 
-const double frame_omega = 1.0;//15.0568536075;//
+const double frame_omega = 1.0;
 
-const double sav_interval = 10.0*twopi/frame_omega;
-const double end_time = 4000.0*twopi/frame_omega;
+const double sav_interval = 1.0*twopi/frame_omega;
+const double end_time = 100.0*twopi/frame_omega;
 
-const int prt_interval = 10000;
+const int prt_interval = 1000;
 const int max_step = 1000000000;
 
 //=======================================================================
 // Hydro parameters
 //=======================================================================
 
-#define EOS_flag 2                         // 0:isothermal 1:isentropic 2:adiabatic
+#define EOS_flag 0                         // 0:isothermal 1:isentropic 2:adiabatic
 #define internal_e_flag 1
 
 #if EOS_flag == 0
@@ -146,12 +152,12 @@ const int bound_top = 2;
 
 const double p_beta = 1.0;                             // temperature ~ r^-p_beta
 #if ndim==3
-const double p_alpha = 1.0 - 0.5*p_beta + 1.5;          // midplane density ~ r^-p_alpha (isothermal limit)
+const double p_alpha = 1.5 - 0.5*p_beta + 1.5;          // midplane density ~ r^-p_alpha (isothermal limit)
 #else 
-const double p_alpha = 1.0;                             // surface density ~ r^-p_alpha
+const double p_alpha = 1.5;                             // surface density ~ r^-p_alpha
 #endif 
-const double ss_alpha = 0.01;                            // alpha-viscosity
-const double sc_h = 0.035;                              // scale height at r = planet_radius
+const double ss_alpha = 0.001;                            // alpha-viscosity
+const double sc_h = 0.05;                              // scale height at r = planet_radius
 
 #if ndim==3
 const double Sigma_0 = 0.1*MMSN_1AU/(sqrt_hpi*sc_h);    // midplane density at r=1 in units M_solar/AU^3
@@ -172,9 +178,9 @@ const int n_planet = 2;
 const int n_planet = 1;
 #endif
 
-const double planet_mass = 0.002;
+const double planet_mass = 0.001;
 const double planet_radius = 1.0;
-const double planet_ecc = 0.03;
+const double planet_ecc = 0.05;
 
 const double ramp_time = 1.0*twopi/frame_omega;
 
