@@ -138,7 +138,7 @@ int main(int narg, char *args[])
 	ofstream check_point;
 
 	string label=create_label();
-	string path = "/scratch/fung/";
+	string path = path_for_dump;
 	string fname;
 
 	Grid* hst;
