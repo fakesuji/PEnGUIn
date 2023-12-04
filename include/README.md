@@ -131,3 +131,176 @@
 	z_xthd:
 		-the array size in each block during a z-dimension sweep
 
+//=======================================================================
+// Temporal parameters
+//=======================================================================
+
+	frame_omega:
+ 		-frame rotation frequency in code units
+	sav_interval:
+ 		-time interval between saving snapshots (see dump_flag) in code units
+   	end_time:
+    		-end time of the simulation in code units
+	prt_interval:
+ 		-number of timesteps between producing terminal output (see silence_flag)
+	max_step:
+ 		-maximum number of timestep
+
+//=======================================================================
+// Hydro parameters
+//=======================================================================
+
+	EOS_flag:
+ 		-options: 0,1,2
+   		-0: isothermal
+     		-1: isentropic
+       		-2: adiabatic
+	internal_e_flag
+ 		-options: 0, 1
+   		-0: track full energy when EOS is adiabatic
+     		-1: track internal energy when EOS is adiabatic
+       	gam:
+		-the adiabatic index "gamma"
+  	gamm:
+   		-gamma minus one
+     	gamp:
+      		-gamma plus one
+	gammfac:
+ 		-(gamma minus one)/(2 * gamma)
+   	gampfac:
+    		-(gamma plus one)/(2 * gamma)
+	CFL:
+ 		-the Courant number
+   
+//=======================================================================
+// Dust parameters
+//=======================================================================
+
+	D_G_ratio:
+ 		-dust-to-gas mass ratio
+	Stokes:
+ 		-Stokes number
+
+//=======================================================================
+// boundary parameters
+//=======================================================================
+
+	init_flag:
+ 		-initial conditions
+ 		-options: 0,1,2,3,4,5,6,7,8
+   		-0: one-dimensional shock tube test
+     		-1: one-dimensional strong shock test
+       		-2: two-dimensional protoplanetary disk in cylindrical coordinates
+	 	-3: three-dimensional protoplanetary disk in spherical coordinates
+   		-4: two-dimensional shock tube test
+     		-5: two-dimensional Kelvin-Helmholtz test
+       		-6: one-dimensional linear wave test
+	 	-7: two-dimensional modified Kelvin-Helmholtz test
+   		-8: one-dimensional divergence test
+	bound_lft:
+ 		-lower x boundary conditions
+   		-options: 0,1,2,3
+     		-0: initial conditions
+       		-1: zero gradient
+	 	-2: reflective
+   		-3: periodic
+	bound_rgh:
+  		-upper x boundary conditions
+   		-options: 0,1,2,3
+     		-0: initial conditions
+       		-1: zero gradient
+	 	-2: reflective
+   		-3: periodic
+	bound_bak:
+  		-lower y boundary conditions
+   		-options: 0,1,2,3
+     		-0: initial conditions
+       		-1: zero gradient
+	 	-2: reflective
+   		-3: periodic
+	bound_frn:
+  		-upper y boundary conditions
+   		-options: 0,1,2,3
+     		-0: initial conditions
+       		-1: zero gradient
+	 	-2: reflective
+   		-3: periodic
+	bound_bom:
+  		-lower z boundary conditions
+   		-options: 0,1,2,3
+     		-0: initial conditions
+       		-1: zero gradient
+	 	-2: reflective
+   		-3: periodic
+	bound_top:
+  		-upper z boundary conditions
+   		-options: 0,1,2,3
+     		-0: initial conditions
+       		-1: zero gradient
+	 	-2: reflective
+   		-3: periodic
+     
+//=======================================================================
+// Disk parameters
+//=======================================================================
+
+	p_beta:
+ 		-disk temperature follows r^-p_beta
+   	p_alpha:
+    		-In 2D simulations, dist surface density follows r^-p_alpha
+      		-In 3D simulations, dist midplane density follows r^-p_alpha
+	ss_alpha:
+ 		-the Sunyaev-Shakura alpha viscosity paramter
+   	sc_h:
+    		-disk aspect ratio at r=planet_radius
+	Sigma_0:
+ 		-In 2D simulations, disk surface density at r=1 in units of solar mass per au^2
+   		-In 3D simulations, disk midplanet density at r=1 in units of solar mass per au^3
+     	kill_width:
+      		-width of the killing wave in units of the local disk scale height
+	beta_cool:
+ 		-the thermal relaxation time in units of the local dynamical time
+
+//=======================================================================
+// planet parameters
+//=======================================================================
+
+	n_planet:
+ 		-number of planets (planet + star if twobd_flag is set to 1)
+	planet_mass:
+ 		-planet-to-star mass ratio
+   	planet_radius:
+    		-semi-major axis of the planet's orbit in code units
+	planet_ecc:
+ 		-eccentricity of the planet's orbit
+	ramp_time:
+ 		-initial time, in code units, taken to gradually bring the planet's mass to "planet_mass"
+   
+//=======================================================================
+// Grid parameters
+//=======================================================================
+
+	xmin:
+ 		-location of the lower x boundary
+	xmax:
+ 		-location of the upper x boundary
+	ymin:
+ 		-location of the lower y boundary
+	ymax:
+ 		-location of the upper y boundary
+	zmin:
+ 		-location of the lower z boundary
+	zmax:
+ 		-location of the upper z boundary
+	geomx, geomy, geomz:
+ 		-grid geometry: cartesian, cylindrical, spherical
+   		-cartesian: geomx=0, geomy=0, geomz=0
+     		-cylindrical: geomx=1, geomy=3, geomz=0
+     		-spherical: geomx=2, geomy=4, geomz=5
+	gridx, gridy, gridz:
+		-grid spacing options:0,1,2,3,4
+  		-0: uniform
+    		-1: logarithmic
+      		-2: non-uniform spacing that concentrates cells near the center of the grid
+		-3: non-uniform spacing that concentrates cells near the top of the grid
+  		-4: mixed non-uniform and uniform spacing that concentrates cells near the center of the grid
