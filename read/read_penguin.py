@@ -147,10 +147,7 @@ def load_1D_data(path, imax, label, num):
 
 	start = end
 	end = start+imax+1
-	xa = dat[start:end]
-
-	xc = np.arange(imax, dtype=np.float64)
-	for i in range(0,imax): xc[i] = 0.5*(xa[i+1]+xa[i])
+	x = dat[start:end]
 
 	start = end
 	end = start+imax
@@ -164,7 +161,7 @@ def load_1D_data(path, imax, label, num):
 	end = start+imax
 	vx = dat[start:end]
 
-	return (t,xc,ro,pr,vx)
+	return (t,x,ro,pr,vx)
 
 def load_2D_data(path, imax, jmax, label, num):
 	fname = path+'binary_'
