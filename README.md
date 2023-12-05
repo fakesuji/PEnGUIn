@@ -8,7 +8,8 @@ command lines for compiling instructions:
 		make
 	Note: Re-make if the parameter file is changed.
 
-	2. If compiling on a machine without GPUs installed, the Makefile must be modified. Go to Line 5 of Makefile, replace:
+	2. If compiling on a machine without GPUs installed, the Makefile must be modified. 
+ 	Go to Line 5 of Makefile, replace:
 		-arch=native
 	with the architecture of your choice. For example, choose
 		-arch=sm_70
