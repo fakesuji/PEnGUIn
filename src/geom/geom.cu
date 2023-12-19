@@ -78,8 +78,9 @@ void nonuspace_half(double* a, double start, double end, int len)
 	double L = end-start;
 
 	//double dx_min = (L/(double)N)/8.0;
+	//double dx_max = (L/(double)N)*2.0:
 	double dx_min = ((xmax-xmin)/(double)xres)/32.0;
-	double dx_max = (L/(double)N)*2.0;
+	double dx_max = sc_h/16.0;
 
 	double k = log(1.0 - (dx_max-dx_min)/(L-(double)N*dx_min))/log(1.0-1.0/(double)N);
 
