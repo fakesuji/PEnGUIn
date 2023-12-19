@@ -110,7 +110,7 @@ const int max_step = 1000000000;
 // Hydro parameters
 //=======================================================================
 
-#define EOS_flag 0                         // 0:isothermal 1:isentropic 2:adiabatic
+#define EOS_flag 0
 #define internal_e_flag 1
 
 #if EOS_flag == 0
@@ -150,23 +150,23 @@ const int bound_top = 2;
 // Disk parameters
 //=======================================================================
 
-const double p_beta = 1.0;                             // temperature ~ r^-p_beta
+const double p_beta = 1.0;
 #if ndim==3
-const double p_alpha = 1.5 - 0.5*p_beta + 1.5;          // midplane density ~ r^-p_alpha (isothermal limit)
+const double p_alpha = 1.5 - 0.5*p_beta + 1.5;
 #else 
-const double p_alpha = 1.5;                             // surface density ~ r^-p_alpha
+const double p_alpha = 1.5;
 #endif 
-const double ss_alpha = 0.001;                            // alpha-viscosity
-const double sc_h = 0.05;                              // scale height at r = planet_radius
+const double ss_alpha = 0.001;
+const double sc_h = 0.05;
 
 #if ndim==3
-const double Sigma_0 = 0.1*MMSN_1AU/(sqrt_hpi*sc_h);    // midplane density at r=1 in units M_solar/AU^3
+const double Sigma_0 = 0.1*MMSN_1AU/(sqrt_hpi*sc_h);
 #else 
-const double Sigma_0 = (MMSN_1AU/0.76)*0.05;              // density at r=1 in units of M_solar/AU^2
+const double Sigma_0 = (MMSN_1AU/0.76)*0.05;
 #endif
 
-const double kill_width = 1.0;                      // in units of sc_h
-const double beta_cool = 0.01;                          // in units of dynamical time for beta cooling
+const double kill_width = 1.0;
+const double beta_cool = 0.01;
 
 //=======================================================================
 // planet parameters
