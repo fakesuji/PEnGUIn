@@ -407,16 +407,17 @@ def make_cart_plot_2D(fig,ax,time,x,y,val,vmin,vmax):
 	
 	rad = np.zeros(imax)
 	azi = np.zeros(jmax)
-
-	box_size = 5.0
+    
+	origin = [-1.0,0.0]
+	box_size = 0.1
 	cx = np.zeros(pres+1)
 	cy = np.zeros(pres+1)
 	dd = 0.5*box_size/pres
 	aa = np.reshape(np.zeros(pres*pres), (-1,pres))
 	
 	for i in range(0,pres+1):
-		cx[i] = (box_size*i)/pres - 0.5*box_size;
-		cy[i] = (box_size*i)/pres - 0.5*box_size;
+		cx[i] = (box_size*i)/pres - 0.5*box_size + origin[0];
+		cy[i] = (box_size*i)/pres - 0.5*box_size + origin[1];
 
 	for i in range(0,imax):
 		rad[i] = (x[i+1]+x[i])/2.0
@@ -442,25 +443,33 @@ def make_cart_plot_2D(fig,ax,time,x,y,val,vmin,vmax):
 	ax.set_aspect('equal')
 	ax.set_xlabel('x', fontsize=12)
 	ax.set_ylabel('y', fontsize=12)
-	ax.set_xticks(np.arange(-5.0, 5.1, step=1.0))
-	ax.set_yticks(np.arange(-5.0, 5.1, step=1.0))
-	ax.set_xlim(-0.5*box_size,0.5*box_size)
-	ax.set_ylim(-0.5*box_size,0.5*box_size)
+	ax.set_xticks(np.arange(-box_size + origin[0], box_size + origin[0], step=box_size/4))
+	ax.set_yticks(np.arange(-box_size + origin[1], box_size + origin[1], step=box_size/4))
+	ax.set_xlim(-0.5*box_size + origin[0],0.5*box_size + origin[0])
+	ax.set_ylim(-0.5*box_size + origin[1],0.5*box_size + origin[1])
 	ax.tick_params(axis='both', labelsize=12, width=2)
 
 	return mesh1
 
+def get_val(dat):
+	return dat[4]/dat[3]    
+
 def make_figure_2D(p0,p1,p2,p3):
+	val0 = get_val(p0)
+	val1 = get_val(p1)
+	val2 = get_val(p2)
+	val3 = get_val(p3)
+    
 	fig, axs = plt.subplots(2, 2, figsize=(11,11))
-	vmin = np.min([np.min(p0[3]),np.min(p1[3]),np.min(p2[3]),np.min(p3[3])])
-	vmax = np.max([np.max(p0[3]),np.max(p1[3]),np.max(p2[3]),np.max(p3[3])])
+	vmin = np.min([np.min(val0),np.min(val1),np.min(val2),np.min(val3)])
+	vmax = np.max([np.max(val0),np.max(val1),np.max(val2),np.max(val3)])
 	vmin = np.log10(vmin)
 	vmax = np.log10(vmax)
 
-	m1=make_cart_plot_2D(fig,axs[0,0],p3[0],p3[1],p3[2],p3[3],vmin,vmax)
-	m2=make_cart_plot_2D(fig,axs[0,1],p2[0],p2[1],p2[2],p2[3],vmin,vmax)
-	m3=make_cart_plot_2D(fig,axs[1,0],p1[0],p1[1],p1[2],p1[3],vmin,vmax)
-	m4=make_cart_plot_2D(fig,axs[1,1],p0[0],p0[1],p0[2],p0[3],vmin,vmax)
+	m1=make_cart_plot_2D(fig,axs[0,0],p0[0],p0[1],p0[2],val0,vmin,vmax)
+	m2=make_cart_plot_2D(fig,axs[0,1],p1[0],p1[1],p1[2],val1,vmin,vmax)
+	m3=make_cart_plot_2D(fig,axs[1,0],p2[0],p2[1],p2[2],val2,vmin,vmax)
+	m4=make_cart_plot_2D(fig,axs[1,1],p3[0],p3[1],p3[2],val3,vmin,vmax)
 
 	axs[0,0].set_title('1.')
 	axs[0,1].set_title('2.')

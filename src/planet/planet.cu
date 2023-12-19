@@ -201,6 +201,18 @@ void evolve_planet(Grid* dev, double time, double dt)
 	return;
 }
 
+double get_rs(double a, double mp)
+{
+	double rs;
+	#if ndim==2
+	rs = fmin(sc_h,fmax(sc_h/2.0,pow(planet_mass/3.0,1.0/3.0)/4.0))*a;
+	#else
+	rs = (pow(planet_mass/3.0,1.0/3.0)/4.0)*a;
+	#endif
+	rs = 0.0003*a;
+	return rs;
+}
+
 void init_planet(Grid* G, double time)
 {
 	printf("planet initialization begins...\n");
@@ -219,11 +231,7 @@ void init_planet(Grid* G, double time)
 		two_body_solution(G[i].planets, time);
 
 		G[i].planets[0].rs = 0.0;
-		#if ndim==2
-		G[i].planets[1].rs = fmin(sc_h,fmax(sc_h/2.0,pow(planet_mass/3.0,1.0/3.0)/4.0))*a;
-		#else
-		G[i].planets[1].rs = (pow(planet_mass/3.0,1.0/3.0)/4.0)*a;
-		#endif
+		G[i].planets[1].rs = get_rs(a, planet_mass);
 	}
 	#else
 	double e = planet_ecc;
@@ -271,6 +279,7 @@ void init_planet(Grid* G, double time)
 
 			orbit_solution(&(G[i].planets[n]), time);
 
+			G[i].planets[n].rs = get_rs(a,planet_mass);
 /*
 			G[i].planets[n].m = ramp_function(time, ramp_time, planet_mass);
 			G[i].planets[n].x = a*(1.0-e);
@@ -281,12 +290,6 @@ void init_planet(Grid* G, double time)
 			G[i].planets[n].vy = sqrt((1.0+e)/(1.0-e)/a)*G[i].planets[n].x;
 			G[i].planets[n].vz = 0.0;
 */
-
-			#if ndim==2
-			G[i].planets[n].rs = fmin(sc_h,fmax(sc_h/2.0,pow(planet_mass/3.0,1.0/3.0)/4.0))*a;
-			#else
-			G[i].planets[n].rs = (pow(planet_mass/3.0,1.0/3.0)/4.0)*a;
-			#endif
 		}
 	}
 	#endif
