@@ -209,7 +209,7 @@ double get_rs(double a, double mp)
 	#else
 	rs = (pow(planet_mass/3.0,1.0/3.0)/4.0)*a;
 	#endif
-	rs = 0.0003*a;
+	//rs = 0.0003*a;
 	return rs;
 }
 

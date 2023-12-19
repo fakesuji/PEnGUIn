@@ -78,6 +78,10 @@ string create_label()
 	label += "_rev";
 	#endif
 
+	#ifdef ave_flag
+	label += "_ave";
+	#endif
+
 	//label += "_"+int_to_string(ndev)+"dev";
 	//label += "_video";
 
@@ -240,4 +244,88 @@ double load_grid(Grid* G, string fname)
 	close_output_file(start_point);
 
 	return start_time;
+}
+
+__global__ void add_grid(Grid G, Cell* in, Cell* out, double fac)
+{
+	int i = threadIdx.x + blockIdx.x*blockDim.x + xpad;
+	int j = threadIdx.y + blockIdx.y*blockDim.y + ypad;
+	int k = threadIdx.z + blockIdx.z*blockDim.z + zpad;
+
+	double xc, yc, zc;
+
+	int ind;
+
+	if (i>=xpad && i<G.xarr-xpad)
+	if (j>=ypad && j<G.yarr-ypad)
+	if (k>=zpad && k<G.zarr-zpad)
+	{		
+		ind = G.get_ind(i,j,k);
+
+		out[ind].r += in[ind].r*fac;
+		out[ind].p += in[ind].p*fac;
+		out[ind].u += in[ind].u*fac;
+		out[ind].v += in[ind].v*fac;
+		out[ind].w += in[ind].w*fac;
+	}
+
+	return;
+}
+
+__global__ void zero_grid(Grid G, Cell* in)
+{
+	int i = threadIdx.x + blockIdx.x*blockDim.x + xpad;
+	int j = threadIdx.y + blockIdx.y*blockDim.y + ypad;
+	int k = threadIdx.z + blockIdx.z*blockDim.z + zpad;
+
+	double xc, yc, zc;
+
+	int ind;
+
+	if (i>=xpad && i<G.xarr-xpad)
+	if (j>=ypad && j<G.yarr-ypad)
+	if (k>=zpad && k<G.zarr-zpad)
+	{		
+		ind = G.get_ind(i,j,k);
+
+		in[ind].r = 0.0;
+		in[ind].p = 0.0;
+		in[ind].u = 0.0;
+		in[ind].v = 0.0;
+		in[ind].w = 0.0;
+	}
+
+	return;
+}
+
+void averaging(Grid* dev, double dt, double t_ave)
+{
+	int nx, ny, nz;
+	for (int n=0; n<ndev; n++)
+	{
+		cudaSetDevice(n);
+
+		nx = dev[n].xres;
+		ny = dev[n].yres;
+		nz = dev[n].zres;
+
+		add_grid<<< dim3(nx/x_xdiv,ny/x_ydiv,nz/x_zdiv), dim3(x_xthd,x_ydiv,x_zdiv), 0, dev[n].stream >>> (dev[n], dev[n].C, dev[n].A, dt/t_ave);
+	}
+	return;
+}
+
+void init_average(Grid* dev)
+{
+	int nx, ny, nz;
+	for (int n=0; n<ndev; n++)
+	{
+		cudaSetDevice(n);
+
+		nx = dev[n].xres;
+		ny = dev[n].yres;
+		nz = dev[n].zres;
+
+		zero_grid<<< dim3(nx/x_xdiv,ny/x_ydiv,nz/x_zdiv), dim3(x_xthd,x_ydiv,x_zdiv), 0, dev[n].stream >>> (dev[n], dev[n].A);
+	}
+	return;
 }
