@@ -40,6 +40,10 @@
 		-options: def or not def
 		-def: solves advection equations only
 		-not def: solves hydrodynamics equations
+  	ave_flag:
+   		-options: def or not def
+     		-def: snapshots are averaged over "sav_interval"
+       		-not def: snapshots are instantaneous
 
 //=======================================================================
 // Save path
