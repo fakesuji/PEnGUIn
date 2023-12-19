@@ -9,6 +9,7 @@
 //#define twobd_flag 1
 //#define silence_flag
 //#define advec_flag
+//#define ave_flag
 
 //=======================================================================
 // Save path

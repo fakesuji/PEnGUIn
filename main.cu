@@ -23,9 +23,13 @@ bool sanity_check()
 {
 	bool sane = true;
 
-	if (xres%x_xdiv!=0) sane = false;
-	if (xres%y_xdiv!=0) sane = false;
-	if (xres%z_xdiv!=0) sane = false;
+	if (xres%ndev!=0) sane = false;
+
+	int xdim = xres/ndev;
+
+	if (xdim%x_xdiv!=0) sane = false;
+	if (xdim%y_xdiv!=0) sane = false;
+	if (xdim%z_xdiv!=0) sane = false;
 
 	#if ndim>1
 	if (yres%x_ydiv!=0) sane = false;
@@ -39,17 +43,31 @@ bool sanity_check()
 	if (zres%z_zdiv!=0) sane = false;
 	#endif
 
+	#if ndim<2
+	if (yres!=1) sane = false;
+	#endif
+
+	#if ndim<3
+	if (zres!=1) sane = false;
+	#endif
+
+	int nDevices;
+	cudaGetDeviceCount(&nDevices);
+	if (ndev>nDevices) sane = false;
+
 	return sane;
 }
 
 void cpy_grid_DevicetoHost(Grid* hst, Grid* dev)
 {
-	
-	//for (int n=0; n<ndev; n++) cudaStreamSynchronize(dev[n].stream);
 	for (int n=0; n<ndev; n++)
 	{
 		cudaSetDevice(n);
+		#ifdef ave_flag
+		cudaMemcpyAsync( hst[n].C, dev[n].A, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(Cell), cudaMemcpyDeviceToHost, dev[n].stream );
+		#else
 		cudaMemcpyAsync( hst[n].C, dev[n].C, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(Cell), cudaMemcpyDeviceToHost, dev[n].stream );
+		#endif
 
 		#ifdef dust_flag
 		cudaMemcpyAsync( hst[n].CD, dev[n].CD, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(Dust), cudaMemcpyDeviceToHost, dev[n].stream );
@@ -62,7 +80,6 @@ void cpy_grid_DevicetoHost(Grid* hst, Grid* dev)
 	{
 		cudaSetDevice(n);
 		cudaDeviceSynchronize();
-		//cudaStreamSynchronize(dev[n].stream);
 	}
 	return;
 }
@@ -124,7 +141,7 @@ int main(int narg, char *args[])
 {
 	if (!sanity_check())
 	{
-		printf("incorrect grid setting.\n");
+		printf("Incorrect setting. Please check your parameter file.\n");
 		return 1;
 	}
 
@@ -194,7 +211,10 @@ int main(int narg, char *args[])
 
 		cudaMalloc( (void**)&dev[n].C, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(Cell) );
 		cudaMalloc( (void**)&dev[n].T, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(Cell) );
-		//cudaMalloc( (void**)&dev[n].F, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(Cell) );
+
+		#ifdef ave_flag
+		cudaMalloc( (void**)&dev[n].A, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(Cell) );
+		#endif
 
 		cudaMalloc( (void**)&dev[n].fx, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(double) );
 		cudaMalloc( (void**)&dev[n].fy, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(double) );
@@ -276,6 +296,10 @@ int main(int narg, char *args[])
 
 	init_OrbAdv(dev);
 
+	#ifdef ave_flag
+	init_average(dev);
+	#endif
+
 	///////////////////////////////////////////////////////////
 
 	auto clock = chrono::high_resolution_clock::now();
@@ -311,7 +335,15 @@ int main(int narg, char *args[])
 
 		////////////////////////////////////////////////////////////////////////////////////
 
+		#ifdef ave_flag
+		averaging(dev, 0.5*dt, sav_interval);
+		#endif
+
 		solve(dev, cur_time, dt);
+
+		#ifdef ave_flag
+		averaging(dev, 0.5*dt, sav_interval);
+		#endif
 
 		cur_time += dt;
 		sav_time += dt;
@@ -358,6 +390,9 @@ int main(int narg, char *args[])
 			sav_time = 0.0;
 			savep = false;
 			dt = old_dt;
+			#ifdef ave_flag
+			init_average(dev);
+			#endif
 		}
 	}
 
@@ -401,7 +436,10 @@ int main(int narg, char *args[])
 
 		cudaFree(dev[n].C);
 		cudaFree(dev[n].T);
-		//cudaFree(dev[n].F);
+
+		#ifdef ave_flag
+		cudaFree(dev[n].A);
+		#endif
 
 		cudaFree(dev[n].fx);
 		cudaFree(dev[n].fy);
