@@ -205,11 +205,10 @@ double get_rs(double a, double mp)
 {
 	double rs;
 	#if ndim==2
-	rs = fmin(sc_h,fmax(sc_h/2.0,pow(planet_mass/3.0,1.0/3.0)/4.0))*a;
+	rs = rs_fac*sc_h*a;//fmin(sc_h,fmax(sc_h/2.0,pow(planet_mass/3.0,1.0/3.0)/4.0))*a;
 	#else
-	rs = (pow(planet_mass/3.0,1.0/3.0)/4.0)*a;
+	rs = rs_fac*pow(planet_mass/3.0,1.0/3.0)*a;
 	#endif
-	//rs = 0.0003*a;
 	return rs;
 }
 
