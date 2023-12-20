@@ -102,7 +102,7 @@ const int z_zthd = z_zdiv + 2*zpad;
 const double frame_omega = 1.0;
 
 const double sav_interval = 0.1*twopi/frame_omega;
-const double end_time = 10.0*twopi/frame_omega;
+const double end_time = 5.0*twopi/frame_omega;
 
 const int prt_interval = 1000;
 const int max_step = 1000000000;
@@ -183,7 +183,7 @@ const double planet_mass = 0.00003;
 const double planet_radius = 1.0;
 const double planet_ecc = 0.0;
 
-const double rs_fac = 0.015;
+const double rs_fac = 0.01;
 const double ramp_time = 1.0*twopi/frame_omega;
 
 //=======================================================================

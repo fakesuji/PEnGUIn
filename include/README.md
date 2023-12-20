@@ -277,6 +277,10 @@
     		-semi-major axis of the planet's orbit in code units
 	planet_ecc:
  		-eccentricity of the planet's orbit
+	rs_fac:
+		-smoothing length of the planet's potential
+		-if ndim=2, smoothing length = rs_fac * local disk scale height
+		-if ndim=3, smoothing length = rs_fac * planet's Hill radius
 	ramp_time:
  		-initial time, in code units, taken to gradually bring the planet's mass to "planet_mass"
    
