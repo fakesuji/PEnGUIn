@@ -183,6 +183,7 @@ const double planet_mass = 0.00003;
 const double planet_radius = 1.0;
 const double planet_ecc = 0.0;
 
+const double rs_fac = 0.015;
 const double ramp_time = 1.0*twopi/frame_omega;
 
 //=======================================================================
