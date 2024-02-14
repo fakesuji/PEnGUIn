@@ -112,9 +112,9 @@
 		-number of cells in the x, y, and z directions
 		-yres=1 if ndim<2
 		-zres=1 if ndim<3
-  		-xres must satisfiy this condition: (xres/ndev)%x_xdiv=0
-    		-if ndim>1, yres must satisfy this condition: yres%y_ydiv=0
-      		-if ndim>2, zres must satisfy this condition: zres%z_zdiv=0
+		-xres must satisfiy this condition: (xres/ndev)%x_xdiv=0
+		-if ndim>1, yres must satisfy this condition: yres%y_ydiv=0
+		-if ndim>2, zres must satisfy this condition: zres%z_zdiv=0
 		-see the section below for descriptions of x_xdiv, y_ydiv, and z_zdiv.
 	xarr, yarr, zarr:
 		-array size in the x, y, and z directions
