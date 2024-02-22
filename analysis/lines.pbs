@@ -1,0 +1,13 @@
+#!/bin/bash
+#
+#PBS -l select=1:ncpus=2:mem=64gb
+#PBS -l walltime=24:00:00
+#PBS -o ../logfile/CI_Tau_h50_e40_a-10_lines.out
+#PBS -j oe
+
+cd $PBS_O_WORKDIR
+module load anaconda3/2022.05-gcc/9.5.0
+echo "Loaded"
+
+python calculate_lines.py
+echo "Completed"
