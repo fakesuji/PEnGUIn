@@ -1,8 +1,8 @@
 #!/bin/bash
 #
-#PBS -l select=1:ncpus=2:mem=128gb
-#PBS -l walltime=16:00:00
-#PBS -o ../logfile/h35_2p636E_e30.out
+#PBS -l select=1:ncpus=2:mem=64gb
+#PBS -l walltime=24:00:00
+#PBS -o ../logfile/CI_Tau_h50_e40_a-10_lines.out
 #PBS -j oe
 
 cd $PBS_O_WORKDIR
