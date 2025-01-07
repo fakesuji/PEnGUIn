@@ -145,6 +145,7 @@ struct Grid
 	double* zv;
 
 	double* dt;
+	double* sum;
 	double* Buff;
 
 	double* orb_rot;

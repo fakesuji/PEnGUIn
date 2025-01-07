@@ -234,46 +234,39 @@ __device__ double get_gx(double rad, double azi, double pol, body *planet)
 
 //====================================================================
 
-__device__ double get_gy(double rad, double azi, double pol, body *planet)
+__device__ double single_gy(double rad, double azi, double pol, body planet)
 {
-	double gy;
+	double gy = 0.0;
+	double gx_tmp, gz_tmp;
 
-	#if geomx==0
-		#ifdef shear_box
-		gy = 0.0;
+	#if geomx==1
+		#if twobd_flag == 1
+		star_planet_grav_cyl_inertial(rad, azi, pol, planet, 0.0, gx_tmp, gy, gz_tmp);
 		#else
-		gy = 0.0;
+		star_planet_grav_cyl(rad, azi, pol, planet, 0.0, gx_tmp, gy, gz_tmp);
 		#endif
 
-	#elif geomx==1
-		gy = 0.0;
-		double gx_tmp, gy_tmp, gz_tmp;
-		for (int m=0; m<n_planet; m++)
-		{
-			#if twobd_flag == 1
-			star_planet_grav_cyl_inertial(rad, azi, pol, planet[m], 0.0, gx_tmp, gy_tmp, gz_tmp);
-			#else
-			star_planet_grav_cyl(rad, azi, pol, planet[m], 0.0, gx_tmp, gy_tmp, gz_tmp);
-			#endif
-			gy += gy_tmp;
-		}
-
 	#elif geomx==2
-		gy = 0.0;
-		double gx_tmp, gy_tmp, gz_tmp;
-		for (int m=0; m<n_planet; m++)
-		{
-			#if twobd_flag == 1
-			star_planet_grav_inertial(rad, azi, pol, planet[m], 0.0, gx_tmp, gy_tmp, gz_tmp);
-			#else
-			star_planet_grav(rad, azi, pol, planet[m], 0.0, gx_tmp, gy_tmp, gz_tmp);
-			#endif
-			gy += gy_tmp;
-		}
+		#if twobd_flag == 1
+		star_planet_grav_inertial(rad, azi, pol, planet, 0.0, gx_tmp, gy, gz_tmp);
+		#else
+		star_planet_grav(rad, azi, pol, planet, 0.0, gx_tmp, gy, gz_tmp);
+		#endif
 	#endif
 
 	return gy;
 }
+
+__device__ double get_gy(double rad, double azi, double pol, body *planet)
+{
+	double gy = 0.0;
+	for (int m=0; m<n_planet; m++)
+	{
+		gy += single_gy(rad, azi, pol, planet[m]);
+	}
+	return gy;
+}
+
 
 //====================================================================
 

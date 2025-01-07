@@ -2,11 +2,12 @@
 #define PARAMETERS_H
 
 #define dump_flag
+#define file_flag 1
 //#define kill_flag 1
 #define OrbAdv_flag
 #define visc_flag 1
 #define cool_flag 1
-#define twobd_flag 1
+#define twobd_flag 0
 //#define silence_flag
 //#define advec_flag
 #define ave_flag
@@ -15,7 +16,7 @@
 // Save path
 //=======================================================================
 
-const char path_for_dump[]="/scratch/fung/";
+const char path_for_dump[]="/sdata/fung/";
 
 //=======================================================================
 // Constants
@@ -63,9 +64,9 @@ const int zpad = npad;
 const int zpad = 0;
 #endif
 
-const int xres = 2160;
-const int yres = 3888;
-const int zres = 1;
+const int xres = 480;//672;
+const int yres = 1632;//2304;
+const int zres = 1;//72;
 
 const int xarr = xres + 2*xpad;
 const int yarr = yres + 2*ypad;
@@ -99,12 +100,12 @@ const int z_zthd = z_zdiv + 2*zpad;
 // Temporal parameters
 //=======================================================================
 
-const double frame_omega = 0.0;
+const double frame_omega = 1.0;
 
-const double sav_interval = 1.0*twopi;
-const double end_time = 100.0*twopi;
+const double sav_interval = 10.0*twopi;
+const double end_time = 1000.0*twopi;
 
-const int prt_interval = 1000;
+const int prt_interval = 20;
 const int max_step = 1000000000;
 
 //=======================================================================
@@ -138,7 +139,7 @@ const double Stokes = 0.01;
 
 #define init_flag 2
 
-const int bound_lft = 1;
+const int bound_lft = 0;
 const int bound_rgh = 0;
 
 const int bound_bak = 3;
@@ -151,14 +152,14 @@ const int bound_top = 2;
 // Disk parameters
 //=======================================================================
 
-const double p_beta = 1.0;
+const double p_beta = 0.0;
 #if ndim==3
-const double p_alpha = 1.5 - 0.5*p_beta + 1.5;
+const double p_alpha = 0.5 - 0.5*p_beta + 1.5;
 #else 
-const double p_alpha = 1.5;
+const double p_alpha = 0.5;
 #endif 
-const double ss_alpha = 0.001;
-const double sc_h = 0.01;
+const double ss_alpha = 0.0001;
+const double sc_h = 0.05;
 
 #if ndim==3
 const double Sigma_0 = 0.1*MMSN_1AU/(sqrt_hpi*sc_h);
@@ -167,7 +168,7 @@ const double Sigma_0 = (MMSN_1AU/0.76)*0.05;
 #endif
 
 const double kill_width = 1.0;
-const double beta_cool = 0.01;
+const double beta_cool = 0.001;
 
 //=======================================================================
 // planet parameters
@@ -179,19 +180,19 @@ const int n_planet = 2;
 const int n_planet = 1;
 #endif
 
-const double planet_mass = 0.001;
+const double planet_mass = 10.0*EarthMass;
 const double planet_radius = 1.0;
-const double planet_ecc = 0.05;
+const double planet_ecc = 0.0;
 
-const double rs_fac = 0.7;
-const double ramp_time = 1.0*twopi;
+const double rs_fac = 0.5;
+const double ramp_time = 0.5*twopi;
 
 //=======================================================================
 // Grid parameters
 //=======================================================================
 
-const double xmin = 0.3;
-const double xmax = 10.0;
+const double xmin = 0.4;
+const double xmax = 2.5;
 const double ymin = 0.0;
 const double ymax = twopi;
 const double zmin = hpi-4.0*sc_h;

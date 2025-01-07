@@ -58,16 +58,13 @@ bool sanity_check()
 	return sane;
 }
 
-void cpy_grid_DevicetoHost(Grid* hst, Grid* dev)
+void cpy_grid_DevicetoHost(Grid* hst, Grid* dev, bool ave)
 {
 	for (int n=0; n<ndev; n++)
 	{
 		cudaSetDevice(n);
-		#ifdef ave_flag
-		cudaMemcpyAsync( hst[n].C, dev[n].A, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(Cell), cudaMemcpyDeviceToHost, dev[n].stream );
-		#else
-		cudaMemcpyAsync( hst[n].C, dev[n].C, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(Cell), cudaMemcpyDeviceToHost, dev[n].stream );
-		#endif
+		if (ave) cudaMemcpyAsync( hst[n].C, dev[n].A, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(Cell), cudaMemcpyDeviceToHost, dev[n].stream );
+		else     cudaMemcpyAsync( hst[n].C, dev[n].C, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(Cell), cudaMemcpyDeviceToHost, dev[n].stream );
 
 		#ifdef dust_flag
 		cudaMemcpyAsync( hst[n].CD, dev[n].CD, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(Dust), cudaMemcpyDeviceToHost, dev[n].stream );
@@ -76,11 +73,7 @@ void cpy_grid_DevicetoHost(Grid* hst, Grid* dev)
 		cudaMemcpyAsync( hst[n].orb_shf, dev[n].orb_shf, dev[n].xarr*dev[n].zarr*sizeof(int), cudaMemcpyDeviceToHost, dev[n].stream );
 		cudaMemcpyAsync( hst[n].planets, dev[n].planets, n_planet*sizeof(body), cudaMemcpyDeviceToHost, dev[n].stream );
 	}
-	for (int n=0; n<ndev; n++) 
-	{
-		cudaSetDevice(n);
-		cudaDeviceSynchronize();
-	}
+	for (int n=0; n<ndev; n++) cudaStreamSynchronize(dev[n].stream);
 	return;
 }
 
@@ -193,6 +186,7 @@ int main(int narg, char *args[])
 		cudaMallocHost( (void**)&hst[n].planets, n_planet*sizeof(body) );
 
 		cudaMallocHost( (void**)&hst[n].dt, sizeof(double) );
+		cudaMallocHost( (void**)&hst[n].sum, sizeof(double) );
 
 
 		cudaStreamCreate(&dev[n].stream);
@@ -207,6 +201,7 @@ int main(int narg, char *args[])
 		cudaMalloc( (void**)&dev[n].zv, zarr*sizeof(double) );
 
 		cudaMalloc( (void**)&dev[n].dt, sizeof(double) );
+		cudaMalloc( (void**)&dev[n].sum, sizeof(double) );
 		cudaMalloc( (void**)&dev[n].Buff, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(double) );
 
 		cudaMalloc( (void**)&dev[n].C, dev[n].xarr*dev[n].yarr*dev[n].zarr*sizeof(Cell) );
@@ -287,6 +282,15 @@ int main(int narg, char *args[])
 		sstep++;
 		#endif
 	}
+	
+	#ifdef file_flag
+		ofstream outfile;
+		outfile.open("./files/"+label+".txt", ofstream::out | ofstream::app);
+		if (!outfile)
+		{
+			outfile.open("./files/"+label+".txt", ofstream::out);
+		}
+	#endif
 
 	///////////////////////////////////////////////////////////
 
@@ -311,6 +315,7 @@ int main(int narg, char *args[])
 	bool print = false;
 	bool savep = false;
 	bool contu = true;
+	double torque;
 
 	while (contu)
 	{
@@ -368,6 +373,23 @@ int main(int narg, char *args[])
 			printf("  ETD %f / %f minutes\n", duration, duration*(end_time-sta_time)/(cur_time-sta_time));
 			printf("  %f seconds per step\n", speed);
 			printf("  %f Mcells per second \n\n", xarr*yarr*zarr/speed/1000000.0);
+			
+			#if file_flag == 1
+				#if twobd_flag == 1
+				torque = global_sum(hst, dev, 1);
+				#else
+				torque = global_sum(hst, dev, 0);
+				#endif
+
+				outfile << cur_time;
+				#if ndim == 3
+				outfile << " " << torque/(planet_mass*planet_mass*sqrt(pi/2.0)/sc_h);
+				#elif ndim == 2
+				outfile << " " << torque/(planet_mass*planet_mass/sc_h/sc_h);
+				#endif
+				outfile << endl;
+			#endif
+			
 
 			print = false;
 		}
@@ -377,22 +399,33 @@ int main(int narg, char *args[])
 			printf("Check point!\n");	
 			//printf("  Current time %f | End time %f | Time step %e\n", cur_time, end_time, dt);
 
-			cpy_grid_DevicetoHost(hst, dev);
+			cpy_grid_DevicetoHost(hst, dev, false);
 			fname = path+"binary_"+label+"_"+frame_num(sstep);
 
 			check_point.open(fname.c_str(), ios::out | ios::binary);
 			write_check_point(check_point, cur_time, hst);
 			check_point.close();
 
-			printf("  %s is saved. \n\n", fname.c_str());
+			printf("  %s is saved. \n", fname.c_str());
+			
+			#ifdef ave_flag
+			for (int n=0; n<ndev; n++) cudaStreamSynchronize(dev[n].stream);
+			cpy_grid_DevicetoHost(hst, dev, true);
+			fname = path+"binary_"+label+"_ave_"+frame_num(sstep);
+
+			check_point.open(fname.c_str(), ios::out | ios::binary);
+			write_check_point(check_point, cur_time, hst);
+			check_point.close();
+			init_average(dev);
+			
+			printf("  %s is saved. \n", fname.c_str());
+			#endif
+			printf("\n");
 
 			sstep++;
 			sav_time = 0.0;
 			savep = false;
 			dt = old_dt;
-			#ifdef ave_flag
-			init_average(dev);
-			#endif
 		}
 	}
 

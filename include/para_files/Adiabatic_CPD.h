@@ -2,6 +2,7 @@
 #define PARAMETERS_H
 
 #define dump_flag
+//#define file_flag 1
 #define kill_flag 1
 //#define OrbAdv_flag
 //#define visc_flag 1

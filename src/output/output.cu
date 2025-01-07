@@ -9,6 +9,7 @@ using namespace std;
 #include "parameters.h"
 #include "structs.h"
 #include "util.h"
+#include "forces.cu"
 
 string create_label()
 {
@@ -78,9 +79,9 @@ string create_label()
 	label += "_rev";
 	#endif
 
-	#ifdef ave_flag
-	label += "_ave";
-	#endif
+	//#ifdef ave_flag
+	//label += "_ave";
+	//#endif
 
 	//label += "_"+int_to_string(ndev)+"dev";
 	//label += "_video";
@@ -104,7 +105,7 @@ void restructure_data(double* data, Grid* G, int data_type)
 		jj = j - ypad;
 		kk = k - zpad;
 		glo_idx = ii + xres*(jj + yres*kk);
-		loc_idx = i + G[n].xarr*(j + G[n].yarr*kk);
+		loc_idx = i + G[n].xarr*(j + G[n].yarr*k);
 		if      (data_type==0) data[glo_idx] = G[n].C[loc_idx].r;
 		else if (data_type==1) data[glo_idx] = G[n].C[loc_idx].p;
 		else if (data_type==2) data[glo_idx] = G[n].C[loc_idx].u;
@@ -328,4 +329,129 @@ void init_average(Grid* dev)
 		zero_grid<<< dim3(nx/x_xdiv,ny/x_ydiv,nz/x_zdiv), dim3(x_xthd,x_ydiv,x_zdiv), 0, dev[n].stream >>> (dev[n], dev[n].A);
 	}
 	return;
+}
+
+/////////////////////////////////////////////////////////////////
+
+__device__ double cal_torque(Cell gas, body planet, double rad, double azi, double pol, double rad_cyl, double dv)
+{
+	double mass, acc, torque;
+
+	mass = gas.r * dv;
+	acc  = output_gy(rad, azi, pol, planet);
+	return rad_cyl * acc * mass;
+}
+
+__global__ void get_sum_lv1(double* sum_lv1, double* xa, double* ya, double* za, int nx, int ny, int nz, Cell* C, Dust* CD, body *planets, int m)
+{
+	extern __shared__ double sm[];
+	int i = threadIdx.x;
+	int ib = blockIdx.x;
+	int ig = i + ib*blockDim.x;
+	
+	int nmax = (nx*ny*nz + blockDim.x*gridDim.x - 1)/(blockDim.x*gridDim.x);
+
+	int idx, idy, idz;
+	int ind;
+	double tmp=0.0;
+	double rad, azi, pol, rad_cyl;
+	double dv;
+
+	for ( int n=0; n<nmax; n++)
+	{
+		idz = (n+nmax*ig)/(nx*ny);
+		idy = (n+nmax*ig - nx*ny*idz)/(nx);
+		idx = (n+nmax*ig - nx*idy - nx*ny*idz);
+	
+		if (idx<nx && idy<ny && idz<nz)
+		{
+			idx += xpad;
+			idy += ypad;
+			idz += zpad;
+			ind = idx + (nx+2*xpad)*(idy + (ny+2*ypad)*idz);
+
+			#if geomy == 3
+			rad = 0.5*(xa[idx+1]+xa[idx]);
+			rad_cyl = rad;
+			#elif geomy == 4
+			rad = 0.5*(xa[idx+1]+xa[idx]);
+			rad_cyl = rad * sin(0.5*(za[idz+1]+za[idz]));
+			#else	
+			rad = 1.0;
+			rad_cyl = 1.0;
+			#endif
+			
+			azi = 0.5*(ya[idy+1]+ya[idy]);
+			
+			#if ndim == 3
+			pol = 0.5*(za[idz+1]+za[idz]);
+			#else
+			pol = 0.0;
+			#endif
+			
+			#if geomy == 3 && ndim == 2
+			dv = 0.5*(xa[idx+1]*xa[idx+1] - xa[idx]*xa[idx]);
+			#elif geomy == 3 && ndim == 3
+			dv = 0.5*(xa[idx+1]*xa[idx+1] - xa[idx]*xa[idx]) * (za[idz+1]-za[idz]);
+			#elif geomy == 4
+			dv = third*(xa[idx+1]*xa[idx+1]*xa[idx+1] - xa[idx]*xa[idx]*xa[idx]) * (cos(za[idz])-cos(za[idz+1]));
+			#else
+			dv = (xa[idx+1] - xa[idx]) * (za[idz+1]-za[idz]);
+			#endif
+			dv *= (ya[idy+1]-ya[idy]);
+
+			tmp += cal_torque(C[ind], planets[m], rad, azi, pol, rad_cyl, dv);
+		}
+	}
+	
+	sm[i] = tmp;
+	__syncthreads();
+
+	round_reduc_sum(blockDim.x, sm);
+	if (i==0) sum_lv1[ib] = sm[i];
+
+	return;
+}
+
+__global__ void get_sum_lv2(double* sum, double* sum_lv1)
+{
+	extern __shared__ double sm[];
+	int i = threadIdx.x;
+
+	sm[i] = sum_lv1[i];
+	__syncthreads();
+
+	round_reduc_sum(blockDim.x, sm);
+	if (i==0) sum[i] = sm[i];
+
+	return;
+}
+
+double global_sum(Grid* hst, Grid* dev, int m)
+{
+	int lv1_size, nx, ny, nz;
+	
+	for (int n=0; n<ndev; n++)
+	{
+		cudaSetDevice(n);
+
+		nx = dev[n].xres;
+		ny = dev[n].yres;
+		nz = dev[n].zres;
+
+		lv1_size = min(1024,(nx*ny*nz+std_thd-1)/std_thd);
+		get_sum_lv1<<< lv1_size, std_thd, std_thd*sizeof(double), dev[n].stream >>>(dev[n].Buff, &dev[n].xa[dev[n].xbgn], dev[n].ya, dev[n].za, nx, ny, nz, dev[n].C, dev[n].CD, dev[n].planets, m);
+		get_sum_lv2<<< 1, lv1_size, lv1_size*sizeof(double), dev[n].stream >>>(dev[n].sum, dev[n].Buff);
+		cudaMemcpyAsync( hst[n].sum, dev[n].sum, sizeof(double), cudaMemcpyDeviceToHost, dev[n].stream );
+	}
+	
+	for(int n=0; n<ndev; n++) cudaStreamSynchronize(dev[n].stream);
+
+	double tmp = 0.0;
+	for (int n=0; n<ndev; n++)
+	{
+		tmp += *hst[n].sum;
+	}
+
+	return tmp;
 }
